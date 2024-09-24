@@ -258,8 +258,10 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
         //Bulk Transfer Type (0x03)
         } else if (urb_data->urb_transfer_type == 0x03) { 
             // std::cout << "Bulk transfer detected" << std::endl;
+            if (urb_data->data_length != 16384) {
+                std::cout << "Data Length: " << urb_data->data_length << std::endl;
+            }
 
-            std::cout << "Data Length: " << urb_data->data_length << std::endl;
             // std::cout << "Max Length Size: " << bulk_usbmon_bulk_maxlengthsize << std::endl;
             // std::cout << "size of URB_Data: " << sizeof(URB_Data) << std::endl;
 

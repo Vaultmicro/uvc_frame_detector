@@ -84,6 +84,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(const std::vector<u_char>& uvc_pay
         //TODO
         //finish the frame
         //release memory 
+        save_frames_to_log(frames.back());
+        if (!frames.back()->frame_error){
+            frames.pop_back();
+        } else {
+            //save them on error heap
+        }
     }
 
     if (payload_header_valid_return) {
@@ -93,7 +99,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(const std::vector<u_char>& uvc_pay
 
     uint8_t previous_fid = payload_header.bmBFH.BFH_FID;
 
-    save_frames_to_log(frames.back());
 
     std::cout << "Payload is valid." << std::endl;
     return 0;
@@ -183,11 +188,11 @@ uint8_t UVCPHeaderChecker::payload_header_valid(const UVC_Payload_Header& payloa
 
     //Checks if the Frame Identifier bit is set
     if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID ){
-        if (!previous_payload_header.bmBFH.BFH_EOF) {
-            // if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && (payload_header.PTS != previous_payload_header.PTS) || payload_header.PTS == 0){
+        if (previous_payload_header.bmBFH.BFH_EOF) {
+            if ((payload_header.PTS != previous_payload_header.PTS) && payload_header.PTS != 0){
                 std::cerr << "Invalid UVC payload header: Frame Identifier bit is same as the previous frame." << std::endl;
                 return 1;
-            // }
+            }
         }
     }
 
