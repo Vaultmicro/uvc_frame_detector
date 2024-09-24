@@ -257,21 +257,26 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
 
         //Bulk Transfer Type (0x03)
         } else if (urb_data->urb_transfer_type == 0x03) { 
-            std::cout << "Bulk transfer detected" << std::endl;
+            // std::cout << "Bulk transfer detected" << std::endl;
 
             std::cout << "Data Length: " << urb_data->data_length << std::endl;
             // std::cout << "Max Length Size: " << bulk_usbmon_bulk_maxlengthsize << std::endl;
             // std::cout << "size of URB_Data: " << sizeof(URB_Data) << std::endl;
 
             //update the max length size
-            if (bulk_usbmon_bulk_maxlengthsize < urb_data->data_length + sizeof(URB_Data)) {
-                bulk_usbmon_bulk_maxlengthsize = urb_data->data_length + sizeof(URB_Data);
-                std::cout << "update the max length size: " << bulk_usbmon_bulk_maxlengthsize << std::endl;
+            if (bulk_usbmon_bulk_maxlengthsize < urb_data->data_length + sizeof(URB_Data)){
+                if ((urb_data->data_length + sizeof(URB_Data))%8 != 0){
+                    bulk_usbmon_bulk_maxlengthsize = (urb_data->data_length + sizeof(URB_Data) + 8 - (urb_data->data_length + sizeof(URB_Data)%8));
+                    std::cerr << "Error incorrect max length size: " << bulk_usbmon_bulk_maxlengthsize << std::endl;
+                } else {
+                    bulk_usbmon_bulk_maxlengthsize = urb_data->data_length + sizeof(URB_Data);
+                    std::cout << "update the max length size: " << bulk_usbmon_bulk_maxlengthsize << std::endl;
+                }
             }
             
             if (bulk_usbmon_bulk_maxlengthsize > urb_data->data_length + sizeof(URB_Data)) {
-                //finish the frame
-                std::cout << "Finish the frame" << std::endl;
+                //finish the transfer
+                std::cout << "Finish the transfer" << std::endl;
 
                 //TODO make hex format and save them in queue
                 temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data), packet + pkthdr->caplen);
@@ -283,8 +288,8 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
                 queue_cv.notify_one();
                 
             } else if (bulk_usbmon_bulk_maxlengthsize == urb_data->data_length + sizeof(URB_Data)) {
-                //continue the frame
-                std::cout << "Continue the frame" << std::endl;
+                //continue the transfer
+                // std::cout << "Continue the transfer" << std::endl;
                 temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data), packet + pkthdr->caplen);
             } else {
                 std::cerr << "Invalid data length for bulk transfer" << std::endl;

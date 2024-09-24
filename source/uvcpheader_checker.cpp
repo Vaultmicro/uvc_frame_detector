@@ -40,11 +40,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(const std::vector<u_char>& uvc_pay
     static uint8_t previous_previous_error = 0;
     static UVC_Payload_Header previous_payload_header;
     static uint8_t previous_error = 0;
+    // static std::queue<std::vector<u_char>> fid_queue;
 
 
     UVC_Payload_Header payload_header = parse_uvc_payload_header(uvc_payload);
 
-    uint8_t payload_header_valid_return = payload_header_valid(payload_header, previous_payload_header);
+    uint8_t payload_header_valid_return = payload_header_valid(payload_header, previous_payload_header, previous_previous_payload_header);
 
     bool frame_found = false;
 
@@ -56,7 +57,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(const std::vector<u_char>& uvc_pay
             if (payload_header_valid_return) {
                 frame->set_frame_error(); // if error set, add error flag to the frame
             }
-
 
             break;
         }
@@ -93,7 +93,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(const std::vector<u_char>& uvc_pay
 
     uint8_t previous_fid = payload_header.bmBFH.BFH_FID;
 
-    save_frames_to_log("frames_log.txt");
+    save_frames_to_log(frames.back());
 
     std::cout << "Payload is valid." << std::endl;
     return 0;
@@ -133,24 +133,20 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(const std::vector
     return payload_header;
 }
 
-uint8_t UVCPHeaderChecker::payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header) {
+uint8_t UVCPHeaderChecker::payload_header_valid(const UVC_Payload_Header& payload_header, 
+                                                const UVC_Payload_Header& previous_payload_header, 
+                                                const UVC_Payload_Header& previous_previous_payload_header) {
+
+    //Checks if the Error bit is set
+    if (payload_header.bmBFH.BFH_ERR) {
+        std::cerr << "Invalid UVC payload header: Error bit is set." << std::endl;
+        return 1;
+    }
 
     //Checks if the header length is valid
     if (payload_header.HLE < 0x02 || payload_header.HLE > 0x0C) {
         std::cerr << "Invalid UVC payload header: Unexpected start byte 0x" 
                   << std::hex << static_cast<int>(payload_header.HLE) << "." << std::endl;
-        return 1;
-    }
-
-    //Checks if the Frame Identifier bit is set
-    if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && (payload_header.PTS != previous_payload_header.PTS) || payload_header.PTS == 0){
-        std::cerr << "Invalid UVC payload header: Frame Identifier bit is not the same as the previous frame." << std::endl;
-        return 1;
-    }
-
-    //Checks if the Error bit is set
-    if (payload_header.bmBFH.BFH_ERR) {
-        std::cerr << "Invalid UVC payload header: Error bit is set." << std::endl;
         return 1;
     }
 
@@ -174,13 +170,27 @@ uint8_t UVCPHeaderChecker::payload_header_valid(const UVC_Payload_Header& payloa
     //TODO
     //Check with the total length of the frame and the calculated length of the frame
     if (payload_header.bmBFH.BFH_EOF){
-        
+        // if (previous_payload_header.bmBFH.BFH_EOF && (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID)){
+        //     std::cerr << "Invalid UVC payload header: Missing frame for bulk whole." << std::endl;
+        //     return 1;
+        // }
     } else{
         if (payload_header.bmBFH.BFH_RES){
             std::cerr << "Invalid UVC payload header: Reserved bit is set." << std::endl;
             return 1;
         }
     }
+
+    //Checks if the Frame Identifier bit is set
+    if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID ){
+        if (!previous_payload_header.bmBFH.BFH_EOF) {
+            // if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && (payload_header.PTS != previous_payload_header.PTS) || payload_header.PTS == 0){
+                std::cerr << "Invalid UVC payload header: Frame Identifier bit is same as the previous frame." << std::endl;
+                return 1;
+            // }
+        }
+    }
+
 
     //Checks if the Still Image bit is set is not needed
 
@@ -209,29 +219,28 @@ void UVCPHeaderChecker::payload_frame_develope(){
 }
 
 
-void UVCPHeaderChecker::save_frames_to_log(const std::string& filename) {
-    std::ofstream log_file(filename, std::ios::app);
+void UVCPHeaderChecker::save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame) {
+    std::ofstream log_file("../log/frames_log.txt", std::ios::app);
 
     if (!log_file.is_open()) {
         std::cerr << "Error opening log file." << std::endl;
         return;
     }
 
-    for (const auto& frame : frames) {
-        std::stringstream frame_info;
-        frame_info << "Frame Number: " << frame->frame_number << "\n"
-                   << "Packet Number: " << frame->packet_number << "\n"
-                   << "Frame PTS: " << frame->frame_pts << "\n"
-                   << "Frame Error: " << static_cast<int>(frame->frame_error) << "\n"
-                   << "EOF Reached: " << static_cast<int>(frame->eof_reached) << "\n"
-                   << "Packets:\n";
+    std::stringstream frame_info;
+    frame_info << "Frame Number: " << current_frame->frame_number << "\n"
+                << "Packet Number: " << current_frame->packet_number << "\n"
+                << "Frame PTS: " << current_frame->frame_pts << "\n"
+                << "Frame Error: " << static_cast<int>(current_frame->frame_error) << "\n"
+                << "EOF Reached: " << static_cast<int>(current_frame->eof_reached) << "\n"
+                << "Packets:\n";
 
-        for (const auto& packet : frame->packets) {
-            frame_info << "  Packet Size: " << packet.size() << " bytes\n";
-        }
-
-        log_file << frame_info.str() << "\n---\n";
+    for (const auto& packet : current_frame->packets) {
+        frame_info << "  Packet Size: " << packet.size() << " bytes\n";
     }
+
+    log_file << frame_info.str() << "\n---\n";
+
 
     log_file.close();
 }

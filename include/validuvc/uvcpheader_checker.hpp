@@ -71,7 +71,7 @@ class UVCPHeaderChecker {
     private:
         std::list<std::unique_ptr<ValidFrame>> frames;
 
-        uint8_t payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header);
+        uint8_t payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
         void payload_frame_develope();
 
@@ -82,7 +82,7 @@ class UVCPHeaderChecker {
         UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload);
 
         void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);   
-        void save_frames_to_log(const std::string& filename);
+        void save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame);
         void save_payload_header_to_log(const UVC_Payload_Header& payload_header);
 
 
