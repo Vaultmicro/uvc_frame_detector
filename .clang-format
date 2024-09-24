@@ -1,0 +1,19 @@
+---
+BasedOnStyle: Google
+IndentWidth: 2                # Indentation width is set to 2 spaces
+ColumnLimit: 80               # Limit each line to 80 characters
+AllowShortIfStatementsOnASingleLine: false   # Prevent if-statements from being placed on a single line
+BreakBeforeBraces: Attach      # Keep braces on the same line as control statements
+DerivePointerAlignment: false  # Do not automatically determine pointer alignment
+PointerAlignment: Left         # Align pointers to the left with the type
+SpacesInParentheses: false     # No spaces inside parentheses
+SpaceAfterCStyleCast: true     # Add a space after C-style casts
+SpaceBeforeAssignmentOperators: true   # Add space before assignment operators (=)
+BreakConstructorInitializers: BeforeColon  # Break constructor initializers before the colon
+BreakBeforeBinaryOperators: None  # Do not break before binary operators
+IndentCaseLabels: true        # Indent case labels inside switch statements
+AlwaysBreakAfterReturnType: None  # Do not force breaking after the return type of a function
+SpacesBeforeTrailingComments: 2   # Add two spaces before inline comments
+SpaceBeforeParens: ControlStatements  # Only add space before parentheses in control statements (if, for, while)
+UseTab: Never                 # Always use spaces instead of tabs
+...

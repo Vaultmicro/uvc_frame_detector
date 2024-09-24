@@ -12,6 +12,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <bitset>
 
 typedef struct __attribute__((packed, aligned(1))) {
     uint8_t HLE;                       // Header Length
@@ -29,7 +30,14 @@ typedef struct __attribute__((packed, aligned(1))) {
         } bmBFH;                       
     };
     uint32_t PTS;                      // Presentation Time Stamp 32bits
-    uint64_t SCR;                      // Clock Reference 48bits
+    union {
+        uint64_t SCR;                  // Clock Reference 48bits
+        struct {
+            uint32_t SCR_STC : 32;     // System Time Clock, 32 bits
+            uint16_t SCR_TOK : 11;     // Token Counter, 11 bits
+            uint16_t SCR_RES : 5;      // Reserved 0, 5 bits
+        } bmSCR;                       // Bitfield for SCR
+    };
 } UVC_Payload_Header;
 
 
