@@ -148,9 +148,11 @@ uint8_t UVCPHeaderChecker::payload_header_valid(const UVC_Payload_Header& payloa
         return 1;
     }
 
-    //Checks if the End of Frame bit is set
-    //TODO
-    //Check with the total length of the frame and the calculated length of the frame
+    //Checks if the Error bit is set
+    if (payload_header.bmBFH.BFH_ERR) {
+        std::cerr << "Invalid UVC payload header: Error bit is set." << std::endl;
+        return 1;
+    }
 
     //Checks if the Presentation Time Stamp bit is set
     //Checks if the Source Clock Reference bit is set
@@ -168,22 +170,21 @@ uint8_t UVCPHeaderChecker::payload_header_valid(const UVC_Payload_Header& payloa
         return 1;
     }
 
-    //Checks if the Reserved bit is set
-    if (payload_header.bmBFH.BFH_RES) {
-        std::cerr << "Invalid UVC payload header: Reserved bit is set." << std::endl;
-        return 1;
+    //Checks if the End of Frame bit is set
+    //TODO
+    //Check with the total length of the frame and the calculated length of the frame
+    if (payload_header.bmBFH.BFH_EOF){
+        
+    } else{
+        if (payload_header.bmBFH.BFH_RES){
+            std::cerr << "Invalid UVC payload header: Reserved bit is set." << std::endl;
+            return 1;
+        }
     }
 
-    //Checks if the Still Image bit is set
+    //Checks if the Still Image bit is set is not needed
 
-
-    //Checks if the Error bit is set
-    if (payload_header.bmBFH.BFH_ERR) {
-        std::cerr << "Invalid UVC payload header: Error bit is set." << std::endl;
-        return 1;
-    }
-
-    // //Checks if the End of Header bit is set
+    // //Checks if the End of Header bit is set 0 for iso and 1 for bulk
     // if (!payload_header.bmBFH.BFH_EOH) {
     //     std::cerr << "Invalid UVC payload header: End of Header (EOH) bit is not set." << std::endl;
     //     return 1;
@@ -204,6 +205,7 @@ void UVCPHeaderChecker::frame_valid_ctrl(const std::vector<u_char>& uvc_payload)
 
 void UVCPHeaderChecker::payload_frame_develope(){
     //Call the picture file
+    //DO NOT NEED THIS FOR NOW
 }
 
 
@@ -235,7 +237,7 @@ void UVCPHeaderChecker::save_frames_to_log(const std::string& filename) {
 }
 
 void UVCPHeaderChecker::save_payload_header_to_log(const UVC_Payload_Header& payload_header) {
-    std::ofstream log_file("payload_headers_log.txt", std::ios::app);
+    std::ofstream log_file("../log/payload_headers_log.txt", std::ios::app);
 
     if (!log_file.is_open()) {
         std::cerr << "Error opening payload header log file." << std::endl;

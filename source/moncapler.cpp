@@ -259,7 +259,7 @@ void packet_handler(u_char *user_data, const struct pcap_pkthdr *pkthdr, const u
         } else if (urb_data->urb_transfer_type == 0x03) { 
             std::cout << "Bulk transfer detected" << std::endl;
 
-            // std::cout << "Data Length: " << urb_data->data_length << std::endl;
+            std::cout << "Data Length: " << urb_data->data_length << std::endl;
             // std::cout << "Max Length Size: " << bulk_usbmon_bulk_maxlengthsize << std::endl;
             // std::cout << "size of URB_Data: " << sizeof(URB_Data) << std::endl;
 
@@ -454,7 +454,7 @@ void test_print_process_packets(){
 
 int main(int argc, char *argv[]) {
     std::string selected_device;
-    int buffer_size = 1024*3; // Default buffer size for usb 3.0
+    int buffer_size = (1280+16)*32+64 ; //URB LENGTH INCLUDING 64
 
     // Parse command line arguments
     for (int i = 1; i < argc; i += 2) {
