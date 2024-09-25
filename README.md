@@ -25,6 +25,15 @@ Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub <br/>
 ### See Usage
 0. sudo ./moncapler
 
+### Example without camera
+To test validation algorithm, can test with colour bar screen of jpeg<br/>
+Build with cmake above<br/>
+0. ./example
+
+### Test Codes
+Build with cmake above<br/>
+0. ./valid_test
+
 ### Example Result
 Data Length: 13424<br/>
 Finish the transfer<br/>
@@ -66,10 +75,6 @@ Starting camera after running code may cause difference in this value, ignore it
 
 ### Saved log file
 To compare raw data with result, go to log dir<br/>
-
-### Test Codes
-Build with cmake above<br/>
-
 
 ### TODO
 make the setup data save variables to find setcur and getcur<br/>
