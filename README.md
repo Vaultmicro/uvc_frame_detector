@@ -66,3 +66,8 @@ Starting camera after running code may cause difference in this value, ignore it
 
 ### Saved log file
 To compare raw data with result, go to log dir<br/>
+
+### TODO
+make the setup data save variables to find setcur and getcur<br/>
+if scr available, make that with graph together with chorono list in moncapler.cpp <br/>
+believe the process, there is no error till now<br/>

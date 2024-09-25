@@ -40,6 +40,17 @@ typedef struct __attribute__((packed, aligned(1))) {
     };
 } UVC_Payload_Header;
 
+enum UVCError {
+  ERR_NO_ERROR = 0,
+  ERR_ERR_BIT_SET = 1,    // Error bit is set
+  ERR_LENGTH_OUT_OF_RANGE = 2, // Invalid header length
+
+  ERR_LENGTH_INVALID = 4, // Invalid length for PTS, Invalid length for SCR
+  ERR_SCR_LENGTH_INVALID = 5, // 
+  ERR_NO_PTS_SCR_LENGTH_INVALID = 6, // Neither PTS nor SCR but invalid length
+  ERR_RESERVED_BIT_SET = 7, // Reserved bit is set
+  ERR_FID_MISMATCH = 8,    // Frame Identifier mismatch
+};
 
 class ValidFrame{
     public:

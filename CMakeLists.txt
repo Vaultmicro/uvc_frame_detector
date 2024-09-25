@@ -43,3 +43,17 @@ target_link_libraries(
     PRIVATE
         ${PCAP_LIBRARIES}
 )
+
+
+add_executable(
+    valid_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/valid_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+)
+
+target_link_libraries(
+    valid_test
+    PRIVATE
+        gtest
+        gtest_main
+)
