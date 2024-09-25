@@ -204,7 +204,7 @@ void clean_exit(int signum) {
   std::cout << "Exiting safely..." << std::endl;
   exit(signum);
 }
-
+ 
 std::string getCurrentTimeFormatted() {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
@@ -279,13 +279,20 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     }
 
     // exclude control transfer
-    if (urb_data->urb_transfer_type == 0x02 ||
-        urb_data->urb_transfer_type == 0x01) {  // Control Transfer Type (0x02)
+    if (urb_data->urb_transfer_type == 0x02) {  // Control Transfer Type (0x02)
       // std::cerr << "Control || Interrupt Transfer detected, skipping this
       // packet" << std::endl;
 
+      // get setup data here
+      // find setcur getcur here
+      // bmRequestType, bRequest, descriptor_index, descriptor_type, language_id, wLength
+
       // find setcur getcur here
       return;
+
+      // Interrupt Transfer Type (0x01)
+    } else if (urb_data->urb_transfer_type == 0x01) {
+      // std::cerr << "Interrupt transfer detected, skipping this packet"
 
       // Bulk Transfer Type (0x03)
     } else if (urb_data->urb_transfer_type == 0x03) {

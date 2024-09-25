@@ -85,14 +85,21 @@ TEST_F(uvc_header_checker_test, valid_reserved_bit_set_test) {
 
 // Test cases for Frame Identifier mismatch (ERR_FID_MISMATCH)
 TEST_F(uvc_header_checker_test, fid_mismatch_test) {
-    std::vector<u_char> fid_mismatch_packet = create_packet({
-        0x0c, 0b00000001, // HLE and BFH with FID mismatch
+    std::vector<u_char> fid_mismatch_packet_0 = create_packet({
+        0x02, 0b10000001, // HLE and BFH with FID mismatch
         0x00, 0x00, 0x00, 0x00, // PTS
         0x00, 0x00, 0x00, 0x00, // SCR
     });
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(fid_mismatch_packet);
-    EXPECT_EQ(valid_err, ERR_FID_MISMATCH);  // Expect ERR_FID_MISMATCH
+    std::vector<u_char> fid_mismatch_packet_1 = create_packet({
+        0x02, 0b10010010, // HLE and BFH with FID mismatch
+        0x00, 0x00, 0x00, 0x00, // PTS
+        0x00, 0x00, 0x00, 0x00, // SCR
+    });
+
+    uint8_t valid_err_0 = header_checker.payload_valid_ctrl(fid_mismatch_packet_0);
+    uint8_t valid_err_1 = header_checker.payload_valid_ctrl(fid_mismatch_packet_1);
+    EXPECT_EQ(valid_err_1, ERR_FID_MISMATCH);  // Expect ERR_FID_MISMATCH
 }
 
 int main(int argc, char **argv) {

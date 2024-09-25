@@ -44,6 +44,11 @@ target_link_libraries(
         ${PCAP_LIBRARIES}
 )
 
+add_executable(
+    example
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/smpte.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+)
 
 add_executable(
     valid_test
