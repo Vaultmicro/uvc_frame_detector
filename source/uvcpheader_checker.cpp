@@ -102,7 +102,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   if (payload_header_valid_return) {
     // TODO save in the error frame heap
-    return 1;
+    return payload_header_valid_return;
   }
 
   uint8_t previous_fid = payload_header.bmBFH.BFH_FID;
@@ -163,6 +163,8 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
     const UVC_Payload_Header& payload_header,
     const UVC_Payload_Header& previous_payload_header,
     const UVC_Payload_Header& previous_previous_payload_header) {
+
+    
   // Checks if the Error bit is set
   if (payload_header.bmBFH.BFH_ERR) {
     std::cerr << "Invalid UVC payload header: Error bit is set." << std::endl;
