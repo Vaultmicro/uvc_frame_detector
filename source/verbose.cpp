@@ -1,77 +1,36 @@
 #include "utils/verbose.hpp"
-#include <iostream>
-#include "utils/verbose.hpp"
 
-
-// Define the global verbose level
+// Initialize verbose level
 int verbose_level = 1;
 
-// Verbose level 1: Crucial output using cout
-void v_cout_1(const std::string& message) {
-    if (verbose_level >= 1) {
-        std::cout << "CRUCIAL: " << message << std::endl;
+// VerboseStream definitions
+VerboseStream v_cout_1(1, "CRUCIAL: ", std::cout);
+VerboseStream v_cerr_1(1, "CRUCIAL ERROR: ", std::cerr);
+VerboseStream v_cout_2(2, "BASIC: ", std::cout);
+VerboseStream v_cerr_2(2, "BASIC ERROR: ", std::cerr);
+VerboseStream v_cout_3(3, "DETAIL: ", std::cout);
+VerboseStream v_cerr_3(3, "DETAIL ERROR: ", std::cerr);
+VerboseStream v_cout_4(4, "DEV: ", std::cout);
+VerboseStream v_cerr_4(4, "DEV ERROR: ", std::cerr);
+VerboseStream v_cout_5(5, "ALL: ", std::cout);
+VerboseStream v_cerr_5(5, "ALL ERROR: ", std::cerr);
+
+// VerboseStream constructor implementation
+VerboseStream::VerboseStream(int level, const std::string& prefix, std::ostream& output_stream)
+    : level_(level), prefix_(prefix), output_stream_(output_stream) {}
+
+// VerboseStream implementation
+VerboseStream& VerboseStream::operator<<(std::ostream& (*manip)(std::ostream&)) {
+    if (verbose_level >= level_) {
+        buffer_ << manip;
+        flush();
     }
+    return *this;
 }
 
-// Verbose level 1: Crucial error output using cerr
-void v_cerr_1(const std::string& message) {
-    if (verbose_level >= 1) {
-        std::cerr << "CRUCIAL ERROR: " << message << std::endl;
-    }
-}
-
-// Verbose level 2: Basic output using cout
-void v_cout_2(const std::string& message) {
-    if (verbose_level >= 2) {
-        std::cout << "BASIC: " << message << std::endl;
-    }
-}
-
-// Verbose level 2: Basic error output using cerr
-void v_cerr_2(const std::string& message) {
-    if (verbose_level >= 2) {
-        std::cerr << "BASIC ERROR: " << message << std::endl;
-    }
-}
-
-// Verbose level 3: Detailed output using cout
-void v_cout_3(const std::string& message) {
-    if (verbose_level >= 3) {
-        std::cout << "DETAIL: " << message << std::endl;
-    }
-}
-
-// Verbose level 3: Detailed error output using cerr
-void v_cerr_3(const std::string& message) {
-    if (verbose_level >= 3) {
-        std::cerr << "DETAIL ERROR: " << message << std::endl;
-    }
-}
-
-// Verbose level 4: Dev output using cout
-void v_cout_4(const std::string& message) {
-    if (verbose_level >= 4) {
-        std::cout << "DEV: " << message << std::endl;
-    }
-}
-
-// Verbose level 4: Dev error output using cerr
-void v_cerr_4(const std::string& message) {
-    if (verbose_level >= 4) {
-        std::cerr << "DEV ERROR: " << message << std::endl;
-    }
-}
-
-// Verbose level 5: All output using cout
-void v_cout_5(const std::string& message) {
-    if (verbose_level >= 5) {
-        std::cout << "ALL: " << message << std::endl;
-    }
-}
-
-// Verbose level 5: All error output using cerr
-void v_cerr_5(const std::string& message) {
-    if (verbose_level >= 5) {
-        std::cerr << "ALL ERROR: " << message << std::endl;
+void VerboseStream::flush() {
+    if (verbose_level >= level_) {
+        output_stream_ << buffer_.str();
+        buffer_.str("");  // Clear the buffer after flushing
     }
 }

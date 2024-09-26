@@ -2,33 +2,51 @@
 #define VERBOSE_HPP
 
 #include <string>
-
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 // Global verbose level (extern to be defined in a cpp file)
 extern int verbose_level;
 
+// VerboseStream class for handling different verbose levels
+class VerboseStream {
+public:
+    VerboseStream(int level, const std::string& prefix, std::ostream& output_stream);
+
+    template<typename T>
+    VerboseStream& operator<<(const T& message) {
+        if (verbose_level >= level_) {
+            buffer_ << prefix_ << message;
+        }
+        return *this;
+    }
+
+    // Overload for manipulator functions like std::endl
+    VerboseStream& operator<<(std::ostream& (*manip)(std::ostream&));
+
+    void flush();
+
+private:
+    int level_;
+    std::string prefix_;
+    std::ostringstream buffer_;
+    std::ostream& output_stream_;
+};
+
+// Verbose log functions
 void v_cout_log(const std::string& message, std::ofstream* log_file);
 
-// Verbose level 1: Basic output using cout
-void v_cout_1(const std::string& message);
-void v_cerr_1(const std::string& message);
-
-// Verbose level 2: Detailed output using cout
-void v_cout_2(const std::string& message);
-void v_cerr_2(const std::string& message);
-
-// Verbose level 3: Error output using cout
-void v_cout_3(const std::string& message);
-void v_cerr_3(const std::string& message);
-
-// Verbose level 4: Log output using cout
-void v_cout_4(const std::string& message);
-void v_cerr_4(const std::string& message);
-
-// Verbose level 5: All output using cout
-void v_cout_5(const std::string& message);
-void v_cerr_5(const std::string& message);
+// Global objects for different verbosity levels
+extern VerboseStream v_cout_1;
+extern VerboseStream v_cerr_1;
+extern VerboseStream v_cout_2;
+extern VerboseStream v_cerr_2;
+extern VerboseStream v_cout_3;
+extern VerboseStream v_cerr_3;
+extern VerboseStream v_cout_4;
+extern VerboseStream v_cerr_4;
+extern VerboseStream v_cout_5;
+extern VerboseStream v_cerr_5;
 
 #endif // VERBOSE_HPP

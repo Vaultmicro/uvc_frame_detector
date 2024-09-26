@@ -113,13 +113,8 @@ class UVCPHeaderChecker {
         std::atomic<uint32_t> frame_count;  
         std::thread fps_thread;
 
-        void timer_thread() {
-            while (!stop_timer_thread) {
-                std::this_thread::sleep_for(std::chrono::seconds(1)); 
-                std::cout << "FPS: " << frame_count.load() << " frames per second" << std::endl;
-                frame_count = 0;
-            }
-        }
+        void timer_thread();
+        
         std::list<std::unique_ptr<ValidFrame>> frames;
 
         uint8_t payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);

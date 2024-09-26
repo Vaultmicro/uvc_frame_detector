@@ -11,9 +11,15 @@ class Logger {
 public:
     // Constructor: Initialize with log directory and file name
     Logger(const std::string& log_dir_path, const std::string& log_file_name);
-    
+
     // Destructor: Close log file if it's open
     ~Logger();
+
+    // General logging function for file only
+    void log(int level, const std::string& level_name, const std::string& message);
+
+    // General logging function for console and file
+    void cout_log(int level, const std::string& level_name, const std::string& message);
 
     // Log level 1: Crucial messages (file only)
     void log_1(const std::string& message);
@@ -30,7 +36,6 @@ public:
     // Log level 5: All messages (file only)
     void log_5(const std::string& message);
 
-    // Console and log combined functions
     // Log level 1: Crucial messages (console and file)
     void cout_log_1(const std::string& message);
 
@@ -56,7 +61,7 @@ private:
     void ensure_log_directory(const std::string& log_dir_path);
 };
 
-// Global log verbose level variable
+// Global log verbose level variable (defined in cpp file)
 extern int log_verbose_level;
 
 #endif // LOGGER_HPP
