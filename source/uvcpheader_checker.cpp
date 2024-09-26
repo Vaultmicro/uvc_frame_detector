@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <iomanip>
+#include <cstddef>
 
 #include "validuvc/uvcpheader_checker.hpp"
 #include "utils/verbose.hpp"
