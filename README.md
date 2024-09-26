@@ -26,13 +26,13 @@ Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub <br/>
 0. sudo ./moncapler
 
 ### Example without camera
+0. ./example
 To test validation algorithm, can test with colour bar screen of jpeg<br/>
 Build with cmake above<br/>
-0. ./example
 
 ### Test Codes
-Build with cmake above<br/>
 0. ./valid_test
+Build with cmake above<br/>
 
 ### Example Result
 Data Length: 13424<br/>
