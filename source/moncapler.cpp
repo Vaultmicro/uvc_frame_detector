@@ -15,6 +15,8 @@
 
 #include "pcap.h"
 #include "validuvc/uvcpheader_checker.hpp"
+#include "utils/verbose.hpp"
+#include "utils/logger.hpp"
 
 // #define BULK_USBMON_MAXLENGTHSIZE 16448
 // #define ISO_USBMON_MAXLENGTHSIZE 41536 //98496
@@ -538,6 +540,10 @@ int main(int argc, char* argv[]) {
       target_busnum = std::atoi(argv[i + 1]);
     } else if (std::strcmp(argv[i], "-dn") == 0 && i + 1 < argc) {
       target_devnum = std::atoi(argv[i + 1]);
+    } else if (std::strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
+      verbose_level = std::atoi(argv[i + 1]);
+    } else if (std::strcmp(argv[i], "-lv") == 0 && i + 1 < argc) {
+      log_verbose_level = std::atoi(argv[i + 1]);
     } else {
       std::cerr << "Usage: " << argv[0]
                 << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]"
@@ -545,6 +551,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
   }
+
 
   if (selected_device.empty()) {
     std::cerr << "Error: Device not specified" << std::endl;

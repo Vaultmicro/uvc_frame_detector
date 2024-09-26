@@ -35,6 +35,8 @@ add_executable(
     moncapler
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
 
 
@@ -48,12 +50,17 @@ add_executable(
     example
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/smpte.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
 
 add_executable(
     valid_test
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/valid_test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+
 )
 
 target_link_libraries(

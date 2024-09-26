@@ -14,6 +14,9 @@
 #include <bitset>
 
 #include <chrono>
+#include <thread>
+#include <atomic>
+#include <iostream>
 
 #include "pcap.h"
 
@@ -105,6 +108,18 @@ class ValidFrame{
 
 class UVCPHeaderChecker {
     private:
+
+        std::atomic<bool> stop_timer_thread;  
+        std::atomic<uint32_t> frame_count;  
+        std::thread fps_thread;
+
+        void timer_thread() {
+            while (!stop_timer_thread) {
+                std::this_thread::sleep_for(std::chrono::seconds(1)); 
+                std::cout << "FPS: " << frame_count.load() << " frames per second" << std::endl;
+                frame_count = 0;
+            }
+        }
         std::list<std::unique_ptr<ValidFrame>> frames;
 
         uint8_t payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
@@ -113,6 +128,19 @@ class UVCPHeaderChecker {
 
 
     public:
+
+        UVCPHeaderChecker() : stop_timer_thread(false), frame_count(0) {
+            fps_thread = std::thread(&UVCPHeaderChecker::timer_thread, this);
+        }
+
+        ~UVCPHeaderChecker() {
+            stop_timer_thread = true;
+            if (fps_thread.joinable()) {
+                fps_thread.join();
+            }
+        }
+
+
         void print_packet(const std::vector<u_char>& packet);
         uint8_t payload_valid_ctrl(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
         UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload);
