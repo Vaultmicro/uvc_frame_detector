@@ -35,6 +35,8 @@ add_executable(
     moncapler
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
 
 
