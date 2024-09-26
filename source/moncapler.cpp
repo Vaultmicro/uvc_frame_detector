@@ -34,6 +34,9 @@ unsigned int filtered_packet_count = 0;
 unsigned long long filtered_total_packet_length = 0;
 unsigned long long filtered_total_captured_length = 0;
 // Global mutex for the queue
+std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
+std::mutex time_mutex;
+
 std::queue<std::vector<u_char>> packet_queue;
 std::mutex queue_mutex;
 std::condition_variable queue_cv;
@@ -306,7 +309,7 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
       // std::endl; std::cout << "size of URB_Data: " << sizeof(URB_Data) <<
       // std::endl;
 
-      // update the max length size
+      // update the max urb length size
       if (bulk_usbmon_bulk_maxlengthsize <
           urb_data->data_length + sizeof(URB_Data)) {
         if ((urb_data->data_length + sizeof(URB_Data)) % 8 != 0) {
@@ -328,12 +331,15 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
         // finish the transfer
         std::cout << "Finish the transfer" << std::endl;
 
-        // TODO make hex format and save them in queue
         temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
                            packet + pkthdr->caplen);
+        auto now = std::chrono::steady_clock::now();
         {
           std::lock_guard<std::mutex> lock(queue_mutex);
           packet_queue.push(temp_buffer);
+
+          std::lock_guard<std::mutex> time_lock(time_mutex);
+          time_records.push(now);
         }
         temp_buffer.clear();
         queue_cv.notify_one();
@@ -380,9 +386,14 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
 
           temp_buffer.insert(temp_buffer.end(), packet + start_offset,
                              packet + end_offset);
+
+          auto now = std::chrono::steady_clock::now();
           {
             std::lock_guard<std::mutex> lock(queue_mutex);
             packet_queue.push(temp_buffer);
+
+            std::lock_guard<std::mutex> time_lock(time_mutex);
+            time_records.push(now);
           }
           temp_buffer.clear();
           queue_cv.notify_one();
@@ -411,6 +422,8 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     char chrono_time_buffer[30];
     std::strftime(chrono_time_buffer, sizeof(chrono_time_buffer),
                   "%Y-%m-%d %H:%M:%S", &local_tm);
+
+
 
     // Log packet information if it matches the target busnum and devnum
     *log_file << "Packet: " << filtered_packet_count
@@ -447,11 +460,18 @@ void process_packets() {
     packet_queue.pop();
     lock.unlock();
 
+    std::chrono::time_point<std::chrono::steady_clock> received_time;
+    {
+        std::lock_guard<std::mutex> time_lock(time_mutex);
+        received_time = time_records.front();
+        time_records.pop();
+    }
+
     if (!packet.empty()){
       std::cout << "Processing packet of size: " << packet.size() << std::endl;
     }
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(packet);
+    uint8_t valid_err = header_checker.payload_valid_ctrl(packet, received_time);
 
     if (valid_err) {
       std::cerr << "Invalid packet detected" << std::endl;

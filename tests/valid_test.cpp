@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <chrono>
 #include "validuvc/uvcpheader_checker.hpp"
 
 class uvc_header_checker_test : public ::testing::Test {
@@ -19,7 +20,8 @@ TEST_F(uvc_header_checker_test, valid_payload_test) {
         0x00, 0x00, 0x00, 0x01, // SCR (valid)
     });
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(valid_packet);
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(valid_packet, current_time);
     EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect no error
 }
 
@@ -31,7 +33,8 @@ TEST_F(uvc_header_checker_test, err_bit_set_test) {
         0x00, 0x00, 0x00, 0x00, // SCR
     });
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(err_bit_packet);
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(err_bit_packet, current_time);
     EXPECT_EQ(valid_err, ERR_ERR_BIT_SET);  // Expect ERR_ERR_BIT_SET
 }
 
@@ -43,7 +46,8 @@ TEST_F(uvc_header_checker_test, length_out_of_range_invalid_test_small) {
         0x00, 0x00, 0x00, 0x00, // SCR
     });
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(length_invalid_packet);
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(length_invalid_packet, current_time);
     EXPECT_EQ(valid_err, ERR_LENGTH_OUT_OF_RANGE);  // Expect ERR_LENGTH_INVALID
 }
 
@@ -55,7 +59,8 @@ TEST_F(uvc_header_checker_test, length_out_of_range_invalid_test_big) {
         0x00, 0x00, 0x00, 0x00, // SCR
     });
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(length_invalid_packet);
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(length_invalid_packet, current_time);
     EXPECT_EQ(valid_err, ERR_LENGTH_OUT_OF_RANGE);  // Expect ERR_LENGTH_INVALID
 }
 
@@ -67,7 +72,8 @@ TEST_F(uvc_header_checker_test, reserved_bit_set_test) {
         0x00, 0x00, 0x00, 0x01, // SCR
     });
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(reserved_bit_packet);
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(reserved_bit_packet, current_time);
     EXPECT_EQ(valid_err, ERR_RESERVED_BIT_SET);  // Expect ERR_RESERVED_BIT_SET
 }
 
@@ -79,8 +85,9 @@ TEST_F(uvc_header_checker_test, valid_reserved_bit_set_test) {
         0x00, 0x00, 0x00, 0x01, // SCR
     });
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(reserved_bit_packet);
-    EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect ERR_RESERVED_BIT_SET
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(reserved_bit_packet, current_time);
+    EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect ERR_NO_ERROR
 }
 
 // Test cases for Frame Identifier mismatch (ERR_FID_MISMATCH)
@@ -97,8 +104,12 @@ TEST_F(uvc_header_checker_test, fid_mismatch_test) {
         0x00, 0x00, 0x00, 0x00, // SCR
     });
 
-    uint8_t valid_err_0 = header_checker.payload_valid_ctrl(fid_mismatch_packet_0);
-    uint8_t valid_err_1 = header_checker.payload_valid_ctrl(fid_mismatch_packet_1);
+    auto current_time_0 = std::chrono::steady_clock::now();
+    uint8_t valid_err_0 = header_checker.payload_valid_ctrl(fid_mismatch_packet_0, current_time_0);
+    
+    auto current_time_1 = std::chrono::steady_clock::now();
+    uint8_t valid_err_1 = header_checker.payload_valid_ctrl(fid_mismatch_packet_1, current_time_1);
+    
     EXPECT_EQ(valid_err_1, ERR_FID_MISMATCH);  // Expect ERR_FID_MISMATCH
 }
 

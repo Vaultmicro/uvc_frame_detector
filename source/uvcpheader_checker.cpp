@@ -30,7 +30,8 @@ void UVCPHeaderChecker::print_packet(const std::vector<u_char>& packet) {
 }
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
-    const std::vector<u_char>& uvc_payload) {
+    const std::vector<u_char>& uvc_payload,
+    std::chrono::time_point<std::chrono::steady_clock> received_time) {
   // Make graph file
   // Make picture file having mjpeg, yuyv, h264
 
@@ -59,8 +60,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   for (auto& frame : frames) {
     if (frame->frame_pts == payload_header.PTS && payload_header.PTS) {
       frame_found = true;
-      frame->add_packet(
-          uvc_payload);  // if frame found, add packet to the frame
+      frame->add_packet(uvc_payload);// if frame found, add packet to the frame
+      frame->add_received_chrono_time(received_time);
 
       if (payload_header_valid_return) {
         frame->set_frame_error();  // if error set, add error flag to the frame
@@ -76,6 +77,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     auto& new_frame = frames.back();
     new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
     new_frame->add_packet(uvc_payload);
+    new_frame->add_received_chrono_time(received_time);
 
     if (payload_header_valid_return) {
       new_frame->set_frame_error();
@@ -88,9 +90,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   }
 
   if (payload_header.bmBFH.BFH_EOF) {
-    // TODO
     // finish the frame
-    // release memory
     save_frames_to_log(frames.back());
     if (!frames.back()->frame_error) {
       frames.pop_back();
@@ -113,10 +113,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   std::chrono::duration<double> elapsed_time = current_time - start_time;
   if (elapsed_time.count() >= 1.0) {
       std::cout << "FPS: " << frame_count << " frames per second" << std::endl;
-      frame_count = 0;  // 프레임 카운트 리셋
-      start_time = current_time;  // 타이머 리셋
+      frame_count = 0;  // frame count reset
+      start_time = current_time;  // timer reset
   }
-
 
   return 0;
 }
