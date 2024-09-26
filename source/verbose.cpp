@@ -4,7 +4,7 @@
 
 
 // Define the global verbose level
-int verbose_level = 0;
+int verbose_level = 1;
 
 // Verbose level 1: Crucial output using cout
 void v_cout_1(const std::string& message) {

@@ -555,6 +555,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
+
   if (selected_device.empty()) {
     std::cerr << "Error: Device not specified" << std::endl;
     std::cerr << "Usage: " << argv[0]

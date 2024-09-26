@@ -59,14 +59,14 @@ std::vector<u_char> create_packet(int frame_count, const std::vector<u_char>& ad
 
     //Making Intentional Error
 
-    if (frame_count % 10 == 1){//17
-        packet = {
-            0x0c, 0b01001110, // HLE and BFH (Header Length and Bit Field Header)
-            0x00, 0x00, 0x00, 0x01, // PTS (Presentation Time Stamp)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x01  // SCR (Source Clock Reference)
-        };
+    // if (frame_count % 10 == 1){//17
+    //     packet = {
+    //         0x0c, 0b01001110, // HLE and BFH (Header Length and Bit Field Header)
+    //         0x00, 0x00, 0x00, 0x01, // PTS (Presentation Time Stamp)
+    //         0x00, 0x00, 0x00, 0x00, 0x00, 0x01  // SCR (Source Clock Reference)
+    //     };
 
-    }
+    // }
 
     // if (frame_count % 100 == 0) {
     //     packet = {

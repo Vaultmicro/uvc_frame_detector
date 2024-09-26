@@ -1,11 +1,35 @@
-#include "validuvc/uvcpheader_checker.hpp"
 
 #include <chrono>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <iomanip>
-#include <cstddef>
+
+#include "validuvc/uvcpheader_checker.hpp"
+#include "utils/verbose.hpp"
+
+void UVCPHeaderChecker::print_packet(const std::vector<u_char>& packet) {
+  for (size_t i = 0; i < packet.size(); i += 16) {
+    // printf("%08zx: ", i);
+
+    for (size_t j = 0; j < 16; ++j) {
+      if (i + j < packet.size()) {
+        printf("%02x ", packet[i + j]);
+      } else {
+        printf("   ");  // padding
+      }
+    }
+
+    printf(" ");
+    // for (size_t j = 0; j < 16; ++j) {
+    //     if (i + j < packet.size()) {
+    //         unsigned char ch = packet[i + j];
+    //         printf("%c", isprint(ch) ? ch : '.');
+    //     }
+    // }
+    printf("\n");
+  }
+}
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
@@ -17,9 +41,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     // std::cerr << "UVC payload is empty." << std::endl;
     return 0;
   }
-
-  static uint32_t frame_count = 0;
-  static auto start_time = std::chrono::steady_clock::now();
 
   static UVC_Payload_Header previous_previous_payload_header;
   static uint8_t previous_previous_error = 0;
@@ -85,19 +106,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   uint8_t previous_fid = payload_header.bmBFH.BFH_FID;
 
-  std::cout << "Payload is valid." << std::endl;
-
-  auto current_time = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed_time = current_time - start_time;
-  if (elapsed_time.count() >= 1.0) {
-      std::cout << "FPS: " << frame_count << " frames per second" << std::endl;
-      frame_count = 0;  // frame count reset
-      start_time = current_time;  // timer reset
-  }
+  //std::cout << "Payload is valid." << std::endl;
 
   return 0;
 }
- 
+
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     const std::vector<u_char>& uvc_payload) {
   UVC_Payload_Header payload_header;
@@ -225,7 +238,7 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
   //     not set." << std::endl; return 1;
   // }
 
-  std::cout << "UVC payload header is valid." << std::endl;
+  v_cout_2 ("UVC payload header is valid.");
   return ERR_NO_ERROR;
 }
 
@@ -304,27 +317,4 @@ void UVCPHeaderChecker::save_payload_header_to_log(
            << "\n\n";  // Separate each entry with a double newline
 
   log_file.close();
-}
-
-void UVCPHeaderChecker::print_packet(const std::vector<u_char>& packet) {
-  for (size_t i = 0; i < packet.size(); i += 16) {
-    // printf("%08zx: ", i);
-
-    for (size_t j = 0; j < 16; ++j) {
-      if (i + j < packet.size()) {
-        printf("%02x ", packet[i + j]);
-      } else {
-        printf("   ");  // padding
-      }
-    }
-
-    printf(" ");
-    // for (size_t j = 0; j < 16; ++j) {
-    //     if (i + j < packet.size()) {
-    //         unsigned char ch = packet[i + j];
-    //         printf("%c", isprint(ch) ? ch : '.');
-    //     }
-    // }
-    printf("\n");
-  }
 }
