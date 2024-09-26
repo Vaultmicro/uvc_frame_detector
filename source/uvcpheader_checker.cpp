@@ -5,29 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include <iomanip>
-
-void UVCPHeaderChecker::print_packet(const std::vector<u_char>& packet) {
-  for (size_t i = 0; i < packet.size(); i += 16) {
-    // printf("%08zx: ", i);
-
-    for (size_t j = 0; j < 16; ++j) {
-      if (i + j < packet.size()) {
-        printf("%02x ", packet[i + j]);
-      } else {
-        printf("   ");  // padding
-      }
-    }
-
-    printf(" ");
-    // for (size_t j = 0; j < 16; ++j) {
-    //     if (i + j < packet.size()) {
-    //         unsigned char ch = packet[i + j];
-    //         printf("%c", isprint(ch) ? ch : '.');
-    //     }
-    // }
-    printf("\n");
-  }
-}
+#include <cstddef>
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
@@ -326,4 +304,27 @@ void UVCPHeaderChecker::save_payload_header_to_log(
            << "\n\n";  // Separate each entry with a double newline
 
   log_file.close();
+}
+
+void UVCPHeaderChecker::print_packet(const std::vector<u_char>& packet) {
+  for (size_t i = 0; i < packet.size(); i += 16) {
+    // printf("%08zx: ", i);
+
+    for (size_t j = 0; j < 16; ++j) {
+      if (i + j < packet.size()) {
+        printf("%02x ", packet[i + j]);
+      } else {
+        printf("   ");  // padding
+      }
+    }
+
+    printf(" ");
+    // for (size_t j = 0; j < 16; ++j) {
+    //     if (i + j < packet.size()) {
+    //         unsigned char ch = packet[i + j];
+    //         printf("%c", isprint(ch) ? ch : '.');
+    //     }
+    // }
+    printf("\n");
+  }
 }
