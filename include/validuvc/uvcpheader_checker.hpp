@@ -119,8 +119,6 @@ class UVCPHeaderChecker {
 
         void timer_thread();
         
-        std::list<std::unique_ptr<ValidFrame>> frames;
-
         uint8_t payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
         void payload_frame_develope();
@@ -139,8 +137,8 @@ class UVCPHeaderChecker {
             }
         }
 
+        std::list<std::unique_ptr<ValidFrame>> frames;
 
-        void print_packet(const std::vector<u_char>& packet);
         uint8_t payload_valid_ctrl(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
         UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload);
 
