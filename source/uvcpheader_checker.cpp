@@ -85,6 +85,27 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         processed_frames.erase(processed_frames.begin());
     }
 
+    // Check the Frame width x height in here
+    // For YUYV format, the width x height should be 1280 x 720 x 2 excluding the headerlength
+    // If not then there is a problem with the frame
+    if (ControlConfig::frame_format == "yuyv") {
+        // Calculate the expected size for the YUYV frame
+        size_t expected_frame_size = ControlConfig::get_width() * ControlConfig::get_height() * 2;
+
+        // Calculate the actual size by summing up all payload sizes and subtracting the total header lengths
+        size_t actual_frame_size = 0;
+        for (const auto& frame : frames) {
+            for (size_t i = 0; i < frame->payload_sizes.size(); ++i) {
+                actual_frame_size += frame->payload_sizes[i] - frame->payload_headers[i].HLE;
+            }
+        }
+
+        if (actual_frame_size != expected_frame_size) {
+            v_cerr_2 << "Frame size mismatch for YUYV: expected "
+                    << expected_frame_size << " but got " << actual_frame_size << std::endl;
+        }
+    }
+
   }
 
   if (payload_header_valid_return) {
