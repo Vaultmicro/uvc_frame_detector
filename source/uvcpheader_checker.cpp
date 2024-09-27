@@ -28,7 +28,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   static uint8_t previous_error = 0;
   // static std::queue<std::vector<u_char>> fid_queue;
 
-  UVC_Payload_Header payload_header = parse_uvc_payload_header(uvc_payload);
+  UVC_Payload_Header payload_header = parse_uvc_payload_header(uvc_payload, received_time);
 
   uint8_t payload_header_valid_return =
       payload_header_valid(payload_header, previous_payload_header,
@@ -37,9 +37,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   bool frame_found = false;
 
   for (auto& frame : frames) {
-    if (frame->frame_pts == payload_header.PTS && payload_header.PTS != 0) {
+    if (payload_header.PTS && frame->frame_pts == payload_header.PTS) {
+
       frame_found = true;
-      frame->add_packet(uvc_payload);// if frame found, add packet to the frame
+      frame->payload_headers.push_back(payload_header);  // Add header
+      frame->payload_sizes.push_back(uvc_payload.size());  // Add size of payload
       frame->add_received_chrono_time(received_time);
 
       if (payload_header_valid_return) {
@@ -52,10 +54,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   // create new frame if not found
   if (!frame_found || previous_payload_header.bmBFH.BFH_EOF) {
-    frames.push_back(std::make_unique<ValidFrame>(frames.size() + 1));
+    ++current_frame_number;
+    frames.push_back(std::make_unique<ValidFrame>(current_frame_number));
     auto& new_frame = frames.back();
     new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
-    new_frame->add_packet(uvc_payload);
+
+    new_frame->payload_headers.push_back(payload_header);  // Add header
+    new_frame->payload_sizes.push_back(uvc_payload.size());  // Add size of payload
     new_frame->add_received_chrono_time(received_time);
 
     if (payload_header_valid_return) {
@@ -72,20 +77,20 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   if (payload_header.bmBFH.BFH_EOF) {
     // finish the frame
     save_frames_to_log(frames.back());
-    if (!frames.back()->frame_error) {
-      frames.pop_back();
-      frame_count++;
-    } else {
-      // save them on error heap
+    processed_frames.push_back(std::move(frames.back()));
+    frames.pop_back();
+    frame_count++;
+
+    if (processed_frames.size() > 90) {
+        processed_frames.erase(processed_frames.begin());
     }
+
   }
 
   if (payload_header_valid_return) {
     // TODO save in the error frame heap
     return payload_header_valid_return;
   }
-
-  uint8_t previous_fid = payload_header.bmBFH.BFH_FID;
 
   //v_cout_2 << "Payload is valid." << std::endl;
 
@@ -101,7 +106,7 @@ void UVCPHeaderChecker::timer_thread() {
 }
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
-    const std::vector<u_char>& uvc_payload) {
+    const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time) {
   UVC_Payload_Header payload_header;
   if (uvc_payload.size() < 2) {
     v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
@@ -133,7 +138,7 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     payload_header.SCR = 0;
   }
 
-  save_payload_header_to_log(payload_header);
+  save_payload_header_to_log(payload_header, received_time);
 
   return payload_header;
 }
@@ -261,10 +266,20 @@ void UVCPHeaderChecker::save_frames_to_log(
              << "\n"
              << "EOF Reached: " << static_cast<int>(current_frame->eof_reached)
              << "\n"
-             << "Packets:\n";
+             << "Payloads:\n";
 
-  for (const auto& packet : current_frame->packets) {
-    frame_info << "  Packet Size: " << packet.size() << " bytes\n";
+  for (size_t i = 0; i < current_frame->payload_headers.size(); ++i) {
+    const UVC_Payload_Header& header = current_frame->payload_headers[i];
+    size_t payload_size = current_frame->payload_sizes[i];
+    
+    // Get the time point from received_chrono_times
+    auto time_point = current_frame->received_chrono_times[i];
+    auto duration_since_epoch = time_point.time_since_epoch();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration_since_epoch).count();
+
+    frame_info << "  Payload " << i + 1 << ":\n"
+               << "    Payload Size: " << payload_size << " bytes\n"
+               << "    Received Time: " << milliseconds << " ms since epoch\n";  // Logging the received time in milliseconds
   }
 
   log_file << frame_info.str() << "\n---\n";
@@ -272,8 +287,9 @@ void UVCPHeaderChecker::save_frames_to_log(
   log_file.close();
 }
 
+
 void UVCPHeaderChecker::save_payload_header_to_log(
-    const UVC_Payload_Header& payload_header) {
+    const UVC_Payload_Header& payload_header, std::chrono::time_point<std::chrono::steady_clock> received_time) {
   std::ofstream log_file("../log/payload_headers_log.txt", std::ios::app);
 
   if (!log_file.is_open()) {
@@ -302,32 +318,11 @@ void UVCPHeaderChecker::save_payload_header_to_log(
            << "  STC: " << static_cast<int>(payload_header.bmSCR.SCR_STC)
            << "\n"
            << "  TOK: " << std::bitset<11>(payload_header.bmSCR.SCR_TOK) << "\n"
-           << "  RES: " << std::bitset<5>(payload_header.bmSCR.SCR_RES) << "\n"
+           << "  RES: " << std::bitset<5>(payload_header.bmSCR.SCR_RES) << "\n";
+
+  log_file << std::dec  // Set the output stream back to decimal mode
+           << "Received Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count() << " ms since epoch\n"
            << "\n\n";  // Separate each entry with a double newline
 
   log_file.close();
-}
-
-
-void UVCPHeaderChecker::print_packet(const std::vector<u_char>& packet) {
-  for (size_t i = 0; i < packet.size(); i += 16) {
-    // printf("%08zx: ", i);
-
-    for (size_t j = 0; j < 16; ++j) {
-      if (i + j < packet.size()) {
-        printf("%02x ", packet[i + j]);
-      } else {
-        printf("   ");  // padding
-      }
-    }
-
-    printf(" ");
-    // for (size_t j = 0; j < 16; ++j) {
-    //     if (i + j < packet.size()) {
-    //         unsigned char ch = packet[i + j];
-    //         printf("%c", isprint(ch) ? ch : '.');
-    //     }
-    // }
-    printf("\n");
-  }
 }

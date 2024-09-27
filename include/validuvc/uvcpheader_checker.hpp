@@ -8,6 +8,7 @@
 #include <memory>
 #include <list>
 #include <iomanip>
+#include <cstddef>
 
 #include <fstream>
 #include <sstream>
@@ -65,22 +66,24 @@ enum UVCError {
 
 class ValidFrame{
     public:
-        uint64_t frame_number;
+        uint32_t frame_number;
         uint16_t packet_number;
         uint32_t frame_pts;
         uint8_t frame_error;
         uint8_t eof_reached;
 
-        std::vector<std::vector<u_char>> packets;
+        std::vector<UVC_Payload_Header> payload_headers;  // To store UVC_Payload_Header
+        std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
+        
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
         std::vector<uint64_t> scr_list;  // System Clock Reference (SCR) list
         std::vector<std::pair<uint32_t, uint32_t>> urb_sec_usec_list;  // URB timestamp list (seconds, microseconds)
-        std::chrono::time_point<std::chrono::steady_clock> frame_end_chrono_time;  // Frame end time
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(0), eof_reached(0) {}
 
-        void add_packet(const std::vector<u_char>& packet) {
-            packets.push_back(packet);
+        void add_payload(const UVC_Payload_Header& header, size_t payload_size) {
+            payload_headers.push_back(header);  // Add header to the vector
+            payload_sizes.push_back(payload_size);  // Add payload size to the vector
             packet_number++;
         }
 
@@ -104,10 +107,6 @@ class ValidFrame{
             urb_sec_usec_list.emplace_back(sec, usec);
         }
 
-        void set_frame_end_chrono_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
-            frame_end_chrono_time = time_point;
-        }
-
 };
 
 class UVCPHeaderChecker {
@@ -119,16 +118,15 @@ class UVCPHeaderChecker {
 
         void timer_thread();
         
-        std::list<std::unique_ptr<ValidFrame>> frames;
-
         uint8_t payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
         void payload_frame_develope();
 
+        uint32_t current_frame_number; 
 
     public:
 
-        UVCPHeaderChecker() : stop_timer_thread(false), frame_count(0) {
+        UVCPHeaderChecker() : stop_timer_thread(false), frame_count(0), current_frame_number(0) {
             fps_thread = std::thread(&UVCPHeaderChecker::timer_thread, this);
         }
 
@@ -139,14 +137,15 @@ class UVCPHeaderChecker {
             }
         }
 
+        std::list<std::unique_ptr<ValidFrame>> frames;
+        std::vector<std::unique_ptr<ValidFrame>> processed_frames;
 
-        void print_packet(const std::vector<u_char>& packet);
         uint8_t payload_valid_ctrl(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
-        UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload);
+        UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
 
         void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);   
         void save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame);
-        void save_payload_header_to_log(const UVC_Payload_Header& payload_header);
+        void save_payload_header_to_log(const UVC_Payload_Header& payload_header, std::chrono::time_point<std::chrono::steady_clock> received_time);
 
 };
 #endif // UVCPHEADER_CHECKER_HPP
