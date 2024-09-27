@@ -57,6 +57,10 @@ enum UVCError {
   ERR_NO_PTS_SCR_LENGTH_INVALID = 6, // Neither PTS nor SCR but invalid length
   ERR_RESERVED_BIT_SET = 7, // Reserved bit is set
   ERR_FID_MISMATCH = 8,    // Frame Identifier mismatch
+  ERR_SWAP = 9,
+  ERR_MISSING_EOF = 10,
+
+  ERR_UNKNOWN = 99
 };
 
 class ValidFrame{

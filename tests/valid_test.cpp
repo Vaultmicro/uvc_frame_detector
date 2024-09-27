@@ -13,7 +13,7 @@ protected:
 };
 
 // Test cases for valid payload
-TEST_F(uvc_header_checker_test, valid_payload_test) {
+TEST_F(uvc_header_checker_test, valid_payload_test_0) {
     std::vector<u_char> valid_packet = create_packet({
         0x0c, 0b00001101, // HLE and BFH (valid payload)
         0x00, 0x00, 0x00, 0x01, // PTS (valid)
@@ -24,6 +24,45 @@ TEST_F(uvc_header_checker_test, valid_payload_test) {
     uint8_t valid_err = header_checker.payload_valid_ctrl(valid_packet, current_time);
     EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect no error
 }
+
+// Test cases for valid payload
+TEST_F(uvc_header_checker_test, valid_payload_test_1) {
+    std::vector<u_char> valid_packet = create_packet({
+        0x02, 0b00000011, // HLE and BFH (valid payload)
+        0x00, 0x00, 0x00, 0x00, // PTS (valid)
+        0x00, 0x00, 0x00, 0x00, // SCR (valid)
+    });
+
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(valid_packet, current_time);
+    EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect no error
+}
+
+// Test cases for valid payload
+TEST_F(uvc_header_checker_test, valid_payload_test_2) {
+    std::vector<u_char> valid_packet = create_packet({
+        0x02, 0b00000010, // HLE and BFH (valid payload)
+        0x00, 0x00, 0x00, 0x00, // PTS (valid)
+        0x00, 0x00, 0x00, 0x00, // SCR (valid)
+    });
+
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(valid_packet, current_time);
+    EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect no error
+}
+
+// // Test cases for valid payload
+// TEST_F(uvc_header_checker_test, valid_payload_test_3) {
+//     std::vector<u_char> valid_packet = create_packet({
+//         0x0c, 0b00001101, // HLE and BFH (valid payload)
+//         0x00, 0x00, 0x00, 0x01, // PTS (valid)
+//         0x00, 0x00, 0x00, 0x01, // SCR (valid)
+//     });
+
+//     auto current_time = std::chrono::steady_clock::now();
+//     uint8_t valid_err = header_checker.payload_valid_ctrl(valid_packet, current_time);
+//     EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect no error
+// }
 
 // Test cases for Error bit set (ERR_ERR_BIT_SET)
 TEST_F(uvc_header_checker_test, err_bit_set_test) {
@@ -90,6 +129,20 @@ TEST_F(uvc_header_checker_test, valid_reserved_bit_set_test) {
     EXPECT_EQ(valid_err, ERR_NO_ERROR);  // Expect ERR_NO_ERROR
 }
 
+// Test cases for Reserved bit set (Length Invalid)
+TEST_F(uvc_header_checker_test, header_length_diff_test) {
+    std::vector<u_char> reserved_bit_packet = create_packet({
+        0x02, 0b00011110, // HLE and BFH with Reserved bit set
+        0x00, 0x00, 0x00, 0x01, // PTS
+        0x00, 0x00, 0x00, 0x01, // SCR
+    });
+
+    auto current_time = std::chrono::steady_clock::now();
+    uint8_t valid_err = header_checker.payload_valid_ctrl(reserved_bit_packet, current_time);
+    EXPECT_EQ(valid_err, ERR_LENGTH_INVALID);  // Expect ERR_NO_ERROR
+}
+
+
 // Test cases for Frame Identifier mismatch (ERR_FID_MISMATCH)
 TEST_F(uvc_header_checker_test, fid_mismatch_test) {
     std::vector<u_char> fid_mismatch_packet_0 = create_packet({
@@ -110,7 +163,8 @@ TEST_F(uvc_header_checker_test, fid_mismatch_test) {
     auto current_time_1 = std::chrono::steady_clock::now();
     uint8_t valid_err_1 = header_checker.payload_valid_ctrl(fid_mismatch_packet_1, current_time_1);
     
-    EXPECT_EQ(valid_err_1, ERR_FID_MISMATCH);  // Expect ERR_FID_MISMATCH
+    EXPECT_EQ(valid_err_0, ERR_NO_ERROR);  // Expect ERR_FID_MISMATCH
+    EXPECT_EQ(valid_err_1, ERR_MISSING_EOF);  // Expect ERR_FID_MISMATCH
 }
 
 int main(int argc, char **argv) {
