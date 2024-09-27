@@ -8,6 +8,7 @@
 #include <string>
 
 #include "validuvc/uvcpheader_checker.hpp"
+#include "validuvc/control_config.hpp"
 
 // Utility function to convert a string of hex values to a vector of u_char
 std::vector<u_char> hex_string_to_vector(const std::string& hex_string) {
@@ -83,6 +84,12 @@ std::vector<u_char> create_packet(int frame_count, const std::vector<u_char>& ad
 
 int main() {
     UVCPHeaderChecker header_checker;
+
+    ControlConfig::set_width(1080);
+    ControlConfig::set_height(720);
+    ControlConfig::set_fps(60);
+    ControlConfig::set_frame_format("MJPEG"); 
+
 
     static uint8_t designed_fps = 30;
     std::chrono::milliseconds frame_interval(1000 / designed_fps); // 33ms

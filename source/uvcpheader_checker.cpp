@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include "validuvc/uvcpheader_checker.hpp"
+#include "validuvc/control_config.hpp"
 #include "utils/verbose.hpp"
 
 
