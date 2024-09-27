@@ -37,7 +37,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   bool frame_found = false;
 
   for (auto& frame : frames) {
-    if (frame->frame_pts == payload_header.PTS && payload_header.PTS != 0) {
+    if (payload_header.PTS && frame->frame_pts == payload_header.PTS) {
+
       frame_found = true;
       frame->add_packet(uvc_payload);// if frame found, add packet to the frame
       frame->add_received_chrono_time(received_time);
@@ -52,7 +53,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   // create new frame if not found
   if (!frame_found || previous_payload_header.bmBFH.BFH_EOF) {
-    frames.push_back(std::make_unique<ValidFrame>(frames.size() + 1));
+    ++current_frame_number;
+    frames.push_back(std::make_unique<ValidFrame>(current_frame_number));
     auto& new_frame = frames.back();
     new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
     new_frame->add_packet(uvc_payload);
@@ -72,20 +74,20 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   if (payload_header.bmBFH.BFH_EOF) {
     // finish the frame
     save_frames_to_log(frames.back());
-    if (!frames.back()->frame_error) {
-      frames.pop_back();
-      frame_count++;
-    } else {
-      // save them on error heap
+    processed_frames.push_back(std::move(frames.back()));
+    frames.pop_back();
+    frame_count++;
+
+    if (processed_frames.size() > 90) {
+        processed_frames.erase(processed_frames.begin());
     }
+
   }
 
   if (payload_header_valid_return) {
     // TODO save in the error frame heap
     return payload_header_valid_return;
   }
-
-  uint8_t previous_fid = payload_header.bmBFH.BFH_FID;
 
   //v_cout_2 << "Payload is valid." << std::endl;
 

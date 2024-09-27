@@ -16,14 +16,14 @@ protected:
 TEST_F(frame_test, two_different_frames_test) {
     // First frame packet
     std::vector<u_char> packet_0 = create_packet({
-        0x02, 0b00000011, // HLE and BFH (Header Length and Bit Field Header)
+        0x02, 0b10000011, // HLE and BFH (Header Length and Bit Field Header)
         0x00, 0x00, 0x00, 0x00, // PTS (Presentation Time Stamp)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // SCR (Source Clock Reference)
     });
 
     // Second frame packet
     std::vector<u_char> packet_1 = create_packet({
-        0x02, 0b00000010, // HLE and BFH (Header Length and Bit Field Header)
+        0x02, 0b10000010, // HLE and BFH (Header Length and Bit Field Header)
         0x00, 0x00, 0x00, 0x00, // PTS (Presentation Time Stamp)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // SCR (Source Clock Reference)
     });
@@ -39,13 +39,11 @@ TEST_F(frame_test, two_different_frames_test) {
     EXPECT_EQ(valid_err_1, ERR_NO_ERROR);  // Expect no error for the second frame
 
     // Check if frames are properly created and if at least two frames exist
-    ASSERT_GE(header_checker.frames.size(), 2) << "There should be at least two frames created.";
+    ASSERT_GE(header_checker.processed_frames.size(), 2) << "There should be at least two frames created.";
 
     // Use iterator to access elements in std::list
-    auto it = header_checker.frames.begin();
-    auto first_frame_number = (*it)->frame_number;
-    std::advance(it, 1);  // Move to the second frame
-    auto second_frame_number = (*it)->frame_number;
+    auto first_frame_number = header_checker.processed_frames[0]->frame_number;
+    auto second_frame_number = header_checker.processed_frames[1]->frame_number;
 
     // Check that two different frames are processed by comparing frame numbers
     ASSERT_NE(first_frame_number, second_frame_number) << "The two frames should have different frame numbers.";

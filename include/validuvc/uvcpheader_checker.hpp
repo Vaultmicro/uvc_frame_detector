@@ -65,7 +65,7 @@ enum UVCError {
 
 class ValidFrame{
     public:
-        uint64_t frame_number;
+        uint32_t frame_number;
         uint16_t packet_number;
         uint32_t frame_pts;
         uint8_t frame_error;
@@ -123,10 +123,11 @@ class UVCPHeaderChecker {
         
         void payload_frame_develope();
 
+        uint32_t current_frame_number; 
 
     public:
 
-        UVCPHeaderChecker() : stop_timer_thread(false), frame_count(0) {
+        UVCPHeaderChecker() : stop_timer_thread(false), frame_count(0), current_frame_number(0) {
             fps_thread = std::thread(&UVCPHeaderChecker::timer_thread, this);
         }
 
@@ -138,6 +139,7 @@ class UVCPHeaderChecker {
         }
 
         std::list<std::unique_ptr<ValidFrame>> frames;
+        std::vector<std::unique_ptr<ValidFrame>> processed_frames;
 
         uint8_t payload_valid_ctrl(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
         UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload);
