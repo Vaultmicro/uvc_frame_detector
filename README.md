@@ -19,8 +19,19 @@ Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet <br/>
 Bus 001 Device 004: ID 2e1a:4c01 Insta360 Insta360 Link <br/>
 Bus 001 Device 005: ID 046d:085e Logitech, Inc. BRIO Ultra HD Webcam <br/>
 Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub <br/>
-2. sudo ./moncapler -in usbmon1 -bs 41536 -bn 1 -dn 4
-3. run any camera appliation, cheese, vlc, opencv ... e.g.) cheese
+2. sudo ./moncapler -in usbmon1 -bs 41536 -bn 1 -dn 4 -fw 1280 -fh 720 -fps 30 -ff mjpeg -v 2 -vl 1 <br/>
+-interface <br/>
+usbmon0 for all usb transfers, usbmon1 only for usb bus 1, usbmon2 only for usb bus 2 ...<br/>
+-bus number, device number <br/>
+can find by lsusb <br/>
+-frame width, frame height, frame per second, frame format <br/>
+needs to be designated by user <br/>
+some of the tests will not be played <br/>
+currently auto set to 1280x720 <br/>
+-verbose, verbose log<br/>
+setting up levels of printings in screen and log 
+
+3. run any camera appliation, guvcview, cheese, vlc, opencv ... e.g.) guvcview
 
 ### See Usage
 0. sudo ./moncapler
@@ -33,6 +44,21 @@ Build with cmake above<br/>
 ### Test Codes
 0. ./valid_test
 Build with cmake above<br/>
+
+
+## How It Works
+
+It brings the data of the usbmon (usbmonitor)<br/>
+So you will have to choose which usbmon to use<br/>
+And then it filters the data by looking at urb header and find specific device's urb<br/>
+When it is found, devide them into IN OUT, CONTROL BULK ISO<br/>
+And recombine urb block with each algorithms to have complete transfer data,<br/>
+starting with payload header<br/>
+Then another thread validate the transferred data by looking at the headers<br/>
+When validation is finished, transfers are combined into a frame<br/>
+When it is done, fps are calculated and shows whether frame has errors<br/>
+Error statistics will be given<br/>
+Below is one of them <br/>
 
 ### Example Result
 Data Length: 13424<br/>
@@ -77,6 +103,5 @@ Starting camera after running code may cause difference in this value, ignore it
 To compare raw data with result, go to log dir<br/>
 
 ### TODO
-make the setup data save variables to find setcur and getcur<br/>
 if scr available, make that with graph together with chorono list in moncapler.cpp <br/>
 believe the process, there is no error till now<br/>

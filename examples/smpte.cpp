@@ -8,6 +8,9 @@
 #include <string>
 
 #include "validuvc/uvcpheader_checker.hpp"
+#include "validuvc/control_config.hpp"
+
+extern int verbose_level;
 
 // Utility function to convert a string of hex values to a vector of u_char
 std::vector<u_char> hex_string_to_vector(const std::string& hex_string) {
@@ -45,15 +48,15 @@ std::vector<u_char> create_packet(int frame_count, const std::vector<u_char>& ad
     // BFH switch
     if (frame_count % 2 == 0) {
         packet = {
-            0x0c, 0b00001111, // HLE and BFH (Header Length and Bit Field Header)
-            0x00, 0x00, 0x00, 0x01, // PTS (Presentation Time Stamp)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x01  // SCR (Source Clock Reference)
+            0x02, 0b00000011, // HLE and BFH (Header Length and Bit Field Header)
+            0x00, 0x00, 0x00, 0x00, // PTS (Presentation Time Stamp)
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // SCR (Source Clock Reference)
         };
     } else {
         packet = {
-            0x0c, 0b00001110, // HLE and BFH (Header Length and Bit Field Header)
-            0x00, 0x00, 0x00, 0x01, // PTS (Presentation Time Stamp)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x01  // SCR (Source Clock Reference)
+            0x02, 0b00000010, // HLE and BFH (Header Length and Bit Field Header)
+            0x00, 0x00, 0x00, 0x00, // PTS (Presentation Time Stamp)
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // SCR (Source Clock Reference)
         };
     }
 
@@ -81,8 +84,17 @@ std::vector<u_char> create_packet(int frame_count, const std::vector<u_char>& ad
     return packet;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+    verbose_level = 2;
+
     UVCPHeaderChecker header_checker;
+
+    ControlConfig::set_width(1080);
+    ControlConfig::set_height(720);
+    ControlConfig::set_fps(60);
+    ControlConfig::set_frame_format("MJPEG"); 
+
 
     static uint8_t designed_fps = 30;
     std::chrono::milliseconds frame_interval(1000 / designed_fps); // 33ms

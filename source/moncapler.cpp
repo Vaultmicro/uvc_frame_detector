@@ -15,6 +15,7 @@
 
 #include "pcap.h"
 #include "validuvc/uvcpheader_checker.hpp"
+#include "validuvc/control_config.hpp"
 #include "utils/verbose.hpp"
 #include "utils/logger.hpp"
 
@@ -27,9 +28,6 @@ namespace fs = std::filesystem;
 // Global log file for the same reason
 pcap_t* handle = nullptr;
 std::ofstream log_file;
-
-extern int verbose_level;
-extern int log_verbose_level;
 
 // Global counters for packets and lengths
 unsigned int total_packet_count = 0;
@@ -46,6 +44,9 @@ std::queue<std::vector<u_char>> packet_queue;
 std::mutex queue_mutex;
 std::condition_variable queue_cv;
 bool stop_processing = false;
+
+extern int verbose_level;
+extern int log_verbose_level;
 
 // Variables to store user input busnum and devnum
 int target_busnum = -1;
@@ -96,6 +97,8 @@ typedef struct __attribute__((packed, aligned(1))) {
   uint32_t iso_descriptor_length;
   uint32_t iso_descriptor_padding;
 } ISO_Descriptor;
+
+
 
 void log_packet_xxd_format(std::ofstream* log_file, const u_char* data,
                            int length, int base_address = 0) {
@@ -266,11 +269,10 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
   int device_address = static_cast<int>(urb_data->device_number);
   int endpoint_number = static_cast<int>(
       urb_data->endpoint & 0x7F);  // Extract lower 7 bits for endpoint number
-  // string direction = (mon_hdr->epnum & 0x80) ? "Device to Host" : "Host to
-  // Device";
 
   double timestamp = pkthdr->ts.tv_sec + pkthdr->ts.tv_usec / 1e6;
   std::string kst_time = convertToKST(timestamp);
+
 
   // Compare busnum and devnum with the target values
   if (bus_number == target_busnum && device_address == target_devnum ||
@@ -281,117 +283,65 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     filtered_total_packet_length += pkthdr->len;
     filtered_total_captured_length += pkthdr->caplen;
 
-    if (urb_data->urb_status != 0) {
-      // v_cerr_3 << "Error detected, skipping this packet" << std::endl;
-      return;
-    }
+    // CHECK OUT THE URB TYPE , URB COMPLETE OR URB SUBMIT
+    // URB_COMPLETE 0x43
+    // URB_SUBMIT 0x53
 
-    // exclude control transfer
-    if (urb_data->urb_transfer_type == 0x02) {  // Control Transfer Type (0x02)
-      // v_cerr_3 << "Control || Interrupt Transfer detected, skipping this
-      // packet" << std::endl;
+    if (urb_data->urb_type == 0x43) {
+    // v_cout_3 << "URB_COMPLETE" << std::endl;
 
-      // get setup data here
-      // find setcur getcur here
-      // bmRequestType, bRequest, descriptor_index, descriptor_type, language_id, wLength
-      // static?
 
-      // find setcur getcur here
-      return;
-
-      // Interrupt Transfer Type (0x01)
-    } else if (urb_data->urb_transfer_type == 0x01) {
-      // v_cerr_3 << "Interrupt transfer detected, skipping this packet"
-
-      // Bulk Transfer Type (0x03)
-    } else if (urb_data->urb_transfer_type == 0x03) {
-      // v_cout_3 << "Bulk transfer detected" << std::endl;
-      if (urb_data->data_length != 16384) {
-        v_cout_3 << "Data Length: " << urb_data->data_length << std::endl;
-      }
-
-      // v_cout_3 << "Max Length Size: " << bulk_usbmon_bulk_maxlengthsize <<
-      // std::endl; v_cout_3 << "size of URB_Data: " << sizeof(URB_Data) <<
-      // std::endl;
-
-      // update the max urb length size
-      if (bulk_usbmon_bulk_maxlengthsize <
-          urb_data->data_length + sizeof(URB_Data)) {
-        if ((urb_data->data_length + sizeof(URB_Data)) % 8 != 0) {
-          bulk_usbmon_bulk_maxlengthsize =
-              (urb_data->data_length + sizeof(URB_Data) + 8 -
-               (urb_data->data_length + sizeof(URB_Data) % 8));
-          v_cerr_3 << "Error incorrect max length size: "
-                    << bulk_usbmon_bulk_maxlengthsize << std::endl;
-        } else {
-          bulk_usbmon_bulk_maxlengthsize =
-              urb_data->data_length + sizeof(URB_Data);
-          v_cout_3 << "update the max length size: "
-                    << bulk_usbmon_bulk_maxlengthsize << std::endl;
-        }
-      }
-
-      if (bulk_usbmon_bulk_maxlengthsize >
-          urb_data->data_length + sizeof(URB_Data)) {
-        // finish the transfer
-        v_cout_3 << "Finish the transfer" << std::endl;
-
-        temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
-                           packet + pkthdr->caplen);
-        auto now = std::chrono::steady_clock::now();
-        {
-          std::lock_guard<std::mutex> lock(queue_mutex);
-          packet_queue.push(temp_buffer);
-
-          std::lock_guard<std::mutex> time_lock(time_mutex);
-          time_records.push(now);
-        }
-        temp_buffer.clear();
-        queue_cv.notify_one();
-
-      } else if (bulk_usbmon_bulk_maxlengthsize ==
-                 urb_data->data_length + sizeof(URB_Data)) {
-        // continue the transfer
-        //  v_cout_3 << "Continue the transfer" << std::endl;
-        temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
-                           packet + pkthdr->caplen);
-      } else {
-        v_cerr_3 << "Invalid data length for bulk transfer" << std::endl;
+      if (urb_data->urb_status != 0) {
+        v_cerr_5 << "urb_status set, skipping this packet" << std::endl;
         return;
       }
 
-      // Isochronous Transfer (0x00)
-    } else if (urb_data->urb_transfer_type == 0x00) {
-      // v_cout_3 << "Isochronous transfer detected" << std::endl;
+      if (urb_data->urb_transfer_type == 0x02) {  // Control Transfer Type (0x02)
+        // v_cerr_3 << "Control || Interrupt Transfer detected, skipping this
+        // packet" << std::endl;
+        // find setcur getcur here
+        // currently, device and wireshark do not give this data, or just i can't find it
+        return;
 
-      if (urb_data->iso_descriptor_number > 0) {
-        std::vector<ISO_Descriptor> iso_descriptors(
-            urb_data->iso_descriptor_number);
+        // Interrupt Transfer Type (0x01)
+      } else if (urb_data->urb_transfer_type == 0x01) {
+        // v_cerr_3 << "Interrupt transfer detected, skipping this packet"
 
-        // this create a new pointer to the start of the iso descriptor
-        const u_char* iso_descriptor_start = packet + sizeof(URB_Data);
-        for (uint8_t i = 0; i < urb_data->iso_descriptor_number; ++i) {
-          std::memcpy(&iso_descriptors[i],
-                      iso_descriptor_start + i * sizeof(ISO_Descriptor),
-                      sizeof(ISO_Descriptor));
+        // Bulk Transfer Type (0x03)
+      } else if (urb_data->urb_transfer_type == 0x03) {
+        // v_cout_3 << "Bulk transfer detected" << std::endl;
+        if (urb_data->data_length != 16384) {
+          v_cout_3 << "Data Length: " << urb_data->data_length << std::endl;
         }
 
-        for (uint8_t i = 0; i < urb_data->iso_descriptor_number; ++i) {
-          uint32_t start_offset = sizeof(URB_Data) +
-                                  (16 * urb_data->iso_descriptor_number) +
-                                  iso_descriptors[i].iso_descriptor_offset;
-          uint32_t end_offset =
-              start_offset + iso_descriptors[i].iso_descriptor_length;
+        // v_cout_3 << "Max Length Size: " << bulk_usbmon_bulk_maxlengthsize <<
+        // std::endl; v_cout_3 << "size of URB_Data: " << sizeof(URB_Data) <<
+        // std::endl;
 
-          // checks if the packet is the last packet
-          if (i == urb_data->iso_descriptor_number - 1) {
-            v_cout_3 << "Last iso descriptor" << std::endl;
-            v_cout_3 << end_offset << " " << pkthdr->caplen << std::endl;
+        // update the max urb length size
+        if (bulk_usbmon_bulk_maxlengthsize <
+            urb_data->data_length + sizeof(URB_Data)) {
+          if ((urb_data->data_length + sizeof(URB_Data)) % 8 != 0) {
+            bulk_usbmon_bulk_maxlengthsize =
+                (urb_data->data_length + sizeof(URB_Data) + 8 -
+                (urb_data->data_length + sizeof(URB_Data) % 8));
+            v_cerr_3 << "Error incorrect max length size: "
+                      << bulk_usbmon_bulk_maxlengthsize << std::endl;
+          } else {
+            bulk_usbmon_bulk_maxlengthsize =
+                urb_data->data_length + sizeof(URB_Data);
+            v_cout_3 << "update the max length size: "
+                      << bulk_usbmon_bulk_maxlengthsize << std::endl;
           }
+        }
 
-          temp_buffer.insert(temp_buffer.end(), packet + start_offset,
-                             packet + end_offset);
+        if (bulk_usbmon_bulk_maxlengthsize >
+            urb_data->data_length + sizeof(URB_Data)) {
+          // finish the transfer
+          v_cout_3 << "Finish the transfer" << std::endl;
 
+          temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
+                            packet + pkthdr->caplen);
           auto now = std::chrono::steady_clock::now();
           {
             std::lock_guard<std::mutex> lock(queue_mutex);
@@ -402,17 +352,93 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
           }
           temp_buffer.clear();
           queue_cv.notify_one();
+
+        } else if (bulk_usbmon_bulk_maxlengthsize ==
+                  urb_data->data_length + sizeof(URB_Data)) {
+          // continue the transfer
+          //  v_cout_3 << "Continue the transfer" << std::endl;
+          temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
+                            packet + pkthdr->caplen);
+        } else {
+          v_cerr_3 << "Invalid data length for bulk transfer" << std::endl;
+          return;
         }
+
+        // Isochronous Transfer (0x00)
+      } else if (urb_data->urb_transfer_type == 0x00) {
+        // v_cout_3 << "Isochronous transfer detected" << std::endl;
+
+        if (urb_data->iso_descriptor_number > 0) {
+          std::vector<ISO_Descriptor> iso_descriptors(
+              urb_data->iso_descriptor_number);
+
+          // this create a new pointer to the start of the iso descriptor
+          const u_char* iso_descriptor_start = packet + sizeof(URB_Data);
+          for (uint8_t i = 0; i < urb_data->iso_descriptor_number; ++i) {
+            std::memcpy(&iso_descriptors[i],
+                        iso_descriptor_start + i * sizeof(ISO_Descriptor),
+                        sizeof(ISO_Descriptor));
+          }
+
+          for (uint8_t i = 0; i < urb_data->iso_descriptor_number; ++i) {
+            uint32_t start_offset = sizeof(URB_Data) +
+                                    (16 * urb_data->iso_descriptor_number) +
+                                    iso_descriptors[i].iso_descriptor_offset;
+            uint32_t end_offset =
+                start_offset + iso_descriptors[i].iso_descriptor_length;
+
+            // checks if the packet is the last packet
+            if (i == urb_data->iso_descriptor_number - 1) {
+              v_cout_3 << "Last iso descriptor" << std::endl;
+              v_cout_3 << end_offset << " " << pkthdr->caplen << std::endl;
+            }
+
+            temp_buffer.insert(temp_buffer.end(), packet + start_offset,
+                              packet + end_offset);
+
+            auto now = std::chrono::steady_clock::now();
+            {
+              std::lock_guard<std::mutex> lock(queue_mutex);
+              packet_queue.push(temp_buffer);
+
+              std::lock_guard<std::mutex> time_lock(time_mutex);
+              time_records.push(now);
+            }
+            temp_buffer.clear();
+            queue_cv.notify_one();
+          }
+        } else {
+          v_cerr_3 << "No iso descriptor detected, skipping this packet"
+                    << std::endl;
+          return;
+        }
+
       } else {
-        v_cerr_3 << "No iso descriptor detected, skipping this packet"
+        v_cerr_3 << "Unknown transfer type detected, skipping this packet"
                   << std::endl;
         return;
       }
+    } else if (urb_data->urb_type == 0x53) {
+      // v_cout_3 << "URB_SUBMIT" << std::endl;
+      if (urb_data->urb_transfer_type == 0x02) {  // Control Transfer Type (0x02)
 
+        // Interrupt Transfer Type (0x01)
+      } else if (urb_data->urb_transfer_type == 0x01) {
+        v_cerr_5 << "Interrupt transfer detected, skipping this packet" << std::endl;
+        return ;
+        // Bulk Transfer Type (0x03)
+      } else if (urb_data->urb_transfer_type == 0x03) {
+        v_cout_5 << "Bulk Transfer SUBMIT detected skipping this packet" << std::endl;
+        return ;
+      } else {
+        v_cerr_3 << "Unknown transfer type detected, skipping this packet" << std::endl;
+        return;
+      }
+
+    } else if (urb_data->urb_type == 0x45) {
+      v_cout_2 << "URB_ERROR" << std::endl;
     } else {
-      v_cerr_3 << "Unknown transfer type detected, skipping this packet"
-                << std::endl;
-      return;
+      // v_cout_3 << "Unknown URB Type" << std::endl;
     }
 
     // Chrono time
@@ -532,6 +558,10 @@ void test_print_process_packets() {
 int main(int argc, char* argv[]) {
   std::string selected_device;
   int buffer_size = (1280 + 16) * 32 + 64;  // URB LENGTH INCLUDING 64
+  bool fw_set = false;
+  bool fh_set = false;
+  bool fps_set = false;
+  bool ff_set = false; 
 
   // Parse command line arguments
   for (int i = 1; i < argc; i += 2) {
@@ -543,18 +573,29 @@ int main(int argc, char* argv[]) {
       target_busnum = std::atoi(argv[i + 1]);
     } else if (std::strcmp(argv[i], "-dn") == 0 && i + 1 < argc) {
       target_devnum = std::atoi(argv[i + 1]);
+    } else if (std::strcmp(argv[i], "-fw") == 0 && i + 1 < argc) {
+      ControlConfig::set_width(std::atoi(argv[i + 1]));
+      fw_set = true;
+    } else if (std::strcmp(argv[i], "-fh") == 0 && i + 1 < argc) {
+      ControlConfig::set_height(std::atoi(argv[i + 1]));
+      fh_set = true;
+    } else if (std::strcmp(argv[i], "-fps") == 0 && i + 1 < argc) {
+      ControlConfig::set_fps(std::atoi(argv[i + 1]));
+      fps_set = true;
+    } else if (std::strcmp(argv[i], "-ff") == 0 && i + 1 < argc) {
+        ControlConfig::set_frame_format(argv[i + 1]);
+        ff_set = true;
     } else if (std::strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
       verbose_level = std::atoi(argv[i + 1]);
     } else if (std::strcmp(argv[i], "-lv") == 0 && i + 1 < argc) {
       log_verbose_level = std::atoi(argv[i + 1]);
     } else {
       v_cerr_3 << "Usage: " << argv[0]
-                << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]"
+                << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]  [-fw frame_width] [-fh frame_height] [-fps frame_per_sec] [-v verbose_level] [-lv log_verbose_level]"
                 << std::endl;
       return 1;
     }
   }
-
 
   if (selected_device.empty()) {
     v_cerr_3 << "Error: Device not specified" << std::endl;
@@ -565,16 +606,35 @@ int main(int argc, char* argv[]) {
   }
 
   if (target_busnum == -1 || target_devnum == -1) {
-    v_cout_3 << "busnum or devnum not specified" << std::endl;
-    v_cout_3 << "All packets will be captured" << std::endl;
+    v_cout_1 << "busnum or devnum not specified" << std::endl;
+    v_cout_1 << "All packets will be captured" << std::endl;
   }
+
+  if (!fw_set || !fh_set || !fps_set || !ff_set) {
+      if (!fw_set) {
+          std::cout << "Frame width not specified, using default: " << ControlConfig::get_width() << std::endl;
+      }
+      if (!fh_set) {
+          std::cout << "Frame height not specified, using default: " << ControlConfig::get_height() << std::endl;
+      }
+      if (!fps_set) {
+          std::cout << "FPS not specified, using default: " << ControlConfig::get_fps() << std::endl;
+      }
+      if (!ff_set) {
+          std::cout << "Frame format not specified, using default: " << ControlConfig::get_frame_format() << std::endl;
+      }
+  }
+  v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
+  v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
+  v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
+  v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format() << std::endl;
 
   // Register signal handler for safe exit
   std::signal(SIGINT, clean_exit);
   std::signal(SIGTERM, clean_exit);
 
-  v_cout_3 << "If code is not working try sudo modprobe usbmon" << std::endl;
-  v_cout_3 << std::endl;
+  v_cout_1 << "If code is not working try sudo modprobe usbmon" << std::endl;
+  v_cout_1 << std::endl;
 
   struct pcap_stat stats;
 
@@ -593,7 +653,7 @@ int main(int argc, char* argv[]) {
   pcap_if_t *interfaces, *device;
 
   if (pcap_findalldevs(&interfaces, error_buffer) == -1) {
-    v_cerr_3 << "Error finding Device: " << error_buffer << std::endl;
+    v_cerr_1 << "Error finding Device: " << error_buffer << std::endl;
     return 1;
   }
 

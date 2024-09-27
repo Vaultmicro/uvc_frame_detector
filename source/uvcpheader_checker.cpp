@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include "validuvc/uvcpheader_checker.hpp"
+#include "validuvc/control_config.hpp"
 #include "utils/verbose.hpp"
 
 
@@ -17,7 +18,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   // Make picture file having mjpeg, yuyv, h264
 
   if (uvc_payload.empty()) {
-    // v_cerr_2 << "UVC payload is empty." << std::endl;
+    v_cerr_5 << "UVC payload is empty." << std::endl;
     return 0;
   }
 
@@ -36,7 +37,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   bool frame_found = false;
 
   for (auto& frame : frames) {
-    if (frame->frame_pts == payload_header.PTS && payload_header.PTS) {
+    if (frame->frame_pts == payload_header.PTS && payload_header.PTS != 0) {
       frame_found = true;
       frame->add_packet(uvc_payload);// if frame found, add packet to the frame
       frame->add_received_chrono_time(received_time);
@@ -65,6 +66,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   // Check if the previous frame has an error and switch
   if (!previous_error) {
     previous_payload_header = payload_header;
+    previous_previous_payload_header = previous_payload_header;
   }
 
   if (payload_header.bmBFH.BFH_EOF) {
@@ -186,16 +188,9 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
     return ERR_LENGTH_INVALID;
   }
 
-  // Checks if the End of Frame bit is set
-  // TODO
   // Check with the total length of the frame and the calculated length of the
   // frame
   if (payload_header.bmBFH.BFH_EOF) {
-    // if (previous_payload_header.bmBFH.BFH_EOF &&
-    // (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID)){
-    //     v_cerr_2 << "Invalid UVC payload header: Missing frame for bulk
-    //     whole." << std::endl; return 1;
-    // }
   } else {
     if (payload_header.bmBFH.BFH_RES) {
       v_cerr_2 << "Invalid UVC payload header: Reserved bit is set."
@@ -207,14 +202,21 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
   // Checks if the Frame Identifier bit is set
   if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID) {
     if (previous_payload_header.bmBFH.BFH_EOF) {
-      if ((payload_header.PTS != previous_payload_header.PTS) &&
+      if ((payload_header.PTS == previous_payload_header.PTS) &&
           payload_header.PTS != 0) {
         v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
                      "as the previous frame."
                   << std::endl;
-        return ERR_FID_MISMATCH;
+        return ERR_SWAP;
       }
+      return ERR_FID_MISMATCH;
     }
+  } else {
+    if (!previous_payload_header.bmBFH.BFH_EOF && previous_payload_header.HLE != 0) {
+      v_cerr_2 << "Missing EOF"<< std::endl;
+      return ERR_MISSING_EOF; //missing frame for bulk for whole
+    }
+
   }
 
   // Checks if the Still Image bit is set is not needed
