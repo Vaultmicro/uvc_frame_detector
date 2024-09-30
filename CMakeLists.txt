@@ -73,8 +73,8 @@ target_link_libraries(
 )
 
 add_executable(
-    frame_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test.cpp
+    frame_test_bulk
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_bulk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
@@ -82,7 +82,23 @@ add_executable(
 )
 
 target_link_libraries(
-    frame_test
+    frame_test_bulk
+    PRIVATE
+        gtest
+        gtest_main 
+)
+
+add_executable(
+    frame_test_iso
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_iso.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
+)
+
+target_link_libraries(
+    frame_test_iso
     PRIVATE
         gtest
         gtest_main

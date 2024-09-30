@@ -14,10 +14,10 @@
 #include <thread>
 
 #include "pcap.h"
-#include "validuvc/uvcpheader_checker.hpp"
-#include "validuvc/control_config.hpp"
-#include "utils/verbose.hpp"
 #include "utils/logger.hpp"
+#include "utils/verbose.hpp"
+#include "validuvc/control_config.hpp"
+#include "validuvc/uvcpheader_checker.hpp"
 
 // #define BULK_USBMON_MAXLENGTHSIZE 16448
 // #define ISO_USBMON_MAXLENGTHSIZE 41536 //98496
@@ -97,8 +97,6 @@ typedef struct __attribute__((packed, aligned(1))) {
   uint32_t iso_descriptor_length;
   uint32_t iso_descriptor_padding;
 } ISO_Descriptor;
-
-
 
 void log_packet_xxd_format(std::ofstream* log_file, const u_char* data,
                            int length, int base_address = 0) {
@@ -198,7 +196,8 @@ void clean_exit(int signum) {
     // Get capture statistics
     if (pcap_stats(handle, &stats) >= 0) {
       // // Print capture statistics
-      // print_capture_statistics(stats, total_packet_count, total_packet_length,
+      // print_capture_statistics(stats, total_packet_count,
+      // total_packet_length,
       //                          total_captured_length, filtered_packet_count,
       //                          filtered_total_packet_length,
       //                          filtered_total_captured_length, &log_file);
@@ -215,7 +214,7 @@ void clean_exit(int signum) {
   v_cout_3 << "Exiting safely..." << std::endl;
   exit(signum);
 }
- 
+
 std::string getCurrentTimeFormatted() {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t);
@@ -273,7 +272,6 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
   double timestamp = pkthdr->ts.tv_sec + pkthdr->ts.tv_usec / 1e6;
   std::string kst_time = convertToKST(timestamp);
 
-
   // Compare busnum and devnum with the target values
   if (bus_number == target_busnum && device_address == target_devnum ||
       target_busnum == -1 && target_devnum == -1 ||
@@ -288,19 +286,20 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     // URB_SUBMIT 0x53
 
     if (urb_data->urb_type == 0x43) {
-    // v_cout_3 << "URB_COMPLETE" << std::endl;
-
+      // v_cout_3 << "URB_COMPLETE" << std::endl;
 
       if (urb_data->urb_status != 0) {
         v_cerr_5 << "urb_status set, skipping this packet" << std::endl;
         return;
       }
 
-      if (urb_data->urb_transfer_type == 0x02) {  // Control Transfer Type (0x02)
+      if (urb_data->urb_transfer_type ==
+          0x02) {  // Control Transfer Type (0x02)
         // v_cerr_3 << "Control || Interrupt Transfer detected, skipping this
         // packet" << std::endl;
         // find setcur getcur here
-        // currently, device and wireshark do not give this data, or just i can't find it
+        // currently, device and wireshark do not give this data, or just i
+        // can't find it
         return;
 
         // Interrupt Transfer Type (0x01)
@@ -324,14 +323,14 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
           if ((urb_data->data_length + sizeof(URB_Data)) % 8 != 0) {
             bulk_usbmon_bulk_maxlengthsize =
                 (urb_data->data_length + sizeof(URB_Data) + 8 -
-                (urb_data->data_length + sizeof(URB_Data) % 8));
+                 (urb_data->data_length + sizeof(URB_Data) % 8));
             v_cerr_3 << "Error incorrect max length size: "
-                      << bulk_usbmon_bulk_maxlengthsize << std::endl;
+                     << bulk_usbmon_bulk_maxlengthsize << std::endl;
           } else {
             bulk_usbmon_bulk_maxlengthsize =
                 urb_data->data_length + sizeof(URB_Data);
             v_cout_3 << "update the max length size: "
-                      << bulk_usbmon_bulk_maxlengthsize << std::endl;
+                     << bulk_usbmon_bulk_maxlengthsize << std::endl;
           }
         }
 
@@ -341,7 +340,7 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
           v_cout_3 << "Finish the transfer" << std::endl;
 
           temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
-                            packet + pkthdr->caplen);
+                             packet + pkthdr->caplen);
           auto now = std::chrono::steady_clock::now();
           {
             std::lock_guard<std::mutex> lock(queue_mutex);
@@ -354,11 +353,11 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
           queue_cv.notify_one();
 
         } else if (bulk_usbmon_bulk_maxlengthsize ==
-                  urb_data->data_length + sizeof(URB_Data)) {
+                   urb_data->data_length + sizeof(URB_Data)) {
           // continue the transfer
           //  v_cout_3 << "Continue the transfer" << std::endl;
           temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
-                            packet + pkthdr->caplen);
+                             packet + pkthdr->caplen);
         } else {
           v_cerr_3 << "Invalid data length for bulk transfer" << std::endl;
           return;
@@ -394,7 +393,7 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
             }
 
             temp_buffer.insert(temp_buffer.end(), packet + start_offset,
-                              packet + end_offset);
+                               packet + end_offset);
 
             auto now = std::chrono::steady_clock::now();
             {
@@ -409,29 +408,33 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
           }
         } else {
           v_cerr_3 << "No iso descriptor detected, skipping this packet"
-                    << std::endl;
+                   << std::endl;
           return;
         }
 
       } else {
         v_cerr_3 << "Unknown transfer type detected, skipping this packet"
-                  << std::endl;
+                 << std::endl;
         return;
       }
     } else if (urb_data->urb_type == 0x53) {
       // v_cout_3 << "URB_SUBMIT" << std::endl;
-      if (urb_data->urb_transfer_type == 0x02) {  // Control Transfer Type (0x02)
+      if (urb_data->urb_transfer_type ==
+          0x02) {  // Control Transfer Type (0x02)
 
         // Interrupt Transfer Type (0x01)
       } else if (urb_data->urb_transfer_type == 0x01) {
-        v_cerr_5 << "Interrupt transfer detected, skipping this packet" << std::endl;
-        return ;
+        v_cerr_5 << "Interrupt transfer detected, skipping this packet"
+                 << std::endl;
+        return;
         // Bulk Transfer Type (0x03)
       } else if (urb_data->urb_transfer_type == 0x03) {
-        v_cout_5 << "Bulk Transfer SUBMIT detected skipping this packet" << std::endl;
-        return ;
+        v_cout_5 << "Bulk Transfer SUBMIT detected skipping this packet"
+                 << std::endl;
+        return;
       } else {
-        v_cerr_3 << "Unknown transfer type detected, skipping this packet" << std::endl;
+        v_cerr_3 << "Unknown transfer type detected, skipping this packet"
+                 << std::endl;
         return;
       }
 
@@ -454,8 +457,6 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     std::strftime(chrono_time_buffer, sizeof(chrono_time_buffer),
                   "%Y-%m-%d %H:%M:%S", &local_tm);
 
-
-
     // // Log packet information if it matches the target busnum and devnum
     // *log_file << "Packet: " << filtered_packet_count
     //           << " Raw time: " << urb_data->urb_sec_hex << "."
@@ -464,7 +465,6 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     //           << std::setfill('0') << std::setw(3) << now_ms.count()
     //           << " [busnum: " << bus_number << ", devnum: " << device_address
     //           << ", epnum: " << endpoint_number << "]" << std::endl;
-
 
     // log_packet_xxd_format(log_file, packet, pkthdr->caplen, 0);
   }
@@ -493,16 +493,17 @@ void process_packets() {
 
     std::chrono::time_point<std::chrono::steady_clock> received_time;
     {
-        std::lock_guard<std::mutex> time_lock(time_mutex);
-        received_time = time_records.front();
-        time_records.pop();
+      std::lock_guard<std::mutex> time_lock(time_mutex);
+      received_time = time_records.front();
+      time_records.pop();
     }
 
-    if (!packet.empty()){
+    if (!packet.empty()) {
       v_cout_3 << "Processing packet of size: " << packet.size() << std::endl;
     }
 
-    uint8_t valid_err = header_checker.payload_valid_ctrl(packet, received_time);
+    uint8_t valid_err =
+        header_checker.payload_valid_ctrl(packet, received_time);
 
     if (valid_err) {
       v_cerr_3 << "Invalid packet detected" << std::endl;
@@ -542,7 +543,7 @@ void test_print_process_packets() {
     if (!packet.empty() && packet[0] == 0x0c && packet[1] == 0x0d) {
       v_cout_3 << "=================================0x0d." << std::endl;
     }
-    
+
     v_cout_3 << "Processing packet of size: " << packet.size() << std::endl;
 
     for (const auto& byte : packet) {
@@ -561,7 +562,7 @@ int main(int argc, char* argv[]) {
   bool fw_set = false;
   bool fh_set = false;
   bool fps_set = false;
-  bool ff_set = false; 
+  bool ff_set = false;
 
   // Parse command line arguments
   for (int i = 1; i < argc; i += 2) {
@@ -583,16 +584,18 @@ int main(int argc, char* argv[]) {
       ControlConfig::set_fps(std::atoi(argv[i + 1]));
       fps_set = true;
     } else if (std::strcmp(argv[i], "-ff") == 0 && i + 1 < argc) {
-        ControlConfig::set_frame_format(argv[i + 1]);
-        ff_set = true;
+      ControlConfig::set_frame_format(argv[i + 1]);
+      ff_set = true;
     } else if (std::strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
       verbose_level = std::atoi(argv[i + 1]);
     } else if (std::strcmp(argv[i], "-lv") == 0 && i + 1 < argc) {
       log_verbose_level = std::atoi(argv[i + 1]);
     } else {
       v_cerr_3 << "Usage: " << argv[0]
-                << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]  [-fw frame_width] [-fh frame_height] [-fps frame_per_sec] [-v verbose_level] [-lv log_verbose_level]"
-                << std::endl;
+               << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]  "
+                  "[-fw frame_width] [-fh frame_height] [-fps frame_per_sec] "
+                  "[-v verbose_level] [-lv log_verbose_level]"
+               << std::endl;
       return 1;
     }
   }
@@ -600,8 +603,8 @@ int main(int argc, char* argv[]) {
   if (selected_device.empty()) {
     v_cerr_3 << "Error: Device not specified" << std::endl;
     v_cerr_3 << "Usage: " << argv[0]
-              << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]"
-              << std::endl;
+             << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]"
+             << std::endl;
     return 1;
   }
 
@@ -611,23 +614,28 @@ int main(int argc, char* argv[]) {
   }
 
   if (!fw_set || !fh_set || !fps_set || !ff_set) {
-      if (!fw_set) {
-          std::cout << "Frame width not specified, using default: " << ControlConfig::get_width() << std::endl;
-      }
-      if (!fh_set) {
-          std::cout << "Frame height not specified, using default: " << ControlConfig::get_height() << std::endl;
-      }
-      if (!fps_set) {
-          std::cout << "FPS not specified, using default: " << ControlConfig::get_fps() << std::endl;
-      }
-      if (!ff_set) {
-          std::cout << "Frame format not specified, using default: " << ControlConfig::get_frame_format() << std::endl;
-      }
+    if (!fw_set) {
+      std::cout << "Frame width not specified, using default: "
+                << ControlConfig::get_width() << std::endl;
+    }
+    if (!fh_set) {
+      std::cout << "Frame height not specified, using default: "
+                << ControlConfig::get_height() << std::endl;
+    }
+    if (!fps_set) {
+      std::cout << "FPS not specified, using default: "
+                << ControlConfig::get_fps() << std::endl;
+    }
+    if (!ff_set) {
+      std::cout << "Frame format not specified, using default: "
+                << ControlConfig::get_frame_format() << std::endl;
+    }
   }
   v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
   v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
   v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
-  v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format() << std::endl;
+  v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
+           << std::endl;
 
   // Register signal handler for safe exit
   std::signal(SIGINT, clean_exit);
@@ -661,7 +669,7 @@ int main(int argc, char* argv[]) {
   int i = 0;
   for (device = interfaces; device != nullptr; device = device->next) {
     v_cout_3 << ++i << ": " << (device->name ? device->name : "No name")
-              << std::endl;
+             << std::endl;
     if (device->description)
       v_cout_3 << " (" << device->description << ")" << std::endl;
   }
@@ -675,7 +683,7 @@ int main(int argc, char* argv[]) {
 
   if (device == nullptr) {
     v_cerr_3 << "Error: Device " << selected_device << " not found"
-              << std::endl;
+             << std::endl;
     pcap_freealldevs(interfaces);
     return 1;
   }
