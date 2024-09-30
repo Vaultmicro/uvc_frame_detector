@@ -56,39 +56,38 @@ TEST_F(frame_test, two_different_frames_test_insta) {
       << "The two frames should have different frame numbers.";
 }
 
-
 // Test for two different frames
 TEST_F(frame_test, whole_frame_test_bravia) {
   // First frame packet with JPEG header
   std::vector<u_char> packet_0 = create_packet({
       0x0c, 0b10001101,  // HLE and BFH (Header Length and Bit Field Header)
-      0x57, 0x9d, 0x68, 0x00,             // PTS (Presentation Time Stamp)
-      0x3e, 0xd2, 0xa6, 0x98, 0xe9, 0x07, // SCR (Source Clock Reference)
-      
-      // JPEG Header
-      0xFF, 0xD8,                         // SOI (Start of Image)
-      0xFF, 0xE0, 0x00, 0x10,             // APP0 Marker and Length
-      0x4A, 0x46, 0x49, 0x46, 0x00,       // "JFIF" Identifier
-      0x01, 0x01, 0x00, 0x00, 0x01, 0x00, // Version and pixel density
-      0x01, 0x00, 0x00,                   // Pixel aspect ratio
+      0x57, 0x9d, 0x68, 0x00,              // PTS (Presentation Time Stamp)
+      0x3e, 0xd2, 0xa6, 0x98, 0xe9, 0x07,  // SCR (Source Clock Reference)
 
-      0xFF, 0xDB, 0x00, 0x43,             // DQT (Define Quantization Table)
-      0x00,                               // Quantization table precision
-      0x06, 0x04, 0x04, 0x06, 0x09,       // Quantization table values (part 1)
-      0x0E, 0x12, 0x16, 0x04, 0x04,       // Quantization table values (part 2)
-      0x05, 0x07, 0x09, 0x15, 0x16,       // Quantization table values (part 3)
-      0x14                                // Quantization table values (part 4)
-      // JPEG data continues as needed
+      // JPEG Header
+      0xFF, 0xD8,                          // SOI (Start of Image)
+      0xFF, 0xE0, 0x00, 0x10,              // APP0 Marker and Length
+      0x4A, 0x46, 0x49, 0x46, 0x00,        // "JFIF" Identifier
+      0x01, 0x01, 0x00, 0x00, 0x01, 0x00,  // Version and pixel density
+      0x01, 0x00, 0x00,                    // Pixel aspect ratio
+
+      0xFF, 0xDB, 0x00, 0x43,        // DQT (Define Quantization Table)
+      0x00,                          // Quantization table precision
+      0x06, 0x04, 0x04, 0x06, 0x09,  // Quantization table values (part 1)
+      0x0E, 0x12, 0x16, 0x04, 0x04,  // Quantization table values (part 2)
+      0x05, 0x07, 0x09, 0x15, 0x16,  // Quantization table values (part 3)
+      0x14                           // Quantization table values (part 4)
+                                     // JPEG data continues as needed
   });
 
   // Second frame packet
   std::vector<u_char> packet_1 = create_packet({
       0x0c, 0b10001101,  // HLE and BFH (Header Length and Bit Field Header)
-      0x57, 0x9d, 0x68, 0x00,             // PTS (Presentation Time Stamp)
-      0xd4, 0xd2, 0xa6, 0x98, 0xe9, 0x07, // SCR (Source Clock Reference)
+      0x57, 0x9d, 0x68, 0x00,              // PTS (Presentation Time Stamp)
+      0xd4, 0xd2, 0xa6, 0x98, 0xe9, 0x07,  // SCR (Source Clock Reference)
   });
 
-    // Third frame packet
+  // Third frame packet
   std::vector<u_char> packet_2 = create_packet({
       0x0c, 0b10001101,  // HLE and BFH (Header Length and Bit Field Header)
       0x57, 0x9d, 0x68, 0x00,             // PTS (Presentation Time Stamp)
@@ -112,11 +111,10 @@ TEST_F(frame_test, whole_frame_test_bravia) {
   // Sixth frame packet
   std::vector<u_char> packet_5 = create_packet({
       0x0c, 0b10001111,  // HLE and BFH (Header Length and Bit Field Header)
-      0x57, 0x9d, 0x68, 0x00,             // PTS (Presentation Time Stamp)
+      0x57, 0x9d, 0x68, 0x00,              // PTS (Presentation Time Stamp)
       0xf5, 0xd7, 0xa6, 0x98, 0xea, 0x07,  // SCR (Source Clock Reference)
       0x00, 0x00, 0x00, 0x00, 0xff, 0xd9,  // JPEG data
   });
-
 
   // Process the first frame
   auto current_time = std::chrono::steady_clock::now();
@@ -160,23 +158,23 @@ TEST_F(frame_test, whole_frame_test_bravia) {
 
   std::vector<u_char> packet_6 = create_packet({
       0x0c, 0b10001100,  // HLE and BFH (Header Length and Bit Field Header)
-      0x78, 0x9d, 0x68, 0x00,             // PTS (Presentation Time Stamp)
-      0x6e, 0x53, 0xa7, 0x98, 0x0a, 0x00, // SCR (Source Clock Reference)
+      0x78, 0x9d, 0x68, 0x00,              // PTS (Presentation Time Stamp)
+      0x6e, 0x53, 0xa7, 0x98, 0x0a, 0x00,  // SCR (Source Clock Reference)
 
       // JPEG Header
-      0xFF, 0xD8,                         // SOI (Start of Image)
-      0xFF, 0xE0, 0x00, 0x10,             // APP0 Marker and Length
-      0x4A, 0x46, 0x49, 0x46, 0x00,       // "JFIF" Identifier
-      0x01, 0x01, 0x00, 0x00, 0x01, 0x00, // Version and pixel density
-      0x01, 0x00, 0x00,                   // Pixel aspect ratio
+      0xFF, 0xD8,                          // SOI (Start of Image)
+      0xFF, 0xE0, 0x00, 0x10,              // APP0 Marker and Length
+      0x4A, 0x46, 0x49, 0x46, 0x00,        // "JFIF" Identifier
+      0x01, 0x01, 0x00, 0x00, 0x01, 0x00,  // Version and pixel density
+      0x01, 0x00, 0x00,                    // Pixel aspect ratio
 
-      0xFF, 0xDB, 0x00, 0x43,             // DQT (Define Quantization Table)
-      0x00,                               // Quantization table precision
-      0x06, 0x04, 0x04, 0x06, 0x09,       // Quantization table values (part 1)
-      0x0E, 0x12, 0x16, 0x04, 0x04,       // Quantization table values (part 2)
-      0x05, 0x07, 0x09, 0x15, 0x16,       // Quantization table values (part 3)
-      0x14                                // Quantization table values (part 4)
-      // JPEG data continues as needed
+      0xFF, 0xDB, 0x00, 0x43,        // DQT (Define Quantization Table)
+      0x00,                          // Quantization table precision
+      0x06, 0x04, 0x04, 0x06, 0x09,  // Quantization table values (part 1)
+      0x0E, 0x12, 0x16, 0x04, 0x04,  // Quantization table values (part 2)
+      0x05, 0x07, 0x09, 0x15, 0x16,  // Quantization table values (part 3)
+      0x14                           // Quantization table values (part 4)
+                                     // JPEG data continues as needed
   });
 
   current_time = std::chrono::steady_clock::now();
@@ -191,15 +189,15 @@ TEST_F(frame_test, whole_frame_test_bravia) {
       << "There should be at least two frame created.";
 
   // Use iterator to access the first frame's frame number
-  auto first_frame_number = whole_frame_checker.processed_frames[0]->frame_number;
-  auto second_frame_number = whole_frame_checker.frames.front()->frame_number; // frames의 첫 번째 요소
+  auto first_frame_number =
+      whole_frame_checker.processed_frames[0]->frame_number;
+  auto second_frame_number = whole_frame_checker.frames.front()
+                                 ->frame_number;  // frames의 첫 번째 요소
 
   // Check that two different frames are processed by comparing frame numbers
   ASSERT_NE(first_frame_number, second_frame_number)
       << "The two frames should have different frame numbers.";
-
 }
-
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

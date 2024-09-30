@@ -17,7 +17,7 @@ public:
     template<typename T>
     VerboseStream& operator<<(const T& message) {
         if (verbose_level >= level_) {
-            buffer_ << prefix_ << message;
+            buffer_ << message;
         }
         return *this;
     }
