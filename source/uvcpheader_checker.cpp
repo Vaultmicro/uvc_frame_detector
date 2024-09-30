@@ -1,15 +1,15 @@
 
+#include "validuvc/uvcpheader_checker.hpp"
+
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <iomanip>
-#include <cstddef>
+#include <iostream>
 
-#include "validuvc/uvcpheader_checker.hpp"
-#include "validuvc/control_config.hpp"
 #include "utils/verbose.hpp"
-
+#include "validuvc/control_config.hpp"
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
@@ -28,7 +28,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   static uint8_t previous_error = 0;
   // static std::queue<std::vector<u_char>> fid_queue;
 
-  UVC_Payload_Header payload_header = parse_uvc_payload_header(uvc_payload, received_time);
+  UVC_Payload_Header payload_header =
+      parse_uvc_payload_header(uvc_payload, received_time);
 
   uint8_t payload_header_valid_return =
       payload_header_valid(payload_header, previous_payload_header,
@@ -38,10 +39,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   for (auto& frame : frames) {
     if (payload_header.PTS && frame->frame_pts == payload_header.PTS) {
-
       frame_found = true;
       frame->payload_headers.push_back(payload_header);  // Add header
-      frame->payload_sizes.push_back(uvc_payload.size());  // Add size of payload
+      frame->payload_sizes.push_back(
+          uvc_payload.size());  // Add size of payload
       frame->add_received_chrono_time(received_time);
 
       if (payload_header_valid_return) {
@@ -60,7 +61,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
 
     new_frame->payload_headers.push_back(payload_header);  // Add header
-    new_frame->payload_sizes.push_back(uvc_payload.size());  // Add size of payload
+    new_frame->payload_sizes.push_back(
+        uvc_payload.size());  // Add size of payload
     new_frame->add_received_chrono_time(received_time);
 
     if (payload_header_valid_return) {
@@ -82,30 +84,33 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     frame_count++;
 
     if (processed_frames.size() > 90) {
-        processed_frames.erase(processed_frames.begin());
+      processed_frames.erase(processed_frames.begin());
     }
 
     // Check the Frame width x height in here
-    // For YUYV format, the width x height should be 1280 x 720 x 2 excluding the headerlength
-    // If not then there is a problem with the frame
+    // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
+    // the headerlength If not then there is a problem with the frame
     if (ControlConfig::frame_format == "yuyv") {
-        // Calculate the expected size for the YUYV frame
-        size_t expected_frame_size = ControlConfig::get_width() * ControlConfig::get_height() * 2;
+      // Calculate the expected size for the YUYV frame
+      size_t expected_frame_size =
+          ControlConfig::get_width() * ControlConfig::get_height() * 2;
 
-        // Calculate the actual size by summing up all payload sizes and subtracting the total header lengths
-        size_t actual_frame_size = 0;
-        for (const auto& frame : frames) {
-            for (size_t i = 0; i < frame->payload_sizes.size(); ++i) {
-                actual_frame_size += frame->payload_sizes[i] - frame->payload_headers[i].HLE;
-            }
+      // Calculate the actual size by summing up all payload sizes and
+      // subtracting the total header lengths
+      size_t actual_frame_size = 0;
+      for (const auto& frame : frames) {
+        for (size_t i = 0; i < frame->payload_sizes.size(); ++i) {
+          actual_frame_size +=
+              frame->payload_sizes[i] - frame->payload_headers[i].HLE;
         }
+      }
 
-        if (actual_frame_size != expected_frame_size) {
-            v_cerr_2 << "Frame size mismatch for YUYV: expected "
-                    << expected_frame_size << " but got " << actual_frame_size << std::endl;
-        }
+      if (actual_frame_size != expected_frame_size) {
+        v_cerr_2 << "Frame size mismatch for YUYV: expected "
+                 << expected_frame_size << " but got " << actual_frame_size
+                 << std::endl;
+      }
     }
-
   }
 
   if (payload_header_valid_return) {
@@ -113,21 +118,23 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     return payload_header_valid_return;
   }
 
-  //v_cout_2 << "Payload is valid." << std::endl;
+  // v_cout_2 << "Payload is valid." << std::endl;
 
   return 0;
 }
 
 void UVCPHeaderChecker::timer_thread() {
-    while (!stop_timer_thread) {
-        std::this_thread::sleep_for(std::chrono::seconds(1)); 
-        std::cout << "FPS: " << frame_count.load() << " frames per second" << std::endl;
-        frame_count = 0;
-    }
+  while (!stop_timer_thread) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::cout << "FPS: " << frame_count.load() << " frames per second"
+              << std::endl;
+    frame_count = 0;
+  }
 }
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
-    const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time) {
+    const std::vector<u_char>& uvc_payload,
+    std::chrono::time_point<std::chrono::steady_clock> received_time) {
   UVC_Payload_Header payload_header;
   if (uvc_payload.size() < 2) {
     v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
@@ -168,8 +175,6 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
     const UVC_Payload_Header& payload_header,
     const UVC_Payload_Header& previous_payload_header,
     const UVC_Payload_Header& previous_previous_payload_header) {
-
-    
   // Checks if the Error bit is set
   if (payload_header.bmBFH.BFH_ERR) {
     v_cerr_2 << "Invalid UVC payload header: Error bit is set." << std::endl;
@@ -179,9 +184,8 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
   // Checks if the header length is valid
   if (payload_header.HLE < 0x02 || payload_header.HLE > 0x0C) {
     v_cerr_2 << "Invalid UVC payload header: Unexpected start byte 0x"
-              << std::hex << std::setw(2) << std::setfill('0') 
-              << static_cast<int>(payload_header.HLE) << "."
-              << std::endl;
+             << std::hex << std::setw(2) << std::setfill('0')
+             << static_cast<int>(payload_header.HLE) << "." << std::endl;
     return ERR_LENGTH_OUT_OF_RANGE;
   }
 
@@ -190,20 +194,20 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
       payload_header.HLE != 0x0C) {
     v_cerr_2 << "Invalid UVC payload header: Both Presentation Time Stamp and "
-                 "Source Clock Reference bits are set."
-              << std::endl;
+                "Source Clock Reference bits are set."
+             << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x06) {
     v_cerr_2 << "Invalid UVC payload header: Presentation Time Stamp bit is "
-                 "set but header length is less than 6."
-              << std::endl;
+                "set but header length is less than 6."
+             << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x08) {
     v_cerr_2 << "Invalid UVC payload header: Source Clock Reference bit is "
-                 "set but header length is less than 12."
-              << std::endl;
+                "set but header length is less than 12."
+             << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x02) {
@@ -220,7 +224,7 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
   } else {
     if (payload_header.bmBFH.BFH_RES) {
       v_cerr_2 << "Invalid UVC payload header: Reserved bit is set."
-                << std::endl;
+               << std::endl;
       return ERR_RESERVED_BIT_SET;
     }
   }
@@ -231,18 +235,18 @@ uint8_t UVCPHeaderChecker::payload_header_valid(
       if ((payload_header.PTS == previous_payload_header.PTS) &&
           payload_header.PTS != 0) {
         v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
-                     "as the previous frame."
-                  << std::endl;
+                    "as the previous frame."
+                 << std::endl;
         return ERR_SWAP;
       }
       return ERR_FID_MISMATCH;
     }
   } else {
-    if (!previous_payload_header.bmBFH.BFH_EOF && previous_payload_header.HLE != 0) {
-      v_cerr_2 << "Missing EOF"<< std::endl;
-      return ERR_MISSING_EOF; //missing frame for bulk for whole
+    if (!previous_payload_header.bmBFH.BFH_EOF &&
+        previous_payload_header.HLE != 0) {
+      v_cerr_2 << "Missing EOF" << std::endl;
+      return ERR_MISSING_EOF;  // missing frame for bulk for whole
     }
-
   }
 
   // Checks if the Still Image bit is set is not needed
@@ -292,15 +296,19 @@ void UVCPHeaderChecker::save_frames_to_log(
   for (size_t i = 0; i < current_frame->payload_headers.size(); ++i) {
     const UVC_Payload_Header& header = current_frame->payload_headers[i];
     size_t payload_size = current_frame->payload_sizes[i];
-    
+
     // Get the time point from received_chrono_times
     auto time_point = current_frame->received_chrono_times[i];
     auto duration_since_epoch = time_point.time_since_epoch();
-    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration_since_epoch).count();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            duration_since_epoch)
+                            .count();
 
-    frame_info << "  Payload " << i + 1 << ":\n"
-               << "    Payload Size: " << payload_size << " bytes\n"
-               << "    Received Time: " << milliseconds << " ms since epoch\n";  // Logging the received time in milliseconds
+    frame_info
+        << "  Payload " << i + 1 << ":\n"
+        << "    Payload Size: " << payload_size << " bytes\n"
+        << "    Received Time: " << milliseconds
+        << " ms since epoch\n";  // Logging the received time in milliseconds
   }
 
   log_file << frame_info.str() << "\n---\n";
@@ -308,9 +316,9 @@ void UVCPHeaderChecker::save_frames_to_log(
   log_file.close();
 }
 
-
 void UVCPHeaderChecker::save_payload_header_to_log(
-    const UVC_Payload_Header& payload_header, std::chrono::time_point<std::chrono::steady_clock> received_time) {
+    const UVC_Payload_Header& payload_header,
+    std::chrono::time_point<std::chrono::steady_clock> received_time) {
   std::ofstream log_file("../log/payload_headers_log.txt", std::ios::app);
 
   if (!log_file.is_open()) {
@@ -342,7 +350,11 @@ void UVCPHeaderChecker::save_payload_header_to_log(
            << "  RES: " << std::bitset<5>(payload_header.bmSCR.SCR_RES) << "\n";
 
   log_file << std::dec  // Set the output stream back to decimal mode
-           << "Received Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count() << " ms since epoch\n"
+           << "Received Time: "
+           << std::chrono::duration_cast<std::chrono::milliseconds>(
+                  received_time.time_since_epoch())
+                  .count()
+           << " ms since epoch\n"
            << "\n\n";  // Separate each entry with a double newline
 
   log_file.close();

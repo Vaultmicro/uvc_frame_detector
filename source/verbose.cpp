@@ -16,21 +16,23 @@ VerboseStream v_cout_5(5, "ALL: ", std::cout);
 VerboseStream v_cerr_5(5, "ALL ERROR: ", std::cerr);
 
 // VerboseStream constructor implementation
-VerboseStream::VerboseStream(int level, const std::string& prefix, std::ostream& output_stream)
+VerboseStream::VerboseStream(int level, const std::string& prefix,
+                             std::ostream& output_stream)
     : level_(level), prefix_(prefix), output_stream_(output_stream) {}
 
 // VerboseStream implementation
-VerboseStream& VerboseStream::operator<<(std::ostream& (*manip)(std::ostream&)) {
-    if (verbose_level >= level_) {
-        buffer_ << manip;
-        flush();
-    }
-    return *this;
+VerboseStream& VerboseStream::operator<<(
+    std::ostream& (*manip)(std::ostream&) ) {
+  if (verbose_level >= level_) {
+    buffer_ << manip;
+    flush();
+  }
+  return *this;
 }
 
 void VerboseStream::flush() {
-    if (verbose_level >= level_) {
-        output_stream_ << buffer_.str();
-        buffer_.str("");  // Clear the buffer after flushing
-    }
+  if (verbose_level >= level_) {
+    output_stream_ << buffer_.str();
+    buffer_.str("");  // Clear the buffer after flushing
+  }
 }
