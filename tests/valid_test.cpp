@@ -17,8 +17,8 @@ class uvc_header_checker_test : public ::testing::Test {
 // Test cases for valid payload
 TEST_F(uvc_header_checker_test, valid_payload_test_0) {
   std::vector<u_char> valid_packet = create_packet({
-      0x0c, 0b00001101,        // HLE and BFH (valid payload)
-      0x00, 0x00, 0x00, 0x01,  // PTS (valid)
+      0x0c, 0b00001101,                    // HLE and BFH (valid payload)
+      0x00, 0x00, 0x00, 0x01,              // PTS (valid)
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -31,8 +31,8 @@ TEST_F(uvc_header_checker_test, valid_payload_test_0) {
 // Test cases for valid payload
 TEST_F(uvc_header_checker_test, valid_payload_test_1) {
   std::vector<u_char> valid_packet = create_packet({
-      0x02, 0b00000011,        // HLE and BFH (valid payload)
-      0x00, 0x00, 0x00, 0x00,  // PTS (valid)
+      0x02, 0b00000011,                    // HLE and BFH (valid payload)
+      0x00, 0x00, 0x00, 0x00,              // PTS (valid)
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -45,8 +45,8 @@ TEST_F(uvc_header_checker_test, valid_payload_test_1) {
 // Test cases for valid payload
 TEST_F(uvc_header_checker_test, valid_payload_test_2) {
   std::vector<u_char> valid_packet = create_packet({
-      0x02, 0b00000010,        // HLE and BFH (valid payload)
-      0x00, 0x00, 0x00, 0x00,  // PTS (valid)
+      0x02, 0b00000010,                    // HLE and BFH (valid payload)
+      0x00, 0x00, 0x00, 0x00,              // PTS (valid)
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -72,8 +72,8 @@ TEST_F(uvc_header_checker_test, valid_payload_test_2) {
 // Test cases for Error bit set (ERR_ERR_BIT_SET)
 TEST_F(uvc_header_checker_test, err_bit_set_test) {
   std::vector<u_char> err_bit_packet = create_packet({
-      0x0c, 0b01000000,        // HLE and BFH with Error bit set
-      0x00, 0x00, 0x00, 0x00,  // PTS
+      0x0c, 0b01000000,                    // HLE and BFH with Error bit set
+      0x00, 0x00, 0x00, 0x00,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -86,8 +86,8 @@ TEST_F(uvc_header_checker_test, err_bit_set_test) {
 // Test cases for invalid header length (ERR_LENGTH_INVALID)
 TEST_F(uvc_header_checker_test, length_out_of_range_invalid_test_small) {
   std::vector<u_char> length_invalid_packet = create_packet({
-      0x00, 0b00001100,        // Invalid HLE (too small)
-      0x00, 0x00, 0x00, 0x00,  // PTS
+      0x00, 0b00001100,                    // Invalid HLE (too small)
+      0x00, 0x00, 0x00, 0x00,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // SCR
   });
 
@@ -100,8 +100,8 @@ TEST_F(uvc_header_checker_test, length_out_of_range_invalid_test_small) {
 // Test cases for invalid header length (ERR_LENGTH_INVALID)
 TEST_F(uvc_header_checker_test, length_out_of_range_invalid_test_big) {
   std::vector<u_char> length_invalid_packet = create_packet({
-      0xb4, 0b00001100,        // Invalid HLE (too big)
-      0x00, 0x00, 0x00, 0x00,  // PTS
+      0xb4, 0b00001100,                    // Invalid HLE (too big)
+      0x00, 0x00, 0x00, 0x00,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // SCR
   });
 
@@ -114,8 +114,8 @@ TEST_F(uvc_header_checker_test, length_out_of_range_invalid_test_big) {
 // Test cases for Reserved bit set (ERR_RESERVED_BIT_SET)
 TEST_F(uvc_header_checker_test, reserved_bit_set_test) {
   std::vector<u_char> reserved_bit_packet = create_packet({
-      0x0c, 0b00011100,        // HLE and BFH with Reserved bit set
-      0x00, 0x00, 0x00, 0x01,  // PTS
+      0x0c, 0b00011100,                    // HLE and BFH with Reserved bit set
+      0x00, 0x00, 0x00, 0x01,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -128,8 +128,8 @@ TEST_F(uvc_header_checker_test, reserved_bit_set_test) {
 // Test cases for Reserved bit set (ERR_RESERVED_BIT_SET)
 TEST_F(uvc_header_checker_test, valid_reserved_bit_set_test) {
   std::vector<u_char> reserved_bit_packet = create_packet({
-      0x0c, 0b00011110,        // HLE and BFH with Reserved bit set
-      0x00, 0x00, 0x00, 0x01,  // PTS
+      0x0c, 0b00011110,                    // HLE and BFH with Reserved bit set
+      0x00, 0x00, 0x00, 0x01,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -142,8 +142,8 @@ TEST_F(uvc_header_checker_test, valid_reserved_bit_set_test) {
 // Test cases for Reserved bit set (Length Invalid)
 TEST_F(uvc_header_checker_test, header_length_diff_test) {
   std::vector<u_char> reserved_bit_packet = create_packet({
-      0x02, 0b00011110,        // HLE and BFH with Reserved bit set
-      0x00, 0x00, 0x00, 0x01,  // PTS
+      0x02, 0b00011110,                    // HLE and BFH with Reserved bit set
+      0x00, 0x00, 0x00, 0x01,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -156,14 +156,14 @@ TEST_F(uvc_header_checker_test, header_length_diff_test) {
 // Test cases for Frame Identifier mismatch (ERR_FID_MISMATCH)
 TEST_F(uvc_header_checker_test, fid_mismatch_test) {
   std::vector<u_char> fid_mismatch_packet_0 = create_packet({
-      0x02, 0b10000001,        // HLE and BFH with FID mismatch
-      0x00, 0x00, 0x00, 0x00,  // PTS
+      0x02, 0b10000001,                    // HLE and BFH with FID mismatch
+      0x00, 0x00, 0x00, 0x00,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // SCR
   });
 
   std::vector<u_char> fid_mismatch_packet_1 = create_packet({
-      0x02, 0b10010010,        // HLE and BFH with FID mismatch
-      0x00, 0x00, 0x00, 0x00,  // PTS
+      0x02, 0b10010010,                    // HLE and BFH with FID mismatch
+      0x00, 0x00, 0x00, 0x00,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // SCR
   });
 

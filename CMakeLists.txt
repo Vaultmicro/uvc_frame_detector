@@ -104,3 +104,43 @@ target_link_libraries(
         gtest_main
 )
 
+
+add_executable(
+    test_packet_handler
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_packet_handler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
+
+target_compile_definitions(test_packet_handler PRIVATE UNIT_TEST)
+
+target_link_libraries(
+    test_packet_handler
+    PRIVATE
+        gtest
+        gtest_main
+        ${PCAP_LIBRARIES}
+)
+
+
+
+add_executable(
+    urb_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/urb_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
+
+target_compile_definitions(urb_test PRIVATE UNIT_TEST)
+
+target_link_libraries(
+    urb_test
+    PRIVATE
+        ${PCAP_LIBRARIES}
+)

@@ -1,3 +1,5 @@
+#include "moncapler.hpp"
+
 #include <chrono>
 #include <condition_variable>
 #include <csignal>
@@ -22,7 +24,7 @@
 // #define BULK_USBMON_MAXLENGTHSIZE 16448
 // #define ISO_USBMON_MAXLENGTHSIZE 41536 //98496
 
-namespace fs = std::filesystem;
+namespace fs = std::filesystem; 
 
 // Global handle for pcap, so it can be closed on exit
 // Global log file for the same reason
@@ -36,6 +38,12 @@ unsigned long long total_captured_length = 0;
 unsigned int filtered_packet_count = 0;
 unsigned long long filtered_total_packet_length = 0;
 unsigned long long filtered_total_captured_length = 0;
+
+#ifdef UNIT_TEST
+unsigned int unit_urb_type = 0;
+unsigned int packet_push_count = 0;
+#endif
+
 // Global mutex for the queue
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
 std::mutex time_mutex;
@@ -52,54 +60,55 @@ extern int log_verbose_level;
 int target_busnum = -1;
 int target_devnum = -1;
 
-// USBMON header structure
-typedef struct __attribute__((packed, aligned(1))) {
-  uint64_t urb_id;               // URB ID (8 bytes, 64 bits)
-  uint8_t urb_type;              // URB Type (1 byte, 8 bits)
-  uint8_t urb_transfer_type;     // URB Transfer Type (1 byte, 8 bits)
-  uint8_t endpoint;              // Endpoint (1 byte, 8 bits)
-  uint8_t device_number;         // Device Number (1 byte, 8 bits)
-  uint16_t urb_bus_id;           // URB Bus ID (2 bytes, 16 bits)
-  uint8_t device_setup_request;  // Device Setup Request (1 byte, 8 bits)
-  uint8_t data_present;          // Data Present (1 byte, 8 bits)
-  uint64_t urb_sec_hex;          // URB Seconds (8 bytes, 64 bits)
-  uint32_t urb_usec_hex;         // URB Microseconds (4 bytes, 32 bits)
-  uint32_t urb_status;           // URB Status (4 bytes, 32 bits)
-  uint32_t urb_length;           // URB Length (4 bytes, 32 bits)
-  uint32_t data_length;          // Data Length (4 bytes, 32 bits)
-  union {
-    uint64_t setup_data;  // Setup Header (8 bytes, 64 bits)
-    struct {
-      uint8_t bmRequestType;     // bmRequestType (1 byte, 8 bits)
-      uint8_t bRequest;          // bRequest (1 byte, 8 bits)
-      uint8_t descriptor_index;  // Descriptor Index (1 byte, 8 bits)
-      uint8_t descriptor_type;   // Descriptor Type (1 byte, 8 bits)
-      uint16_t language_id;      // Language ID (2 byte, 16 bits)
-      uint16_t wLength;          // wLength (2 byte, 16 bits)
-    } b_setup_data;
-    uint64_t iso_descriptor;  // ISO Descriptor (8 bytes, 64 bits)
-    struct {
-      uint32_t iso_error_count;  // ISO Packet Descriptor (4 bytes, 32 bits)
-      uint32_t iso_descriptor_count;  // ISO Descriptor Count (4 bytes, 32 bits)
-    } b_iso_descriptor;
-  };
-  uint32_t interval;               // Interval (4 bytes, 32 bits)
-  uint32_t start_of_frame;         // Start of Frame (4 bytes, 32 bits)
-  uint32_t copy_of_transfer_flag;  // Copy of Transfer Flag (4 bytes, 32 bits)
-  uint32_t
-      iso_descriptor_number;  // Number of ISO Descriptor (4 bytes, 32 bits)
-} URB_Data;
+// // USBMON header structure
+// typedef struct __attribute__((packed, aligned(1))) {
+//   uint64_t urb_id;               // URB ID (8 bytes, 64 bits)
+//   uint8_t urb_type;              // URB Type (1 byte, 8 bits)
+//   uint8_t urb_transfer_type;     // URB Transfer Type (1 byte, 8 bits)
+//   uint8_t endpoint;              // Endpoint (1 byte, 8 bits)
+//   uint8_t device_number;         // Device Number (1 byte, 8 bits)
+//   uint16_t urb_bus_id;           // URB Bus ID (2 bytes, 16 bits)
+//   uint8_t device_setup_request;  // Device Setup Request (1 byte, 8 bits)
+//   uint8_t data_present;          // Data Present (1 byte, 8 bits)
+//   uint64_t urb_sec_hex;          // URB Seconds (8 bytes, 64 bits)
+//   uint32_t urb_usec_hex;         // URB Microseconds (4 bytes, 32 bits)
+//   uint32_t urb_status;           // URB Status (4 bytes, 32 bits)
+//   uint32_t urb_length;           // URB Length (4 bytes, 32 bits)
+//   uint32_t data_length;          // Data Length (4 bytes, 32 bits)
+//   union {
+//     uint64_t setup_data;  // Setup Header (8 bytes, 64 bits)
+//     struct {
+//       uint8_t bmRequestType;     // bmRequestType (1 byte, 8 bits)
+//       uint8_t bRequest;          // bRequest (1 byte, 8 bits)
+//       uint8_t descriptor_index;  // Descriptor Index (1 byte, 8 bits)
+//       uint8_t descriptor_type;   // Descriptor Type (1 byte, 8 bits)
+//       uint16_t language_id;      // Language ID (2 byte, 16 bits)
+//       uint16_t wLength;          // wLength (2 byte, 16 bits)
+//     } b_setup_data;
+//     uint64_t iso_descriptor;  // ISO Descriptor (8 bytes, 64 bits)
+//     struct {
+//       uint32_t iso_error_count;  // ISO Packet Descriptor (4 bytes, 32 bits)
+//       uint32_t iso_descriptor_count;  // ISO Descriptor Count (4 bytes, 32
+//       bits)
+//     } b_iso_descriptor;
+//   };
+//   uint32_t interval;               // Interval (4 bytes, 32 bits)
+//   uint32_t start_of_frame;         // Start of Frame (4 bytes, 32 bits)
+//   uint32_t copy_of_transfer_flag;  // Copy of Transfer Flag (4 bytes, 32
+//   bits) uint32_t
+//       iso_descriptor_number;  // Number of ISO Descriptor (4 bytes, 32 bits)
+// } URB_Data;
 
-// ISO Descriptor structure
-typedef struct __attribute__((packed, aligned(1))) {
-  uint32_t iso_descriptor_status;
-  uint32_t iso_descriptor_offset;
-  uint32_t iso_descriptor_length;
-  uint32_t iso_descriptor_padding;
-} ISO_Descriptor;
+// // ISO Descriptor structure
+// typedef struct __attribute__((packed, aligned(1))) {
+//   uint32_t iso_descriptor_status;
+//   uint32_t iso_descriptor_offset;
+//   uint32_t iso_descriptor_length;
+//   uint32_t iso_descriptor_padding;
+// } ISO_Descriptor;
 
 void log_packet_xxd_format(std::ofstream* log_file, const u_char* data,
-                           int length, int base_address = 0) {
+                           int length, int base_address) {
   for (int i = 0; i < length; i += 16) {
     // Print address in hexadecimal
     *log_file << std::setw(8) << std::setfill('0') << std::hex
@@ -133,7 +142,7 @@ void log_packet_xxd_format(std::ofstream* log_file, const u_char* data,
   *log_file << std::dec;  // Reset to decimal format
 }
 
-void coutnlog(const std::string& message, std::ofstream* log_file = nullptr) {
+void coutnlog(const std::string& message, std::ofstream* log_file) {
   // Print to console
   v_cout_3 << message << std::endl;
 
@@ -150,7 +159,7 @@ void print_capture_statistics(const pcap_stat& stats,
                               unsigned int filtered_packet_count,
                               unsigned long long filtered_total_packet_length,
                               unsigned long long filtered_total_captured_length,
-                              std::ofstream* log_file = nullptr) {
+                              std::ofstream* log_file) {
   coutnlog("\n", log_file);
   coutnlog("Capture Statistics:", log_file);
   coutnlog("\n", log_file);
@@ -262,7 +271,9 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
 
   // Interpret the packet as a USBMON header
   const URB_Data* urb_data = reinterpret_cast<const URB_Data*>(packet);
-
+#ifdef UNIT_TEST
+  unit_urb_type = urb_data->urb_type;
+#endif
   // Extract busnum, devnum, epnum
   int bus_number = static_cast<int>(urb_data->urb_bus_id);
   int device_address = static_cast<int>(urb_data->device_number);
@@ -280,7 +291,7 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     filtered_packet_count++;
     filtered_total_packet_length += pkthdr->len;
     filtered_total_captured_length += pkthdr->caplen;
-
+   
     // CHECK OUT THE URB TYPE , URB COMPLETE OR URB SUBMIT
     // URB_COMPLETE 0x43
     // URB_SUBMIT 0x53
@@ -342,6 +353,9 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
           temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
                              packet + pkthdr->caplen);
           auto now = std::chrono::steady_clock::now();
+#ifdef UNIT_TEST
+          packet_push_count++;
+#endif
           {
             std::lock_guard<std::mutex> lock(queue_mutex);
             packet_queue.push(temp_buffer);
@@ -396,6 +410,10 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
                                packet + end_offset);
 
             auto now = std::chrono::steady_clock::now();
+#ifdef UNIT_TEST
+            packet_push_count++;
+#endif
+
             {
               std::lock_guard<std::mutex> lock(queue_mutex);
               packet_queue.push(temp_buffer);
@@ -407,12 +425,15 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
             queue_cv.notify_one();
           }
         } else {
+
           v_cerr_3 << "No iso descriptor detected, skipping this packet"
                    << std::endl;
           return;
         }
 
       } else {
+        // //packet_push_count++;
+
         v_cerr_3 << "Unknown transfer type detected, skipping this packet"
                  << std::endl;
         return;
@@ -439,10 +460,22 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
       }
 
     } else if (urb_data->urb_type == 0x45) {
+// #ifdef UNIT_TEST
+//     //packet_push_count++;
+// #endif
+
       v_cout_2 << "URB_ERROR" << std::endl;
     } else {
+#ifdef UNIT_TEST
+    //packet_push_count++;
+#endif
+
       // v_cout_3 << "Unknown URB Type" << std::endl;
     }
+    
+#ifdef UNIT_TEST
+      //packet_push_count++;
+#endif
 
     // Chrono time
     //  Capture the current time using chrono
@@ -555,6 +588,8 @@ void test_print_process_packets() {
   }
   log_file.close();
 }
+
+#ifndef UNIT_TEST
 
 int main(int argc, char* argv[]) {
   std::string selected_device;
@@ -733,3 +768,5 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+#endif
