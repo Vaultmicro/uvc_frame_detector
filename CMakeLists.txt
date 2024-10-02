@@ -128,8 +128,8 @@ target_link_libraries(
 
 
 add_executable(
-    urb_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/urb_test.cpp
+    show_urb_header
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/show_urb_header.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
@@ -137,10 +137,10 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
 
-target_compile_definitions(urb_test PRIVATE UNIT_TEST)
+target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
 
 target_link_libraries(
-    urb_test
+    show_urb_header
     PRIVATE
         ${PCAP_LIBRARIES}
 )
