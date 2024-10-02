@@ -273,6 +273,7 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
   const URB_Data* urb_data = reinterpret_cast<const URB_Data*>(packet);
 #ifdef UNIT_TEST
   unit_urb_type = urb_data->urb_type;
+  packet_push_count = 0;
 #endif
   // Extract busnum, devnum, epnum
   int bus_number = static_cast<int>(urb_data->urb_bus_id);

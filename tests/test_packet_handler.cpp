@@ -151,6 +151,129 @@ TEST(PacketHandlerTest, ValidPacket_i1) {
 }
 
 
+// Test case for packet_handler function
+TEST(PacketHandlerTest, ValidPacket_iio) {
+    // Initialize global variables
+    total_packet_count = 0;
+    filtered_packet_count = 0;
+    total_packet_length = 0;
+    total_captured_length = 0;
+    filtered_total_packet_length = 0;
+    filtered_total_captured_length = 0;
+    unit_urb_type = 0;
+    packet_push_count = 0;
+
+
+    // 1. Read packet data
+    std::string filename0 = "../tests/tph_iso_0.txt";
+    std::vector<u_char> packet_data;
+
+    try {
+        packet_data = read_packet_data_from_file(filename0);
+    } catch (const std::exception& e) {
+        FAIL() << e.what();
+    }
+
+   // 2. Create pcap_pkthdr
+    struct pcap_pkthdr pkthdr;
+    pkthdr.caplen = packet_data.size();  // Captured packet length
+    pkthdr.len = packet_data.size();     // Actual packet length
+    // Set timestamp (adjust if necessary)
+    pkthdr.ts.tv_sec = 0;
+    pkthdr.ts.tv_usec = 0;
+
+    // 3. Set user_data (e.g., log file)
+    std::ofstream log_file("test_log.txt");
+    u_char* user_data = reinterpret_cast<u_char*>(&log_file);
+
+    // 4. Set necessary global variables (e.g., target_busnum, target_devnum)
+    extern int target_busnum;
+    extern int target_devnum;
+    target_busnum = -1;  // Adjust as needed
+    target_devnum = -1;  // Adjust as needed
+
+    // 5. Call packet_handler function
+    packet_handler(user_data, &pkthdr, packet_data.data());
+
+    // 6. Verify expected results
+    // For example, check if filtered_packet_count is 1
+    EXPECT_EQ(filtered_packet_count, 1);
+    EXPECT_EQ(packet_push_count, 32) << "packet_queue.push was called " << packet_push_count << " times.";
+    EXPECT_EQ(unit_urb_type, 0x43) << "URB_TYPE:  " << unit_urb_type;
+
+
+
+
+    std::string filenameo = "../tests/tph_iso_out.txt";
+
+    try {
+        packet_data = read_packet_data_from_file(filenameo);
+    } catch (const std::exception& e) {
+        FAIL() << e.what();
+    }
+
+    // 2. Create pcap_pkthdr
+    pkthdr.caplen = packet_data.size();  // Captured packet length
+    pkthdr.len = packet_data.size();     // Actual packet length
+    // Set timestamp (adjust if necessary)
+    pkthdr.ts.tv_sec = 0;
+    pkthdr.ts.tv_usec = 0;
+
+    // 4. Set necessary global variables (e.g., target_busnum, target_devnum)
+    extern int target_busnum;
+    extern int target_devnum;
+    target_busnum = -1;  // Adjust as needed
+    target_devnum = -1;  // Adjust as needed
+
+    // 5. Call packet_handler function
+    packet_handler(user_data, &pkthdr, packet_data.data());
+
+    // 6. Verify expected results
+    // For example, check if filtered_packet_count is 1
+    EXPECT_EQ(filtered_packet_count, 2);
+    EXPECT_EQ(packet_push_count, 0) << "packet_queue.push was called " << packet_push_count << " times.";
+    EXPECT_EQ(unit_urb_type, 0x53) << "URB_TYPE:  " << unit_urb_type;
+
+
+
+    
+    std::string filename1 = "../tests/tph_iso_1.txt";
+
+    try {
+        packet_data = read_packet_data_from_file(filename1);
+    } catch (const std::exception& e) {
+        FAIL() << e.what();
+    }
+
+    // 2. Create pcap_pkthdr
+    pkthdr.caplen = packet_data.size();  // Captured packet length
+    pkthdr.len = packet_data.size();     // Actual packet length
+    // Set timestamp (adjust if necessary)
+    pkthdr.ts.tv_sec = 0;
+    pkthdr.ts.tv_usec = 0;
+
+    // 4. Set necessary global variables (e.g., target_busnum, target_devnum)
+    extern int target_busnum;
+    extern int target_devnum;
+    target_busnum = -1;  // Adjust as needed
+    target_devnum = -1;  // Adjust as needed
+
+    // 5. Call packet_handler function
+    packet_handler(user_data, &pkthdr, packet_data.data());
+
+    // 6. Verify expected results
+    // For example, check if filtered_packet_count is 1
+    EXPECT_EQ(filtered_packet_count, 3);
+    EXPECT_EQ(packet_push_count, 32) << "packet_queue.push was called " << packet_push_count << " times.";
+    EXPECT_EQ(unit_urb_type, 0x43) << "URB_TYPE:  " << unit_urb_type;
+
+
+
+    // Close the log file
+    log_file.close();
+}
+
+
 
 // Test case for packet_handler function
 TEST(PacketHandlerTest, ValidPacket_b) {
