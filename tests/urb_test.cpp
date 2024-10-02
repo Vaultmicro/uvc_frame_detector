@@ -19,24 +19,45 @@ extern unsigned long long filtered_total_packet_length;
 extern unsigned long long filtered_total_captured_length;
 extern unsigned int packet_push_count;
 
+// // This is to open with the bianry mode
+// // Function to read packet data from a file
+// std::vector<u_char> read_packet_data_from_file(const std::string& filename) {
+//     // Open the file in binary mode
+//     std::ifstream file(filename, std::ios::binary);
+//     std::vector<u_char> data;
+
+//     if (!file) {
+//         throw std::runtime_error("Failed to open file: " + filename);
+//     }
+
+//     // Read the data
+//     file.unsetf(std::ios::skipws);
+//     std::istream_iterator<u_char> begin(file), end;
+//     data.insert(data.begin(), begin, end);
+
+//     return data;
+// }
 
 // Function to read packet data from a file
 std::vector<u_char> read_packet_data_from_file(const std::string& filename) {
-    // Open the file in binary mode
-    std::ifstream file(filename, std::ios::binary);
+    std::ifstream file(filename);
     std::vector<u_char> data;
 
     if (!file) {
         throw std::runtime_error("Failed to open file: " + filename);
     }
 
-    // Read the data
-    file.unsetf(std::ios::skipws);
-    std::istream_iterator<u_char> begin(file), end;
-    data.insert(data.begin(), begin, end);
+    std::string hex_str;
+    while (file >> hex_str) {
+        // 16진수 문자열을 u_char로 변환하여 벡터에 추가
+        u_char byte = static_cast<u_char>(std::stoul(hex_str, nullptr, 16)); //stoul makes the hex to u_long type to u_char into 1 byte
+        data.push_back(byte);
+    }
 
     return data;
 }
+
+ 
 
 // Function to print URB data
 void print_urb_data(const URB_Data* urb_data) {
@@ -50,8 +71,8 @@ void print_urb_data(const URB_Data* urb_data) {
     std::cout << "Data Length: " << std::hex << urb_data->data_length << std::endl;
     std::cout << "ISO Descriptor Number: " << std::hex << urb_data->iso_descriptor_number << std::endl;
     std::cout << std::endl;
-
 }
+
 
 // Function that handles packets and prints URB data
 void packet_handler_print(u_char* user_data, const struct pcap_pkthdr* pkthdr, const u_char* packet) {

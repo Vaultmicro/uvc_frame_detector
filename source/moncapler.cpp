@@ -24,7 +24,7 @@
 // #define BULK_USBMON_MAXLENGTHSIZE 16448
 // #define ISO_USBMON_MAXLENGTHSIZE 41536 //98496
 
-namespace fs = std::filesystem;
+namespace fs = std::filesystem; 
 
 // Global handle for pcap, so it can be closed on exit
 // Global log file for the same reason
@@ -38,7 +38,11 @@ unsigned long long total_captured_length = 0;
 unsigned int filtered_packet_count = 0;
 unsigned long long filtered_total_packet_length = 0;
 unsigned long long filtered_total_captured_length = 0;
+
+#ifdef UNIT_TEST
+unsigned int unit_urb_type = 0;
 unsigned int packet_push_count = 0;
+#endif
 
 // Global mutex for the queue
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
@@ -267,9 +271,9 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
 
   // Interpret the packet as a USBMON header
   const URB_Data* urb_data = reinterpret_cast<const URB_Data*>(packet);
-
-  packet_push_count = urb_data->urb_type;
-
+#ifdef UNIT_TEST
+  unit_urb_type = urb_data->urb_type;
+#endif
   // Extract busnum, devnum, epnum
   int bus_number = static_cast<int>(urb_data->urb_bus_id);
   int device_address = static_cast<int>(urb_data->device_number);
@@ -291,9 +295,7 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
     // CHECK OUT THE URB TYPE , URB COMPLETE OR URB SUBMIT
     // URB_COMPLETE 0x43
     // URB_SUBMIT 0x53
-#ifdef UNIT_TEST
-    //packet_push_count++;
-#endif
+
     if (urb_data->urb_type == 0x43) {
       // v_cout_3 << "URB_COMPLETE" << std::endl;
 
@@ -351,8 +353,9 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
           temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
                              packet + pkthdr->caplen);
           auto now = std::chrono::steady_clock::now();
-              //packet_push_count++;
-
+#ifdef UNIT_TEST
+          packet_push_count++;
+#endif
           {
             std::lock_guard<std::mutex> lock(queue_mutex);
             packet_queue.push(temp_buffer);
@@ -381,7 +384,6 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
         if (urb_data->iso_descriptor_number > 0) {
           std::vector<ISO_Descriptor> iso_descriptors(
               urb_data->iso_descriptor_number);
-          //packet_push_count++;
 
           // this create a new pointer to the start of the iso descriptor
           const u_char* iso_descriptor_start = packet + sizeof(URB_Data);
@@ -408,7 +410,9 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
                                packet + end_offset);
 
             auto now = std::chrono::steady_clock::now();
-            //packet_push_count++;
+#ifdef UNIT_TEST
+            packet_push_count++;
+#endif
 
             {
               std::lock_guard<std::mutex> lock(queue_mutex);
