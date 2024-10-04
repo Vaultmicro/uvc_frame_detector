@@ -48,6 +48,81 @@ typedef struct __attribute__((packed, aligned(1))) {
     };
 } UVC_Payload_Header;
 
+struct PayloadErrorStats {
+    int count_no_error = 0;
+    int count_empty_payload = 0;
+    int count_max_payload_overflow = 0;
+    int count_err_bit_set = 0;
+    int count_length_out_of_range = 0;
+    int count_length_invalid = 0;
+    int count_reserved_bit_set = 0;
+    int count_eoh_bit = 0;
+    int count_toggle_bit_overlapped = 0;
+    int count_fid_mismatch = 0;
+    int count_swap = 0;
+    int count_missing_eof = 0;
+    int count_unknown_error = 0;
+
+    int total() const {
+        return count_no_error + count_empty_payload + count_max_payload_overflow +
+               count_err_bit_set + count_length_out_of_range + count_length_invalid +
+               count_reserved_bit_set + count_eoh_bit + count_toggle_bit_overlapped +
+               count_fid_mismatch + count_swap + count_missing_eof + count_unknown_error;
+    }
+
+    void print_stats() const {
+        int total_count = total();
+        std::cout << "Payload Error Statistics:\n";
+        std::cout << "No Error: " << count_no_error << " (" << percentage(count_no_error, total_count) << "%)\n";
+        std::cout << "Empty Payload: " << count_empty_payload << " (" << percentage(count_empty_payload, total_count) << "%)\n";
+        std::cout << "Max Payload Overflow: " << count_max_payload_overflow << " (" << percentage(count_max_payload_overflow, total_count) << "%)\n";
+        std::cout << "Error Bit Set: " << count_err_bit_set << " (" << percentage(count_err_bit_set, total_count) << "%)\n";
+        std::cout << "Length Out of Range: " << count_length_out_of_range << " (" << percentage(count_length_out_of_range, total_count) << "%)\n";
+        std::cout << "Length Invalid: " << count_length_invalid << " (" << percentage(count_length_invalid, total_count) << "%)\n";
+        std::cout << "Reserved Bit Set: " << count_reserved_bit_set << " (" << percentage(count_reserved_bit_set, total_count) << "%)\n";
+        std::cout << "End of Header Bit: " << count_eoh_bit << " (" << percentage(count_eoh_bit, total_count) << "%)\n";
+        std::cout << "Toggle Bit Overlapped: " << count_toggle_bit_overlapped << " (" << percentage(count_toggle_bit_overlapped, total_count) << "%)\n";
+        std::cout << "Frame Identifier Mismatch: " << count_fid_mismatch << " (" << percentage(count_fid_mismatch, total_count) << "%)\n";
+        std::cout << "Swap: " << count_swap << " (" << percentage(count_swap, total_count) << "%)\n";
+        std::cout << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
+        std::cout << "Unknown Error: " << count_unknown_error << " (" << percentage(count_unknown_error, total_count) << "%)\n";
+    }
+
+    double percentage(int count, int total_count) const {
+        return total_count == 0 ? 0 : static_cast<double>(count) / total_count * 100.0;
+    }
+};
+
+struct FrameErrorStats {
+    int count_no_error = 0;
+    int count_frame_drop = 0;
+    int count_frame_error = 0;
+    int count_max_frame_overflow = 0;
+    int count_invalid_yuyv_raw_size = 0;
+    int count_same_different_pts = 0;
+
+    int total() const {
+        return count_no_error + count_frame_drop + count_frame_error +
+               count_max_frame_overflow + count_invalid_yuyv_raw_size + count_same_different_pts;
+    }
+
+    void print_stats() const {
+        int total_count = total();
+        std::cout << "\nFrame Error Statistics:\n";
+        std::cout << "No Error: " << count_no_error << " (" << percentage(count_no_error, total_count) << "%)\n";
+        std::cout << "Frame Drop: " << count_frame_drop << " (" << percentage(count_frame_drop, total_count) << "%)\n";
+        std::cout << "Frame Error: " << count_frame_error << " (" << percentage(count_frame_error, total_count) << "%)\n";
+        std::cout << "Max Frame Overflow: " << count_max_frame_overflow << " (" << percentage(count_max_frame_overflow, total_count) << "%)\n";
+        std::cout << "Invalid YUYV Raw Size: " << count_invalid_yuyv_raw_size << " (" << percentage(count_invalid_yuyv_raw_size, total_count) << "%)\n";
+        std::cout << "Same Different PTS: " << count_same_different_pts << " (" << percentage(count_same_different_pts, total_count) << "%)\n";
+    }
+
+    double percentage(int count, int total_count) const {
+        return total_count == 0 ? 0 : static_cast<double>(count) / total_count * 100.0;
+    }
+};
+
+
 enum UVCError {
   ERR_NO_ERROR = 0,
   ERR_EMPTY_PAYLOAD = 1,
@@ -67,10 +142,11 @@ enum UVCError {
 
 enum FrameError {
   ERR_FRAME_NO_ERROR = 0,
-  ERR_FRAME_ERROR = 1,
-  ERR_FRAME_MAX_FRAME_OVERFLOW = 2,
-  ERR_FRAME_INVALID_YUYV_RAW_SIZE = 3,
-  ERR_FRAME_SAME_DIFFERENT_PTS = 4,
+  ERR_FRAME_DROP = 1,
+  ERR_FRAME_ERROR = 2,
+  ERR_FRAME_MAX_FRAME_OVERFLOW = 3,
+  ERR_FRAME_INVALID_YUYV_RAW_SIZE = 4,
+  ERR_FRAME_SAME_DIFFERENT_PTS = 5,
 
 };
 
@@ -79,7 +155,7 @@ class ValidFrame{
         uint32_t frame_number;
         uint16_t packet_number;
         uint32_t frame_pts;
-        uint8_t frame_error;
+        FrameError frame_error;
         uint8_t eof_reached;
 
         std::vector<UVC_Payload_Header> payload_headers;  // To store UVC_Payload_Header
@@ -89,7 +165,7 @@ class ValidFrame{
         std::vector<uint64_t> scr_list;  // System Clock Reference (SCR) list
         std::vector<std::pair<uint32_t, uint32_t>> urb_sec_usec_list;  // URB timestamp list (seconds, microseconds)
 
-        ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(0), eof_reached(0) {}
+        ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
         void add_payload(const UVC_Payload_Header& header, size_t payload_size) {
             payload_headers.push_back(header);  // Add header to the vector
@@ -129,11 +205,53 @@ class UVCPHeaderChecker {
 
         void timer_thread();
         
-        uint8_t payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
+        UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
         void payload_frame_develope();
 
-        uint32_t current_frame_number; 
+        uint32_t current_frame_number;
+
+        PayloadErrorStats payload_stats;
+        FrameErrorStats frame_stats;
+
+        void update_payload_error_stat(UVCError error) {
+            switch (error) {
+                case ERR_NO_ERROR: payload_stats.count_no_error++; break;
+                case ERR_EMPTY_PAYLOAD: payload_stats.count_empty_payload++; break;
+                case ERR_MAX_PAYLAOD_OVERFLOW: payload_stats.count_max_payload_overflow++; break;
+                case ERR_ERR_BIT_SET: payload_stats.count_err_bit_set++; break;
+                case ERR_LENGTH_OUT_OF_RANGE: payload_stats.count_length_out_of_range++; break;
+                case ERR_LENGTH_INVALID: payload_stats.count_length_invalid++; break;
+                case ERR_RESERVED_BIT_SET: payload_stats.count_reserved_bit_set++; break;
+                case ERR_EOH_BIT: payload_stats.count_eoh_bit++; break;
+                case ERR_TOGGLE_BIT_OVERLAPPED: payload_stats.count_toggle_bit_overlapped++; break;
+                case ERR_FID_MISMATCH: payload_stats.count_fid_mismatch++; break;
+                case ERR_SWAP: payload_stats.count_swap++; break;
+                case ERR_MISSING_EOF: payload_stats.count_missing_eof++; break;
+                case ERR_UNKNOWN: payload_stats.count_unknown_error++; break;
+                default: break;
+            }
+        }
+
+        void update_frame_error_stat(FrameError error) {
+            switch (error) {
+                case ERR_FRAME_NO_ERROR: frame_stats.count_no_error++; break;
+                case ERR_FRAME_DROP: frame_stats.count_frame_drop++; break;
+                case ERR_FRAME_ERROR: frame_stats.count_frame_error++; break;
+                case ERR_FRAME_MAX_FRAME_OVERFLOW: frame_stats.count_max_frame_overflow++; break;
+                case ERR_FRAME_INVALID_YUYV_RAW_SIZE: frame_stats.count_invalid_yuyv_raw_size++; break;
+                case ERR_FRAME_SAME_DIFFERENT_PTS: frame_stats.count_same_different_pts++; break;
+                default: break;
+            }
+        }
+
+        void save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame);
+        void save_payload_header_to_log(
+            const UVC_Payload_Header& payload_header,
+            std::chrono::time_point<std::chrono::steady_clock> received_time);
+
+
+
 
     public:
      
@@ -142,10 +260,14 @@ class UVCPHeaderChecker {
         }
 
         ~UVCPHeaderChecker() {
+            std::cout << "UVCPHeaderChecker Destructor" << std::endl;
+
             stop_timer_thread = true;
             if (fps_thread.joinable()) {
                 fps_thread.join();
             }
+            print_stats();
+
         }
 
         std::list<std::unique_ptr<ValidFrame>> frames;
@@ -160,9 +282,12 @@ class UVCPHeaderChecker {
             std::chrono::time_point<std::chrono::steady_clock> received_time);
 
         void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);
-        void save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame);
-        void save_payload_header_to_log(
-            const UVC_Payload_Header& payload_header,
-            std::chrono::time_point<std::chrono::steady_clock> received_time);
+
+        void print_stats() const {
+            payload_stats.print_stats();
+            frame_stats.print_stats();
+            std::cout << std::flush;
+        }
+
 };
 #endif // UVCPHEADER_CHECKER_HPP

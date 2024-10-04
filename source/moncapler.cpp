@@ -202,7 +202,9 @@ void clean_exit(int signum) {
   struct pcap_stat stats;
 
   if (handle != nullptr) {
+    pcap_breakloop(handle);
     // Get capture statistics
+
     if (pcap_stats(handle, &stats) >= 0) {
       // // Print capture statistics
       // print_capture_statistics(stats, total_packet_count,
@@ -213,15 +215,20 @@ void clean_exit(int signum) {
     } else {
       v_cerr_3 << "pcap_stats failed: " << pcap_geterr(handle) << std::endl;
     }
-    pcap_close(handle);
   }
+
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    stop_processing = true;
+  }
+  queue_cv.notify_all();
 
   if (log_file.is_open()) {
     log_file.close();
   }
 
-  v_cout_3 << "Exiting safely..." << std::endl;
-  exit(signum);
+  v_cout_2 << "Exiting safely..." << std::endl;
+  //exit(signum);
 }
 
 std::string getCurrentTimeFormatted() {
@@ -521,31 +528,37 @@ void process_packets() {
       break;
     }
 
-    auto packet = packet_queue.front();
-    packet_queue.pop();
-    lock.unlock();
+    
+    if (!packet_queue.empty()) {
 
-    std::chrono::time_point<std::chrono::steady_clock> received_time;
-    {
-      std::lock_guard<std::mutex> time_lock(time_mutex);
-      received_time = time_records.front();
-      time_records.pop();
-    }
+      auto packet = packet_queue.front();
+      packet_queue.pop();
+      lock.unlock();
 
-    if (!packet.empty()) {
-      v_cout_3 << "Processing packet of size: " << packet.size() << std::endl;
-    }
+      std::chrono::time_point<std::chrono::steady_clock> received_time;
+      {
+        std::lock_guard<std::mutex> time_lock(time_mutex);
+        received_time = time_records.front();
+        time_records.pop();
+      }
 
-    uint8_t valid_err =
-        header_checker.payload_valid_ctrl(packet, received_time);
+      if (!packet.empty()) {
+        v_cout_3 << "Processing packet of size: " << packet.size() << std::endl;
+      }
 
-    if (valid_err) {
-      v_cerr_3 << "Invalid packet detected" << std::endl;
-      continue;
+      uint8_t valid_err =
+          header_checker.payload_valid_ctrl(packet, received_time);
+
+      if (valid_err) {
+        v_cerr_3 << "Invalid packet detected" << std::endl;
+        continue;
+      }
+    } else {
+      lock.unlock();
     }
     // header_checker.print_packet(packet);
   }
-  log_file.close();
+  std::cout << "Process packet() end" << std::endl;
 }
 
 void test_print_process_packets() {
@@ -634,6 +647,7 @@ int main(int argc, char* argv[]) {
       v_cerr_1 << "Usage: " << argv[0]
                << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]  "
                   "[-fw frame_width] [-fh frame_height] [-fps frame_per_sec] "
+                  "[-ff frame_format] [-mf max_frame_size] [-mp max_payload_size] "
                   "[-v verbose_level] [-lv log_verbose_level]"
                << std::endl;
       return 1;
@@ -645,6 +659,7 @@ int main(int argc, char* argv[]) {
     v_cerr_1 << "Usage: " << argv[0]
              << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum] "
                 "[-fw frame_width] [-fh frame_height] [-fps frame_per_sec] "
+                "[-ff frame_format] [-mf max_frame_size] [-mp max_payload_size] "
                 "[-v verbose_level] [-lv log_verbose_level]"
              << std::endl;
     return 1;
@@ -761,17 +776,19 @@ int main(int argc, char* argv[]) {
   capture_thread.join();
   // // Start packet capture
   // pcap_loop(handle, 0, packet_handler, reinterpret_cast<u_char*>(&log_file));
-
-  {
-    std::lock_guard<std::mutex> lock(queue_mutex);
-    stop_processing = true;
-  }
-
-  queue_cv.notify_one();  // Notify the processing thread
   process_thread.join();
 
+  if(handle!=nullptr){
+    pcap_close(handle);
+    handle=nullptr;
+  }
+  if(log_file.is_open()){
+    log_file.close();
+  }
   // This code will not be reached if pcap_loop runs indefinitely
   clean_exit(0);
+
+  std::cout << "End of main" << std::endl;
 
   return 0;
 }
