@@ -21,10 +21,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   if (uvc_payload.empty()) {
     v_cerr_5 << "UVC payload is empty." << std::endl;
+    update_payload_error_stat(ERR_EMPTY_PAYLOAD);
     return ERR_EMPTY_PAYLOAD;
   }
   if (uvc_payload.size() > ControlConfig::dwMaxPayloadTransferSize) {
     v_cerr_5 << "UVC payload size exceeds maximum transfer size." << std::endl;
+    update_payload_error_stat(ERR_MAX_PAYLAOD_OVERFLOW);
     return ERR_MAX_PAYLAOD_OVERFLOW;
   }
 
@@ -38,7 +40,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   UVC_Payload_Header payload_header =
       parse_uvc_payload_header(uvc_payload, received_time);
 
-  uint8_t payload_header_valid_return =
+  UVCError payload_header_valid_return =
       payload_header_valid(payload_header, previous_payload_header,
                            previous_previous_payload_header);
 
@@ -68,6 +70,28 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     
     // create new frame if not found
     if (!frame_found || previous_payload_header.bmBFH.BFH_EOF) {
+
+      //Process the last frame when EOF is missing
+      if (payload_header_valid_return == ERR_MISSING_EOF) {
+        v_cerr_2 << "Missing EOF" << std::endl;
+        if (!frames.empty()) {
+          auto& last_frame = frames.back();
+          last_frame->frame_error = ERR_FRAME_ERROR;
+          last_frame->eof_reached = false;
+          //finish the last frame
+          update_frame_error_stat(last_frame->frame_error);
+          save_frames_to_log(last_frame);
+          processed_frames.push_back(std::move(frames.back()));
+          frames.pop_back();
+          frame_count++;
+
+          if (processed_frames.size() > 30) {
+            processed_frames.erase(processed_frames.begin());
+          }
+
+        }
+      }
+
       ++current_frame_number;
       frames.push_back(std::make_unique<ValidFrame>(current_frame_number));
       auto& new_frame = frames.back();
@@ -91,7 +115,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   
 
     if (payload_header.bmBFH.BFH_EOF) {
-
+      auto& last_frame = frames.back();
+      update_frame_error_stat(last_frame->frame_error);
       // finish the frame
       save_frames_to_log(frames.back());
       processed_frames.push_back(std::move(frames.back()));
@@ -100,43 +125,46 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
       if (processed_frames.size() > 90) {
         processed_frames.erase(processed_frames.begin());
-      } 
+      }
 
 
-      // // Check the Frame width x height in here
-      // // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
-      // // the headerlength If not then there is a problem with the frame
-      // if (ControlConfig::frame_format == "yuyv") {
-      //   // Calculate the expected size for the YUYV frame
-      //   size_t expected_frame_size =
-      //       ControlConfig::get_width() * ControlConfig::get_height() * 2;
+      // Check the Frame width x height in here
+      // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
+      // the headerlength If not then there is a problem with the frame
+      if (ControlConfig::frame_format == "yuyv") {
+        // Calculate the expected size for the YUYV frame
+        size_t expected_frame_size =
+            ControlConfig::get_width() * ControlConfig::get_height() * 2;
 
-      //   // Calculate the actual size by summing up all payload sizes and
-      //   // subtracting the total header lengths
-      //   size_t actual_frame_size = 0;
-      //   for (const auto& frame : frames) {
-      //     for (size_t i = 0; i < frame->payload_sizes.size(); ++i) {
-      //       actual_frame_size +=
-      //           frame->payload_sizes[i] - frame->payload_headers[i].HLE;
-      //     }
-      //   }
+        // Calculate the actual size by summing up all payload sizes and
+        // subtracting the total header lengths
+        size_t actual_frame_size = 0;
+        for (const auto& frame : frames) {
+          for (size_t i = 0; i < frame->payload_sizes.size(); ++i) {
+            actual_frame_size +=
+                frame->payload_sizes[i] - frame->payload_headers[i].HLE;
+          }
+        }
 
-      //   if (actual_frame_size != expected_frame_size) {
-      //     v_cerr_2 << "Frame size mismatch for YUYV: expected "
-      //             << expected_frame_size << " but got " << actual_frame_size
-      //             << std::endl;
-      //   }
-      // }
+        if (actual_frame_size != expected_frame_size) {
+          v_cerr_2 << "Frame size mismatch for YUYV: expected "
+                  << expected_frame_size << " but got " << actual_frame_size
+                  << std::endl;
+        }
+      }
     }
+
+    update_payload_error_stat(payload_header_valid_return);
     return payload_header_valid_return;
 
   } else {
     // TODO save in the error frame heap
+    update_payload_error_stat(payload_header_valid_return);
     return payload_header_valid_return;
   }
 
   // v_cout_2 << "Payload is valid." << std::endl;
-
+  update_payload_error_stat(ERR_UNKNOWN);
   return ERR_UNKNOWN;
 }
 
@@ -145,9 +173,15 @@ void UVCPHeaderChecker::timer_thread() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "FPS: " << frame_count.load() << " frames per second"
               << std::endl;
+
+    int fps_difference = ControlConfig::fps - frame_count.load();
+    if (frame_count != ControlConfig::fps){
+      frame_stats.count_frame_drop += std::abs(fps_difference);
+    }
     frame_count = 0;
   }
 }
+
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     const std::vector<u_char>& uvc_payload,
@@ -188,7 +222,7 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
   return payload_header;
 }
 
-uint8_t UVCPHeaderChecker::payload_header_valid(
+UVCError UVCPHeaderChecker::payload_header_valid(
     const UVC_Payload_Header& payload_header,
     const UVC_Payload_Header& previous_payload_header,
     const UVC_Payload_Header& previous_previous_payload_header) {
