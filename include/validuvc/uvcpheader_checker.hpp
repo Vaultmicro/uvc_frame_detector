@@ -19,10 +19,26 @@
 #include <atomic>
 #include <iostream>
 
-#include "pcap.h"
+
+#ifdef _WIN32
+ #include "winpcap_sdk_include/pcap.h"
+
+#elif __linux__
+  #include "pcap.h"
+#else
+  #include "pcap.h"
+#endif
 
 
-typedef struct __attribute__((packed, aligned(1))) {
+#ifdef _MSC_VER
+    #pragma pack(push, 1)
+#elif defined(__GNUC__)
+    #define PACKED __attribute__((packed, aligned(1)))
+#else
+    #define PACKED
+#endif
+
+typedef struct PACKED {
     uint8_t HLE;                       // Header Length
     union {
         uint8_t BFH;                   // Bit Field Header
@@ -47,6 +63,10 @@ typedef struct __attribute__((packed, aligned(1))) {
         } bmSCR;                       // Bitfield for SCR
     };
 } UVC_Payload_Header;
+
+#ifdef _MSC_VER
+    #pragma pack(pop) // MSVC에서의 pack 해제
+#endif
 
 struct PayloadErrorStats {
     int count_no_error = 0;

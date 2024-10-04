@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <cstring>
 #include <ctime>
-#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -14,8 +13,19 @@
 #include <queue>
 #include <sstream>
 #include <thread>
+  #include <filesystem>
 
-#include "pcap.h"
+
+#ifdef _WIN32
+ #include "winpcap_sdk_include/pcap.h"
+
+#elif __linux__
+  #include "pcap.h"
+#else
+  #include "pcap.h"
+#endif
+
+
 #include "utils/logger.hpp"
 #include "utils/verbose.hpp"
 #include "validuvc/control_config.hpp"
