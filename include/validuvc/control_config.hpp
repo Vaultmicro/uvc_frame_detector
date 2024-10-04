@@ -1,4 +1,4 @@
-#ifndef CONTROL_CONFIG_HPP
+﻿#ifndef CONTROL_CONFIG_HPP
 #define CONTROL_CONFIG_HPP
 
 #include <string>

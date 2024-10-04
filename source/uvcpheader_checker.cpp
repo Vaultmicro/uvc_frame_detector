@@ -55,7 +55,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         frame->add_payload(payload_header, uvc_payload.size());
         frame->add_received_chrono_time(received_time);
 
-        size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), 0);
+        size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
         if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
           frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
         }
@@ -100,7 +100,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       new_frame->add_payload(payload_header, uvc_payload.size());
       new_frame->add_received_chrono_time(received_time);
 
-      size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), 0);
+      size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
       if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
         new_frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
       }

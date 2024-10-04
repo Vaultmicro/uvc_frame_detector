@@ -21,7 +21,7 @@
 
 
 #ifdef _WIN32
- #include "winpcap_sdk_include/pcap.h"
+ #include "npcap_sdk_include_1.13/pcap.h"
 
 #elif __linux__
   #include "pcap.h"

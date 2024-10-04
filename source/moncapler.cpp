@@ -17,7 +17,7 @@
 
 
 #ifdef _WIN32
- #include "winpcap_sdk_include/pcap.h"
+ #include "npcap_sdk_include_1.13/pcap.h"
 
 #elif __linux__
   #include "pcap.h"
@@ -253,7 +253,10 @@ std::string convertToKST(double unix_timestamp) {
   std::time_t time = static_cast<std::time_t>(unix_timestamp);
 
 #ifdef _WIN32
-  std::tm* gmtm = gmtime_s(&time);
+  std::tm temp_gmtm = {};
+  errno_t err = gmtime_s(&temp_gmtm, &time);
+  std::tm* gmtm = &temp_gmtm;
+
 #endif
 #ifdef __linux__
   std::tm* gmtm = std::gmtime(&time);

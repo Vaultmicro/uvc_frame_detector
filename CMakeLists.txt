@@ -26,8 +26,8 @@ set(PCAP_LIBRARIES
 )
 
 set(NPCAP_LIBRARIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/Packet.lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/wpcap.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/Packet.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/wpcap.lib
 )
 
 
