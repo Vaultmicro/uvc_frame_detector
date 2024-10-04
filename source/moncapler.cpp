@@ -215,7 +215,6 @@ void clean_exit(int signum) {
     } else {
       v_cerr_3 << "pcap_stats failed: " << pcap_geterr(handle) << std::endl;
     }
-    pcap_close(handle);
   }
 
   {
@@ -559,7 +558,6 @@ void process_packets() {
     }
     // header_checker.print_packet(packet);
   }
-  log_file.close();
   std::cout << "Process packet() end" << std::endl;
 }
 
@@ -787,15 +785,6 @@ int main(int argc, char* argv[]) {
   if(log_file.is_open()){
     log_file.close();
   }
-
-  {
-    std::lock_guard<std::mutex> lock(queue_mutex);
-    stop_processing = true;
-  }
-
-  queue_cv.notify_one();  // Notify the processing thread
-  process_thread.join();
-
   // This code will not be reached if pcap_loop runs indefinitely
   clean_exit(0);
 

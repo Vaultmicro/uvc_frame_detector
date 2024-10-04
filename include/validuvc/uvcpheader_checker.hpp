@@ -261,12 +261,13 @@ class UVCPHeaderChecker {
 
         ~UVCPHeaderChecker() {
             std::cout << "UVCPHeaderChecker Destructor" << std::endl;
-            print_stats();
 
             stop_timer_thread = true;
             if (fps_thread.joinable()) {
                 fps_thread.join();
             }
+            print_stats();
+
         }
 
         std::list<std::unique_ptr<ValidFrame>> frames;
