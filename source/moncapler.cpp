@@ -229,7 +229,7 @@ void clean_exit(int signum) {
   }
 
   v_cout_2 << "Exiting safely..." << std::endl;
-  exit(signum);
+  //exit(signum);
 }
 
 std::string getCurrentTimeFormatted() {
