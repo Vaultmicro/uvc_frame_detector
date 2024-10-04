@@ -273,6 +273,7 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
   const URB_Data* urb_data = reinterpret_cast<const URB_Data*>(packet);
 #ifdef UNIT_TEST
   unit_urb_type = urb_data->urb_type;
+  packet_push_count = 0;
 #endif
   // Extract busnum, devnum, epnum
   int bus_number = static_cast<int>(urb_data->urb_bus_id);
@@ -621,12 +622,16 @@ int main(int argc, char* argv[]) {
     } else if (std::strcmp(argv[i], "-ff") == 0 && i + 1 < argc) {
       ControlConfig::set_frame_format(argv[i + 1]);
       ff_set = true;
+    } else if (std::strcmp(argv[i], "-mf") == 0 && i + 1 < argc) {
+      ControlConfig::set_dwMaxVideoFrameSize(std::atoi(argv[i + 1]));
+    } else if (std::strcmp(argv[i], "-mp") == 0 && i + 1 < argc) {
+      ControlConfig::set_dwMaxPayloadTransferSize(std::atoi(argv[i + 1]));
     } else if (std::strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
       verbose_level = std::atoi(argv[i + 1]);
     } else if (std::strcmp(argv[i], "-lv") == 0 && i + 1 < argc) {
       log_verbose_level = std::atoi(argv[i + 1]);
     } else {
-      v_cerr_3 << "Usage: " << argv[0]
+      v_cerr_1 << "Usage: " << argv[0]
                << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]  "
                   "[-fw frame_width] [-fh frame_height] [-fps frame_per_sec] "
                   "[-v verbose_level] [-lv log_verbose_level]"
@@ -636,9 +641,11 @@ int main(int argc, char* argv[]) {
   }
 
   if (selected_device.empty()) {
-    v_cerr_3 << "Error: Device not specified" << std::endl;
-    v_cerr_3 << "Usage: " << argv[0]
-             << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum]"
+    v_cerr_1 << "Error: Device not specified" << std::endl;
+    v_cerr_1 << "Usage: " << argv[0]
+             << " [-in usbmonX] [-bs buffer_size] [-bn busnum] [-dn devnum] "
+                "[-fw frame_width] [-fh frame_height] [-fps frame_per_sec] "
+                "[-v verbose_level] [-lv log_verbose_level]"
              << std::endl;
     return 1;
   }
@@ -703,10 +710,10 @@ int main(int argc, char* argv[]) {
   // Print the list of devices
   int i = 0;
   for (device = interfaces; device != nullptr; device = device->next) {
-    v_cout_3 << ++i << ": " << (device->name ? device->name : "No name")
+    v_cout_1 << ++i << ": " << (device->name ? device->name : "No name")
              << std::endl;
     if (device->description)
-      v_cout_3 << " (" << device->description << ")" << std::endl;
+      v_cout_1 << " (" << device->description << ")" << std::endl;
   }
 
   // Find the specified device
@@ -717,7 +724,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (device == nullptr) {
-    v_cerr_3 << "Error: Device " << selected_device << " not found"
+    v_cerr_1 << "Error: Device " << selected_device << " not found"
              << std::endl;
     pcap_freealldevs(interfaces);
     return 1;
@@ -725,7 +732,7 @@ int main(int argc, char* argv[]) {
 
   handle = pcap_open_live(device->name, buffer_size, 1, 1000, error_buffer);
   if (handle == nullptr) {
-    v_cerr_3 << "Error opening device: " << error_buffer << std::endl;
+    v_cerr_1 << "Error opening device: " << error_buffer << std::endl;
     pcap_freealldevs(interfaces);
     return 1;
   }
@@ -749,7 +756,7 @@ int main(int argc, char* argv[]) {
   std::thread process_thread(process_packets);
   // std::thread process_thread(test_print_process_packets);
 
-  v_cout_3 << " Thread started" << std::endl;
+  v_cout_1 << " Thread started" << std::endl;
 
   capture_thread.join();
   // // Start packet capture
