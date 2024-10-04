@@ -1,4 +1,4 @@
-#ifndef MONCAPLER_HPP
+﻿#ifndef MONCAPLER_HPP
 #define MONCAPLER_HPP
 
 #include <chrono>
@@ -58,8 +58,16 @@ extern int log_verbose_level;
 extern int target_busnum;
 extern int target_devnum;
 
-// Structure declarations
-typedef struct __attribute__((packed, aligned(1))) {
+#ifdef _MSC_VER
+    #pragma pack(push, 1)
+    #define PACKED 
+#elif defined(__GNUC__)
+    #define PACKED __attribute__((packed, aligned(1)))
+#else
+    #define PACKED
+#endif
+
+typedef struct PACKED {
   uint64_t urb_id;
   uint8_t urb_type;
   uint8_t urb_transfer_type;
@@ -95,12 +103,18 @@ typedef struct __attribute__((packed, aligned(1))) {
   uint32_t iso_descriptor_number;
 } URB_Data;
 
-typedef struct __attribute__((packed, aligned(1))) {
+typedef struct PACKED {
   uint32_t iso_descriptor_status;
   uint32_t iso_descriptor_offset;
   uint32_t iso_descriptor_length;
   uint32_t iso_descriptor_padding;
 } ISO_Descriptor;
+
+
+#ifdef _MSC_VER
+    #pragma pack(pop) // MSVC에서의 pack 해제
+#endif
+
 
 // Function declarations
 void log_packet_xxd_format(std::ofstream* log_file, const u_char* data,

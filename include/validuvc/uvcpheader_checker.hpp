@@ -1,4 +1,4 @@
-#ifndef UVCPHEADER_CHECKER_HPP
+﻿#ifndef UVCPHEADER_CHECKER_HPP
 #define UVCPHEADER_CHECKER_HPP
 
 #include <vector>
@@ -32,6 +32,8 @@
 
 #ifdef _MSC_VER
     #pragma pack(push, 1)
+    #define PACKED 
+
 #elif defined(__GNUC__)
     #define PACKED __attribute__((packed, aligned(1)))
 #else

@@ -1,4 +1,4 @@
-
+﻿
 #include "validuvc/uvcpheader_checker.hpp"
 
 #include <chrono>

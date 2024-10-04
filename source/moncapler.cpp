@@ -1,4 +1,4 @@
-#include "moncapler.hpp"
+﻿#include "moncapler.hpp"
 
 #include <chrono>
 #include <condition_variable>
@@ -13,7 +13,7 @@
 #include <queue>
 #include <sstream>
 #include <thread>
-  #include <filesystem>
+#include <filesystem>
 
 
 #ifdef _WIN32
@@ -252,8 +252,12 @@ std::string getCurrentTimeFormatted() {
 std::string convertToKST(double unix_timestamp) {
   std::time_t time = static_cast<std::time_t>(unix_timestamp);
 
+#ifdef _WIN32
+  std::tm* gmtm = gmtime_s(&time);
+#endif
+#ifdef __linux__
   std::tm* gmtm = std::gmtime(&time);
-
+#endif
   gmtm->tm_hour += 9;
 
   if (gmtm->tm_hour >= 24) {
