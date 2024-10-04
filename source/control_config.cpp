@@ -2,11 +2,14 @@
 
 #include <algorithm>
 #include <iostream>
+#include <cstdint>
 
 int ControlConfig::width = 1280;
 int ControlConfig::height = 720;
 int ControlConfig::fps = 30;
 std::string ControlConfig::frame_format = "mjpeg";
+uint64_t ControlConfig::dwMaxVideoFrameSize = 16777216;
+uint64_t ControlConfig::dwMaxPayloadTransferSize = 1310720;
 
 void ControlConfig::set_width(int w) { width = w; }
 
@@ -27,6 +30,16 @@ void ControlConfig::set_frame_format(const std::string& format) {
               << ". Using default format 'mjpeg'." << std::endl;
     frame_format = "mjpeg";
   }
+}
+
+uint64_t ControlConfig::set_dwMaxVideoFrameSize(uint64_t max_video_frame_size) {
+  dwMaxVideoFrameSize = max_video_frame_size;
+  return 0;
+}
+
+uint64_t ControlConfig::set_dwMaxPayloadTransferSize(uint64_t max_payload_transfer_size) {
+  dwMaxPayloadTransferSize = max_payload_transfer_size;
+  return 0;
 }
 
 int ControlConfig::get_width() { return width; }

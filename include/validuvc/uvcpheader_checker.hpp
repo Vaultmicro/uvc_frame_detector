@@ -50,18 +50,28 @@ typedef struct __attribute__((packed, aligned(1))) {
 
 enum UVCError {
   ERR_NO_ERROR = 0,
-  ERR_ERR_BIT_SET = 1,    // Error bit is set
-  ERR_LENGTH_OUT_OF_RANGE = 2, // Invalid header length
-
-  ERR_LENGTH_INVALID = 4, // Invalid length for PTS, Invalid length for SCR
-  ERR_SCR_LENGTH_INVALID = 5, // 
-  ERR_NO_PTS_SCR_LENGTH_INVALID = 6, // Neither PTS nor SCR but invalid length
-  ERR_RESERVED_BIT_SET = 7, // Reserved bit is set
-  ERR_FID_MISMATCH = 8,    // Frame Identifier mismatch
-  ERR_SWAP = 9,
-  ERR_MISSING_EOF = 10,
+  ERR_EMPTY_PAYLOAD = 1,
+  ERR_MAX_PAYLAOD_OVERFLOW= 2,
+  ERR_ERR_BIT_SET = 3,    // Error bit is set
+  ERR_LENGTH_OUT_OF_RANGE = 4, // Invalid header length
+  ERR_LENGTH_INVALID = 5, // Invalid length for PTS, Invalid length for SCR
+  ERR_RESERVED_BIT_SET = 6, // Reserved bit is set
+  ERR_EOH_BIT = 7,
+  ERR_TOGGLE_BIT_OVERLAPPED = 8,
+  ERR_FID_MISMATCH = 9,    // Frame Identifier mismatch
+  ERR_SWAP = 10,
+  ERR_MISSING_EOF = 11,
 
   ERR_UNKNOWN = 99
+};
+
+enum FrameError {
+  ERR_FRAME_NO_ERROR = 0,
+  ERR_FRAME_ERROR = 1,
+  ERR_FRAME_MAX_FRAME_OVERFLOW = 2,
+  ERR_FRAME_INVALID_YUYV_RAW_SIZE = 3,
+  ERR_FRAME_SAME_DIFFERENT_PTS = 4,
+
 };
 
 class ValidFrame{
@@ -88,7 +98,7 @@ class ValidFrame{
         }
 
         void set_frame_error() {
-            frame_error = 1;
+            frame_error = ERR_FRAME_ERROR;
         }
 
         void set_eof_reached() {
@@ -107,6 +117,7 @@ class ValidFrame{
             urb_sec_usec_list.emplace_back(sec, usec);
         }
 
+    
 };
 
 class UVCPHeaderChecker {
@@ -125,9 +136,9 @@ class UVCPHeaderChecker {
         uint32_t current_frame_number; 
 
     public:
-
-        UVCPHeaderChecker() : stop_timer_thread(false), frame_count(0), current_frame_number(0) {
-            fps_thread = std::thread(&UVCPHeaderChecker::timer_thread, this);
+     
+        UVCPHeaderChecker()          : stop_timer_thread(false), frame_count(0), current_frame_number(0) {
+       fps_thread = std::thread(&UVCPHeaderChecker::timer_thread, this);
         }
 
         ~UVCPHeaderChecker() {
@@ -140,12 +151,18 @@ class UVCPHeaderChecker {
         std::list<std::unique_ptr<ValidFrame>> frames;
         std::vector<std::unique_ptr<ValidFrame>> processed_frames;
 
-        uint8_t payload_valid_ctrl(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
-        UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
+        uint8_t payload_valid_ctrl(
+            const std::vector<u_char>& uvc_payload,
+            std::chrono::time_point<std::chrono::steady_clock> received_time);
+        
+        UVC_Payload_Header parse_uvc_payload_header(
+            const std::vector<u_char>& uvc_payload,
+            std::chrono::time_point<std::chrono::steady_clock> received_time);
 
-        void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);   
+        void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);
         void save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame);
-        void save_payload_header_to_log(const UVC_Payload_Header& payload_header, std::chrono::time_point<std::chrono::steady_clock> received_time);
-
+        void save_payload_header_to_log(
+            const UVC_Payload_Header& payload_header,
+            std::chrono::time_point<std::chrono::steady_clock> received_time);
 };
 #endif // UVCPHEADER_CHECKER_HPP
