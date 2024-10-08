@@ -67,6 +67,30 @@ extern int target_devnum;
     #define PACKED
 #endif
 
+#ifdef _WIN32
+
+typedef struct PACKED {
+  uint16_t pseudoheader;
+  uint64_t urb_id;
+  uint32_t urb_status;
+  uint8_t direction;
+  uint16_t urb_bus_id;
+  uint16_t device_address;
+  uint8_t endpoint;
+  uint8_t urb_transfer_type;
+  uint32_t data_length;
+  //may have iso descriptors here
+  //iso_descriptor_count is crucial is not, then switch descriptor count to ISO_Descriptor for only window
+} URB_Data;
+
+typedef struct PACKED {
+  uint32_t iso_descriptor_status;
+  uint32_t iso_descriptor_offset;
+  uint32_t iso_descriptor_length;
+  uint32_t iso_descriptor_padding;
+} ISO_Descriptor;
+
+#elif __linux__
 typedef struct PACKED {
   uint64_t urb_id;
   uint8_t urb_type;
@@ -109,6 +133,7 @@ typedef struct PACKED {
   uint32_t iso_descriptor_length;
   uint32_t iso_descriptor_padding;
 } ISO_Descriptor;
+#endif
 
 
 #ifdef _MSC_VER
