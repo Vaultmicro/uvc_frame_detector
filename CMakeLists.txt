@@ -62,100 +62,100 @@ endif (WIN32)
 
 
 
-# add_executable(
-#     example
-#     ${CMAKE_CURRENT_SOURCE_DIR}/examples/smpte.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-# )
+add_executable(
+    example
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/smpte.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
 
-# add_executable(
-#     valid_test
-#     ${CMAKE_CURRENT_SOURCE_DIR}/tests/valid_test.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-# )
+add_executable(
+    valid_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/valid_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
 
-# target_link_libraries(
-#     valid_test
-#     PRIVATE
-#         gtest
-#         gtest_main
-# )
+target_link_libraries(
+    valid_test
+    PRIVATE
+        gtest
+        gtest_main
+)
 
-# add_executable(
-#     frame_test_bulk
-#     ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_bulk.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
-# )
+add_executable(
+    frame_test_bulk
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_bulk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
+)
 
-# target_link_libraries(
-#     frame_test_bulk
-#     PRIVATE
-#         gtest
-#         gtest_main 
-# )
+target_link_libraries(
+    frame_test_bulk
+    PRIVATE
+        gtest
+        gtest_main 
+)
 
-# add_executable(
-#     frame_test_iso
-#     ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_iso.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
-# )
+add_executable(
+    frame_test_iso
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_iso.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
+)
 
-# target_link_libraries(
-#     frame_test_iso
-#     PRIVATE
-#         gtest
-#         gtest_main
-# )
-
-
-# add_executable(
-#     test_packet_handler
-#     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_packet_handler.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-# )
-
-# target_compile_definitions(test_packet_handler PRIVATE UNIT_TEST)
-
-# target_link_libraries(
-#     test_packet_handler
-#     PRIVATE
-#         gtest
-#         gtest_main
-#         ${PCAP_LIBRARIES}
-# )
+target_link_libraries(
+    frame_test_iso
+    PRIVATE
+        gtest
+        gtest_main
+)
 
 
+add_executable(
+    test_packet_handler
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_packet_handler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
 
-# add_executable(
-#     show_urb_header
-#     ${CMAKE_CURRENT_SOURCE_DIR}/tests/show_urb_header.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-# )
+target_compile_definitions(test_packet_handler PRIVATE UNIT_TEST)
 
-# target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
+target_link_libraries(
+    test_packet_handler
+    PRIVATE
+        gtest
+        gtest_main
+        ${PCAP_LIBRARIES}
+)
 
-# target_link_libraries(
-#     show_urb_header
-#     PRIVATE
-#         ${PCAP_LIBRARIES}
-# )
+
+
+add_executable(
+    show_urb_header
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/show_urb_header.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
+
+target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
+
+target_link_libraries(
+    show_urb_header
+    PRIVATE
+        ${PCAP_LIBRARIES}
+)

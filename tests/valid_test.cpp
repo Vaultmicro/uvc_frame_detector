@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "validuvc/uvcpheader_checker.hpp"
+#include "validuvc/control_config.hpp"
 
 class uvc_header_checker_test : public ::testing::Test {
  protected:
@@ -236,7 +237,36 @@ TEST_F(uvc_header_checker_test, fid_mismatch_test) {
   EXPECT_EQ(valid_err_1, ERR_FID_MISMATCH);  // Expect ERR_FID_MISMATCH
 }
 
+TEST_F(uvc_header_checker_test, empty_including_header_test) {
+  std::vector<u_char> no_packet = create_packet({
+  });
+
+  auto current_time = std::chrono::steady_clock::now();
+  uint8_t valid_err =
+      header_checker.payload_valid_ctrl(no_packet, current_time);
+  EXPECT_EQ(valid_err, ERR_EMPTY_PAYLOAD);  // Expect error
+}
+
+TEST_F(uvc_header_checker_test, max_payload_overflow_test) {
+  std::vector<u_char> overflow_packet = create_packet({
+      0x02, 0b10000001,                    // HLE and BFH with FID mismatch
+      0x00, 0x00, 0x00, 0x00,              // PTS
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // SCR
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+  });
+  ControlConfig::dwMaxPayloadTransferSize = 30;
+
+  auto current_time = std::chrono::steady_clock::now();
+  uint8_t valid_err =
+      header_checker.payload_valid_ctrl(overflow_packet, current_time);
+  EXPECT_EQ(valid_err, ERR_MAX_PAYLAOD_OVERFLOW);  // Expect error
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+
