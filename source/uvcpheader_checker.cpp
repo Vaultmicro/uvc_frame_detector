@@ -1,5 +1,4 @@
 ﻿
-#include "validuvc/uvcpheader_checker.hpp"
 
 #include <chrono>
 #include <cstdint>
@@ -11,7 +10,12 @@
 #include <stddef.h>
 
 #include "utils/verbose.hpp"
+#include "validuvc/uvcpheader_checker.hpp"
 #include "validuvc/control_config.hpp"
+
+#ifdef _WIN32
+  typedef unsigned char u_char;
+#endif
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,

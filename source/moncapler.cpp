@@ -17,7 +17,7 @@
 
 
 #ifdef _WIN32
-
+  #include "pcap.h"
 #elif __linux__
   #include "pcap.h"
 #else

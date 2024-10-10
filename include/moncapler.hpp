@@ -82,6 +82,13 @@ typedef struct PACKED {
   //iso_descriptor_count is crucial is not, then switch descriptor count to ISO_Descriptor for only window
 } URB_Data;
 
+// // have to check real camera data
+// typedef struct PACKED{
+//     uint32_t  TransferFlags;
+//     uint32_t  TransferBufferLength;
+//     uint32_t UrbLink;
+// };
+
 typedef struct PACKED {
   uint32_t iso_descriptor_status;
   uint32_t iso_descriptor_offset;
