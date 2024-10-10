@@ -20,15 +20,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(PCAP REQUIRED libpcap)
+
 set(PCAP_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so.1.10.4
 )
 
-set(NPCAP_LIBRARIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/Packet.lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/wpcap.lib
-)
+# set(NPCAP_LIBRARIES
+#     ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/Packet.lib
+#     ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/wpcap.lib
+# )
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -52,14 +53,22 @@ if (UNIX)
             ${PCAP_LIBRARIES}
     )
 endif(UNIX)
-if (WIN32)
-    target_link_libraries(
-        uvc_frame_detector
-        PRIVATE
-            ${NPCAP_LIBRARIES}
-    )
-endif (WIN32)
-
+# if (WIN32)
+#     target_link_libraries(
+#         uvc_frame_detector
+#         PRIVATE
+#             ${NPCAP_LIBRARIES}
+#     )
+# endif (WIN32)
+add_executable(
+    oldmanandsea
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/circular_buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
 
 
 add_executable(
