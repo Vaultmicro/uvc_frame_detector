@@ -36,7 +36,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${googletest_SOURCE_DIR}/googlemock/include)
 include_directories(${googletest_SOURCE_DIR}/googletest/include)
 
-
+if(UNIX)
 add_executable(
     uvc_frame_detector
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
@@ -45,6 +45,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
+endif(UNIX)
 
 if (UNIX)
     target_link_libraries(
@@ -60,16 +61,20 @@ endif(UNIX)
 #             ${NPCAP_LIBRARIES}
 #     )
 # endif (WIN32)
+
+if(WIN32)
 add_executable(
     oldmanandsea
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/circular_buffer.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/source/circular_buffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
+endif(WIN32)
 
+if (UNIX)
 
 add_executable(
     example
@@ -168,3 +173,5 @@ target_link_libraries(
     PRIVATE
         ${PCAP_LIBRARIES}
 )
+
+endif(UNIX)
