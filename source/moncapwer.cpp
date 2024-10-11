@@ -106,6 +106,7 @@ void capture_packets() {
         auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
         uint32_t frame_length = (frame_len != "N/A") ? std::stoul(frame_len) : 0;
+        static int start_flag = 0;
 
         if (usb_capdata == "N/A") {
             continue;
@@ -139,17 +140,17 @@ void capture_packets() {
               // Skip control transfer
           } else if (usb_transfer_type == "0x03") {
 
-            if (bulk_maxlengthsize < frame_length) {
-              bulk_maxlengthsize = frame_length;
-            }
-
-            if (bulk_maxlengthsize == frame_length) {
+            if (bulk_maxlengthsize == frame_length && start_flag == 1) {
               // Continue the transfer
               std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
               temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
               // temp_buffer = hex_string_to_bytes(usb_capdata);
             } else {
-            
+              if (bulk_maxlengthsize < frame_length) {
+                bulk_maxlengthsize = frame_length;
+              }
+
+              start_flag = 1;
               std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
               temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
               // temp_buffer = hex_string_to_bytes(usb_capdata);
