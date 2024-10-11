@@ -76,17 +76,18 @@ std::vector<u_char> hex_string_to_bytes(const std::string& hex) {
 
 
 void capture_packets() {
-    // std::string output_path = "C:\\Users\\gyuho\\uvc_frame_detector\\log\\pipe.txt";
-    // std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
+    std::string output_path = "C:\\Users\\gyuho\\uvc_frame_detector\\log\\pipe.txt";
+    std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
 
-    // if (!log_file.is_open()) {
-    //     std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
-    //     return;
-    // } else {
-    //     std::cout << "Log file opened successfully: " << output_path << std::endl;
-    // }
+    if (!log_file.is_open()) {
+        std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
+        return;
+    } else {
+        std::cout << "Log file opened successfully: " << output_path << std::endl;
+    }
 
     static std::vector<u_char> temp_buffer;
+    static uint32_t bulk_maxlengthsize = 0;
 
     std::string line;
     std::cout << "Waiting for input..." << std::endl;
@@ -104,6 +105,8 @@ void capture_packets() {
         std::string usb_capdata = tokens.size() > 3 ? tokens[3] : "N/A";
         auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
+        uint32_t frame_length = (frame_len != "N/A") ? std::stoul(frame_len) : 0;
+
         if (usb_capdata == "N/A") {
             continue;
         } else {
@@ -115,13 +118,18 @@ void capture_packets() {
             for (const std::string& token : capdata_tokens) {
                 temp_buffer = hex_string_to_bytes(token);
 
-              {
-                  std::lock_guard<std::mutex> lock(queue_mutex);
-                  packet_queue.push(temp_buffer);
+                log_file << "temp_buffer: ";
+                for (u_char byte : temp_buffer) {
+                    log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+                }
 
-                  std::lock_guard<std::mutex> time_lock(time_mutex);
-                  time_records.push(time_point);
-              }
+                {
+                    std::lock_guard<std::mutex> lock(queue_mutex);
+                    packet_queue.push(temp_buffer);
+
+                    std::lock_guard<std::mutex> time_lock(time_mutex);
+                    time_records.push(time_point);
+                }
                 temp_buffer.clear();
                 queue_cv.notify_one();
             }
@@ -131,22 +139,36 @@ void capture_packets() {
               // Skip control transfer
           } else if (usb_transfer_type == "0x03") {
 
-            temp_buffer = hex_string_to_bytes(usb_capdata);
-
-            // log_file << "temp_buffer: ";
-            // for (u_char byte : temp_buffer) {
-            //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-            // }
-
-            {
-                std::lock_guard<std::mutex> lock(queue_mutex);
-                packet_queue.push(temp_buffer);
-
-                std::lock_guard<std::mutex> time_lock(time_mutex);
-                time_records.push(time_point);
+            if (bulk_maxlengthsize < frame_length) {
+              bulk_maxlengthsize = frame_length;
             }
-            temp_buffer.clear();
-            queue_cv.notify_one();
+
+            if (bulk_maxlengthsize == frame_length) {
+              // Continue the transfer
+              std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
+              temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
+              // temp_buffer = hex_string_to_bytes(usb_capdata);
+            } else {
+            
+              std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
+              temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
+              // temp_buffer = hex_string_to_bytes(usb_capdata);
+
+              // log_file << "temp_buffer: ";
+              // for (u_char byte : temp_buffer) {
+              //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+              // }
+
+              {
+                  std::lock_guard<std::mutex> lock(queue_mutex);
+                  packet_queue.push(temp_buffer);
+
+                  std::lock_guard<std::mutex> time_lock(time_mutex);
+                  time_records.push(time_point);
+              }
+              temp_buffer.clear();
+              queue_cv.notify_one();
+            }
 
           } else {
               // Handle unexpected transfer type
@@ -168,8 +190,8 @@ void capture_packets() {
         // log_file.flush();
     }
 
-    // log_file.close();
-    // std::cout << "Log file closed." << std::endl;
+    log_file.close();
+    std::cout << "Log file closed." << std::endl;
 }
 
 
