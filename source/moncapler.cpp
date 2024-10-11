@@ -721,7 +721,6 @@ int main(int argc, char* argv[]) {
 
   // Get current time formatted string
   std::string current_time_str = getCurrentTimeFormatted();
-
   // Ensure the log directory exists
   std::string base_path = "./";
   std::string log_dir = base_path + "../log";

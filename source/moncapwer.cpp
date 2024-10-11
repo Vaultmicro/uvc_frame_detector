@@ -11,7 +11,6 @@
 #include <queue>
 #include <csignal>
 
-#include <utils/circular_buffer.hpp>
 #include <validuvc/control_config.hpp>
 #include <validuvc/uvcpheader_checker.hpp>
 #include <utils/verbose.hpp>
@@ -25,11 +24,11 @@ bool stop_processing = false;
 
 
 void clean_exit(int signum) {
-//   {
-//     std::lock_guard<std::mutex> lock(queue_mutex);
-//     stop_processing = true;
-//   }
-//   queue_cv.notify_all();
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    stop_processing = true;
+  }
+  queue_cv.notify_all();
 
 //   if (log_file.is_open()) {
 //     log_file.close();
@@ -52,18 +51,42 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
     return tokens;
 }
 
-void capture_packets(CircularBuffer<char>& data_circular_buffer, 
-                     CircularBuffer<double>& time_circular_buffer, 
-                     CircularBuffer<int>& len_circular_buffer) {
-    std::string output_path = "C:\\Users\\gyuho\\win_p\\pipe.txt";
-    std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
+std::chrono::time_point<std::chrono::steady_clock> convert_epoch_to_time_point(double frame_time_epoch) {
+    auto duration = std::chrono::duration<double>(frame_time_epoch);
+    auto time_point = std::chrono::steady_clock::time_point(std::chrono::duration_cast<std::chrono::steady_clock::duration>(duration));
+    return time_point;
+}
 
-    if (!log_file.is_open()) {
-        std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
-        return;
-    } else {
-        std::cout << "Log file opened successfully: " << output_path << std::endl;
+std::vector<u_char> hex_string_to_bytes(const std::string& hex) {
+    std::vector<u_char> bytes;
+    try {
+        for (size_t i = 0; i < hex.length(); i += 2) {
+            std::string byte_string = hex.substr(i, 2); 
+            u_char byte = static_cast<u_char>(std::stoul(byte_string, nullptr, 16));
+            bytes.push_back(byte);
+        }
+    } catch (const std::invalid_argument&) {
+        std::cerr << "Invalid argument error." << std::endl;
+    } catch (const std::out_of_range&) {
+        std::cerr << "Out of range error." << std::endl;
     }
+    return bytes;
+}
+
+
+
+void capture_packets() {
+    // std::string output_path = "C:\\Users\\gyuho\\uvc_frame_detector\\log\\pipe.txt";
+    // std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
+
+    // if (!log_file.is_open()) {
+    //     std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
+    //     return;
+    // } else {
+    //     std::cout << "Log file opened successfully: " << output_path << std::endl;
+    // }
+
+    static std::vector<u_char> temp_buffer;
 
     std::string line;
     std::cout << "Waiting for input..." << std::endl;
@@ -73,50 +96,80 @@ void capture_packets(CircularBuffer<char>& data_circular_buffer,
         std::vector<std::string> tokens = split(line, ';');
 
         // Prepare fields with defaults if they are missing
+        // -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata or usb.iso.data
+        // MUST BE IN CORRECT ORDER
         std::string usb_transfer_type = tokens.size() > 0 ? tokens[0] : "N/A";
         std::string frame_time_epoch = tokens.size() > 1 ? tokens[1] : "N/A";
         std::string frame_len = tokens.size() > 2 ? tokens[2] : "N/A";
         std::string usb_capdata = tokens.size() > 3 ? tokens[3] : "N/A";
+        auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
-        // Process based on usb_transfer_type
-        if (usb_transfer_type == "0x00") {
-            std::vector<std::string> capdata_tokens = split(usb_capdata, ',');
-            for (const auto& token : capdata_tokens) {
-                data_circular_buffer.enqueue(token.c_str(), token.size());
-                double frame_time_epoch_double = std::stod(frame_time_epoch);
-                time_circular_buffer.enqueue(&frame_time_epoch_double, 1);
-                int frame_len_int = std::stoi(frame_len);
-                len_circular_buffer.enqueue(&frame_len_int, 1);
-            }
-        } else if (usb_transfer_type == "0x01") {
-            // Skip interrupt transfer
-        } else if (usb_transfer_type == "0x02") {
-            // Skip control transfer
-        } else if (usb_transfer_type == "0x03") {
-            data_circular_buffer.enqueue(usb_capdata.c_str(), usb_capdata.size());
-            double frame_time_epoch_double = std::stod(frame_time_epoch);
-            time_circular_buffer.enqueue(&frame_time_epoch_double, 1);
-            int frame_len_int = std::stoi(frame_len);
-            len_circular_buffer.enqueue(&frame_len_int, 1);
+        if (usb_capdata == "N/A") {
+            continue;
         } else {
-            // Handle unexpected transfer type
+
+          // Process based on usb_transfer_type
+          if (usb_transfer_type == "0x00") {
+            std::vector<std::string> capdata_tokens = split(usb_capdata, ',');
+            
+            for (const std::string& token : capdata_tokens) {
+                temp_buffer = hex_string_to_bytes(token);
+
+              {
+                  std::lock_guard<std::mutex> lock(queue_mutex);
+                  packet_queue.push(temp_buffer);
+
+                  std::lock_guard<std::mutex> time_lock(time_mutex);
+                  time_records.push(time_point);
+              }
+                temp_buffer.clear();
+                queue_cv.notify_one();
+            }
+          } else if (usb_transfer_type == "0x01") {
+              // Skip interrupt transfer
+          } else if (usb_transfer_type == "0x02") {
+              // Skip control transfer
+          } else if (usb_transfer_type == "0x03") {
+
+            temp_buffer = hex_string_to_bytes(usb_capdata);
+
+            // log_file << "temp_buffer: ";
+            // for (u_char byte : temp_buffer) {
+            //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+            // }
+
+            {
+                std::lock_guard<std::mutex> lock(queue_mutex);
+                packet_queue.push(temp_buffer);
+
+                std::lock_guard<std::mutex> time_lock(time_mutex);
+                time_records.push(time_point);
+            }
+            temp_buffer.clear();
+            queue_cv.notify_one();
+
+          } else {
+              // Handle unexpected transfer type
+          }
+
         }
 
-        // Print each field separately
+        // // Print each field separately
         // std::cout << "frame.time_epoch: " << frame_time_epoch << std::endl;
         // std::cout << "frame.len: " << frame_len << std::endl;
         // std::cout << "usb.capdata: " << usb_capdata << std::endl;
 
-        // Log the separated fields
-        log_file << "frame.time_epoch: " << frame_time_epoch << std::endl;
-        log_file << "frame.len: " << frame_len << std::endl;
-        log_file << "usb.capdata: " << usb_capdata << std::endl;
+        // // Log the separated fields
+        // log_file << "usb_transfer_type: " << usb_transfer_type << std::endl;
+        // log_file << "frame.time_epoch: " << frame_time_epoch << std::endl;
+        // log_file << "frame.len: " << frame_len << std::endl;
+        // log_file << "usb.capdata: " << usb_capdata << std::endl;
 
-        log_file.flush();
+        // log_file.flush();
     }
 
-    log_file.close();
-    std::cout << "Log file closed." << std::endl;
+    // log_file.close();
+    // std::cout << "Log file closed." << std::endl;
 }
 
 
@@ -132,7 +185,6 @@ void process_packets() {
     if (stop_processing && packet_queue.empty()) {
       break;
     }
-
     
     if (!packet_queue.empty()) {
 
@@ -231,15 +283,9 @@ int main(int argc, char* argv[]) {
 
 
     // Create buffers
-    CircularBuffer<char> data_circular_buffer(131072 * 30);
-    CircularBuffer<double> time_circular_buffer(30);
-    CircularBuffer<int> len_circular_buffer(30);
 
     // Create threads for capture and processing
-    std::thread capture_thread(capture_packets, 
-                               std::ref(data_circular_buffer), 
-                               std::ref(time_circular_buffer), 
-                               std::ref(len_circular_buffer));
+    std::thread capture_thread(capture_packets);
 
     std::thread process_thread(process_packets);  // Process packets in another thread (empty for now)
 

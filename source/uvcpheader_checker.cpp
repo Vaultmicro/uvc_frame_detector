@@ -34,7 +34,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     return ERR_MAX_PAYLAOD_OVERFLOW;
   }
 
-
   static UVC_Payload_Header previous_previous_payload_header;
   static uint8_t previous_previous_error = 0;
   static UVC_Payload_Header previous_payload_header;
@@ -190,9 +189,10 @@ void UVCPHeaderChecker::timer_thread() {
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     const std::vector<u_char>& uvc_payload,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
-  UVC_Payload_Header payload_header;
+  UVC_Payload_Header payload_header = {};
   if (uvc_payload.size() < 2) {
     v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
+    save_payload_header_to_log(payload_header, received_time);
     return payload_header;  // check if payload is too small for payload header
   }
 
@@ -374,7 +374,12 @@ void UVCPHeaderChecker::save_frames_to_log(
 void UVCPHeaderChecker::save_payload_header_to_log(
     const UVC_Payload_Header& payload_header,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
+
+#ifdef __linux__
   std::ofstream log_file("../log/payload_headers_log.txt", std::ios::app);
+#elif _WIN32
+  std::ofstream log_file("..\\..\\log\\payload_headers_log.txt", std::ios::app);
+#endif
 
   if (!log_file.is_open()) {
     v_cerr_2 << "Error opening payload header log file." << std::endl;
