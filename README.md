@@ -1,7 +1,45 @@
 # uvc_frame_detector
 
+version 0.0.2
+included linux and window verison  
+each using usbmon and tshark for stream  
 
 ## Usage
+
+
+### In Window
+
+### Build
+0. mkdir log
+1. mkdir build
+2. cd build
+3. cmake ..
+4. cmake --build .
+5. cd Debug
+
+### Run  
+To run this code in window, must install wireshark in computer with USBPcap  
+If USBPcap is not installed with Wireshark, reinstall wireshark and check USBPcap install  
+After install, reboot  
+C:\Program Files\Wireshark
+Find Wireshark.exe > go to Help(H) > Wireshark info(A) > Folder  
+Check if Extcap Path is set extcap/wireshark  
+If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wireshark directory  
+  
+Go to project Directory  
+0. cd build  
+For BULK  
+"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg  
+
+For ISO
+"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg  
+
+-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data // Must be in correct order  
+if you are in build directory, can change C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build into .\Debug\oldmanandsea.exe  
+
+
+
+### In LINUX
 
 ### Build
 0. sudo modprobe usbmon
@@ -19,7 +57,8 @@ Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet <br/>
 Bus 001 Device 004: ID 2e1a:4c01 Insta360 Insta360 Link <br/>
 Bus 001 Device 005: ID 046d:085e Logitech, Inc. BRIO Ultra HD Webcam <br/>
 Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub <br/>
-2. sudo ./moncapler -in usbmon1 -bs 41536 -bn 1 -dn 4 -fw 1280 -fh 720 -fps 30 -ff mjpeg -v 2 -lv 1 <br/>
+2. sudo ./moncapler -in usbmon1 -bs 41536 -bn 1 -dn 4 -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf -mp -v 2 -lv 1 <br/>
+
 -interface <br/>
 usbmon0 for all usb transfers, usbmon1 only for usb bus 1, usbmon2 only for usb bus 2 ...<br/>
 -bus number, device number <br/>
@@ -61,102 +100,73 @@ Error statistics will be given<br/>
 Below is one of them <br/>
 
 ### Example Result
-Data Length: 13424<br/>
-Finish the transfer<br/>
-Processing packet of size: 177264<br/>
-UVC payload header is valid.<br/>
-Payload is valid.<br/>
-Data Length: 14169<br/>
-Finish the transfer<br/>
-Data Length: 13795<br/>
-Finish the transfer<br/>
-Processing packet of size: 2602841<br/>
-UVC payload header is valid.<br/>
-Payload is valid.<br/>
-Processing packet of size: 79331<br/>
-Invalid UVC payload header: Error bit is set.<br/>
-Invalid packet detected<br/>
 
-...<br/>
+### For window & linux
+
+press ctrl + c once to see statistics  
+
+Payload Error Statistics:  
+No Error: 133 (100%)  
+Empty Payload: 0 (0%)  
+Max Payload Overflow: 0 (0%)  
+Error Bit Set: 0 (0%)  
+Length Out of Range: 0 (0%)  
+Length Invalid: 0 (0%)  
+Reserved Bit Set: 0 (0%)  
+End of Header Bit: 0 (0%)  
+Toggle Bit Overlapped: 0 (0%)  
+Frame Identifier Mismatch: 0 (0%)    
+Swap: 0 (0%)  
+Missing EOF: 0 (0%)  
+Unknown Error: 0 (0%)  
+  
+Frame Error Statistics:  
+No Error: 133 (79.6407%)  
+Frame Drop: 34 (20.3593%)  
+Frame Error: 0 (0%)  
+Max Frame Overflow: 0 (0%)  
+Invalid YUYV Raw Size: 0 (0%)  
+Same Different PTS: 0 (0%)  
+
+
+### For Linux only
+
 Capture Statistics:<br/>
-
-
+  
 Total Packets received in usbmon: 6982<br/>
 Total Packets dropped by system buffer: 10122<br/>
 Total Packets dropped by interface: 0<br/>
-
-
+  
+    
 Total Packets counted in usbmon by application: 6952<br/>
 Total Packet Length bytes: 40249996<br/>
 Total Captured Packet Length bytes: 40249996<br/>
-
-
+  
+  
 Filtered Packets (busnum=1, devnum=4): 6940<br/>
 Filtered Packet Length bytes (busnum=1, devnum=4): 40249115<br/>
 Filtered Captured Packet Length bytes (busnum=1, devnum=4): 40249115<br/>
-
-
+  
+  
 If Filtered Packet Length bytes and Filtered Captured Packet Length bytes are different, then test enviroment is maybe unstable <br/>
 Starting camera after running code may cause difference in this value, ignore it if think unnecessary <br/>
-
+  
 ### Saved log file
 To compare raw data with result, go to log dir<br/>
 
-## Project Tree
+frames_log.txt can see every frame packets information  
 
-.
-├── build  
-│   ├── bin  
-│   ├── CMakeCache.txt  
-│   ├── CMakeFiles  
-│   ├── cmake_install.cmake  
-│   ├── _deps  
-│   ├── example  
-│   ├── frames_log.txt  
-│   ├── frame_test_bulk  
-│   ├── frame_test_iso  
-│   ├── lib  
-│   ├── Makefile  
-│   ├── moncapler  
-│   └── valid_test  
-├── CMakeLists.txt  
-├── examples  
-│   ├── smpte.cpp  
-│   └── smpte.txt  
-├── include  
-│   ├── pcap  
-│   ├── pcap-bpf.h  
-│   ├── pcap.h  
-│   ├── pcap-namedb.h  
-│   ├── utils  
-│   └── validuvc  
-├── library  
-│   ├── libpcap.a  
-│   ├── libpcap.so -> libpcap.so.0.8  
-│   ├── libpcap.so.0.8 -> libpcap.so.1.10.4  
-│   └── libpcap.so.1.10.4  
-├── log  
-│   ├── frames_log.txt  
-│   └── payload_headers_log.txt  
-├── README.md  
-├── scripts  
-│   ├── build.bash  
-│   ├── clang-foramt.bash  
-│   └── run.bash  
-├── source  
-│   ├── appraiser.cpp  
-│   ├── control_config.cpp  
-│   ├── logger.cpp  
-│   ├── moncapler.cpp  
-│   ├── uvcpheader_checker.cpp  
-│   └── verbose.cpp  
-└── tests  
-    ├── frame_test_bulk.cpp  
-    ├── frame_test_iso.cpp  
-    └── valid_test.cpp  
+### Test Codes
+For now  
+frame_test_bulk,  
+frame_test_iso,  
+valid_test  
+is available  
+all tests passed 100  
 
+test_packaet_handler is also available for linux  
 
 
 ### TODO
-if scr available, make that with graph together with chorono list in moncapler.cpp <br/>
-believe the process, there is no error till now<br/>
+make that with graph togeth <br/>
+make jpeg data into .jpeg file to sea the err frame <br/>

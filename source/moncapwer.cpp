@@ -76,15 +76,15 @@ std::vector<u_char> hex_string_to_bytes(const std::string& hex) {
 
 
 void capture_packets() {
-    std::string output_path = "C:\\Users\\gyuho\\uvc_frame_detector\\log\\pipe.txt";
-    std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
+    // std::string output_path = "C:\\Users\\gyuho\\uvc_frame_detector\\log\\pipe.txt";
+    // std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
 
-    if (!log_file.is_open()) {
-        std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
-        return;
-    } else {
-        std::cout << "Log file opened successfully: " << output_path << std::endl;
-    }
+    // if (!log_file.is_open()) {
+    //     std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
+    //     return;
+    // } else {
+    //     std::cout << "Log file opened successfully: " << output_path << std::endl;
+    // }
 
     static std::vector<u_char> temp_buffer;
     static uint32_t bulk_maxlengthsize = 0;
@@ -119,10 +119,10 @@ void capture_packets() {
             for (const std::string& token : capdata_tokens) {
                 temp_buffer = hex_string_to_bytes(token);
 
-                log_file << "temp_buffer: ";
-                for (u_char byte : temp_buffer) {
-                    log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-                }
+                // log_file << "temp_buffer: ";
+                // for (u_char byte : temp_buffer) {
+                //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+                // }
 
                 {
                     std::lock_guard<std::mutex> lock(queue_mutex);
@@ -191,8 +191,8 @@ void capture_packets() {
         // log_file.flush();
     }
 
-    log_file.close();
-    std::cout << "Log file closed." << std::endl;
+    // log_file.close();
+    // std::cout << "Log file closed." << std::endl;
 }
 
 
