@@ -23,6 +23,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   // Make graph file
   // Make picture file having mjpeg, yuyv, h264
 
+  static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
+
   if (uvc_payload.empty()) {
     v_cerr_5 << "UVC payload is empty." << std::endl;
     update_payload_error_stat(ERR_EMPTY_PAYLOAD);
@@ -32,6 +34,21 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     v_cerr_5 << "UVC payload size exceeds maximum transfer size." << std::endl;
     update_payload_error_stat(ERR_MAX_PAYLAOD_OVERFLOW);
     return ERR_MAX_PAYLAOD_OVERFLOW;
+  }
+
+  if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
+      std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 1) {
+    
+    std::cout << "FPS: " << frame_count.load() << " frames per second"
+              << std::endl;
+
+    int fps_difference = ControlConfig::fps - frame_count.load();
+    if (frame_count != ControlConfig::fps){
+      frame_stats.count_frame_drop += std::abs(fps_difference);
+    }
+    frame_count = 0;
+    temp_received_time = received_time;
+
   }
 
   static UVC_Payload_Header previous_previous_payload_header;
@@ -174,14 +191,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 void UVCPHeaderChecker::timer_thread() {
   while (!stop_timer_thread) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout << "FPS: " << frame_count.load() << " frames per second"
-              << std::endl;
+    // std::cout << "FPS: " << frame_count.load() << " frames per second"
+    //           << std::endl;
 
-    int fps_difference = ControlConfig::fps - frame_count.load();
-    if (frame_count != ControlConfig::fps){
-      frame_stats.count_frame_drop += std::abs(fps_difference);
-    }
-    frame_count = 0;
+    // int fps_difference = ControlConfig::fps - frame_count.load();
+    // if (frame_count != ControlConfig::fps){
+    //   frame_stats.count_frame_drop += std::abs(fps_difference);
+    // }
+    // frame_count = 0;
   }
 }
 
