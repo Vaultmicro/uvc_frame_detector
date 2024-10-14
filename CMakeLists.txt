@@ -4,24 +4,29 @@ project(
     uvc_frame_detector
     DESCRIPTION "Packet Capture And Analysis Tool for UVC Frame"
     VERSION 0.0.0
-    LANGUAGES CXX
+    LANGUAGES CXX C
 )
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED True)
+
 
 if(UNIX)
 include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(googletest)
 
+# find_package(PkgConfig REQUIRED)
+# pkg_check_modules(PCAP REQUIRED libpcap)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(PCAP REQUIRED libpcap)
-
+set(LIBUSB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/libusb-1.0)
+set(LIBUSB_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/library/libusb-1.0.so.0.4.0)
 
 
 set(PCAP_LIBRARIES
@@ -67,7 +72,6 @@ set(CMAKE_BUILD_TYPE Debug)
 add_executable(
     oldmanandsea
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/source/circular_buffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
@@ -87,6 +91,27 @@ add_executable(
 
 
 if (UNIX)
+
+add_executable(
+    uvcperf
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvc_stream.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/stream.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/ctrl-gen.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/device.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/diag.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/init.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
+
+target_link_libraries(
+    uvcperf
+    PRIVATE
+        ${LIBUSB_LIBRARIES}
+)
+
 
 add_executable(
     valid_test
