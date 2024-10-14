@@ -44,7 +44,26 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 if(UNIX)
 add_executable(
     uvc_frame_detector
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cppadd_executable(
+    uvcperf
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvc_stream.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/stream.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/ctrl-gen.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/device.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/diag.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/init.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+)
+
+target_link_libraries(
+    uvcperf
+    PRIVATE
+        ${LIBUSB_LIBRARIES}
+)
+
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp

@@ -173,6 +173,23 @@ all tests passed 100
 test_packaet_handler is also available for linux  
 
 
+
+
+# uvcperf
+
+## Usage
+Same building method written above  
+Changed libuvc streaming part and made valiate statistics for streaming  
+ONLY ON LINUX environment  
+
+## RUN
+0. cd build
+1. sudo ./uvcperf  
+ctrl + c to end  
+
+
+
+
 ### TODO
 make that with graph togeth <br/>
 make jpeg data into .jpeg file to sea the err frame <br/>
