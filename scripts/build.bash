@@ -1,11 +1,11 @@
 #!/bin/bash
 
-sudo modprobe usbmon
+# sudo modprobe usbmon
 
 
-cd ..
-mkdir build
-cd build
-cmake ..
-make
-cd ../scripts
+# cd ..
+# mkdir build
+# cd build
+# cmake ..
+# make
+# cd ../scripts

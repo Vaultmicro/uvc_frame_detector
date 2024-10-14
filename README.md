@@ -7,8 +7,8 @@ each using usbmon and tshark for stream
 ## Usage
 
 
-### In Window
-
+### In Window  
+(only cmd works, not ps1, open in dev mode if possible)
 ### Build
 0. mkdir log
 1. mkdir build
@@ -29,13 +29,19 @@ If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wiresha
 Go to project Directory  
 0. cd build  
 For BULK  
-"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg  
+"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
 
 For ISO
-"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg  
+"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
+
+Can find maximum frame size and maximum payload size in  
+for Window > download usb device tree viewer and check video streaming format type descriptor: dwMaxVideoFrameBufferSize
+for linux type lsusb -v and find dwMaxVideoFrameBufferSize  
+if leave blank for -fw -fh -fps -ff -mf -mp, 1024 720 30 mjpg 16777216 and 1310720 will be set automatically  
+each indicate frame_width frame_height frame_per_sec frame_format max_frame_size max_payload_size  
 
 -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data // Must be in correct order  
-if you are in build directory, can change C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build into .\Debug\oldmanandsea.exe  
+if you are in build directory, can change C:\-----PROJECT_DIRECTORY_PATH-----\build into .\Debug\oldmanandsea.exe  
 
 
 

@@ -10,31 +10,31 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# include(FetchContent)
-# FetchContent_Declare(
-#   googletest
-#   URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
-# )
-# FetchContent_MakeAvailable(googletest)
+if(UNIX)
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
+)
+FetchContent_MakeAvailable(googletest)
 
 
-#find_package(PkgConfig REQUIRED)
-#pkg_check_modules(PCAP REQUIRED libpcap)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(PCAP REQUIRED libpcap)
+
+
 
 set(PCAP_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so.1.10.4
 )
 
-# set(NPCAP_LIBRARIES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/Packet.lib
-#     ${CMAKE_CURRENT_SOURCE_DIR}/library/npcap_sdk_lib_1.13/x64/wpcap.lib
-# )
-
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${googletest_SOURCE_DIR}/googlemock/include)
 include_directories(${googletest_SOURCE_DIR}/googletest/include)
+endif(UNIX)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 
 if(UNIX)
 add_executable(
@@ -75,7 +75,6 @@ add_executable(
 )
 endif(WIN32)
 
-if (UNIX)
 
 add_executable(
     example
@@ -85,6 +84,9 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
+
+
+if (UNIX)
 
 add_executable(
     valid_test
@@ -133,7 +135,6 @@ target_link_libraries(
         gtest
         gtest_main
 )
-
 
 add_executable(
     test_packet_handler

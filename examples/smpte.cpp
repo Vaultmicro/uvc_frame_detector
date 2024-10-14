@@ -104,7 +104,11 @@ int main(int argc, char* argv[]) {
       std::chrono::steady_clock::now();
 
   // smpte from txt
+#ifdef _WIN32
+  std::string filename = "..\\..\\examples\\smpte.txt";
+#elif __linux__
   std::string filename = "../examples/smpte.txt";
+#endif
   std::vector<u_char> additional_data = read_additional_image_data(filename);
 
   if (additional_data.empty()) {

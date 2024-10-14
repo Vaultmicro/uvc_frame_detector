@@ -101,6 +101,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           //finish the last frame
           update_frame_error_stat(last_frame->frame_error);
           save_frames_to_log(last_frame);
+          if (last_frame->frame_error) {
+            v_cout_1 << "Frame Error: " << last_frame->frame_error << std::endl;
+            v_cout_1 << "Frame Payload times: ";
+            for (const auto& time_point : last_frame->received_chrono_times) {
+                v_cout_1 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
+            }
+            v_cout_1 << std::endl;
+          }
           processed_frames.push_back(std::move(frames.back()));
           frames.pop_back();
           frame_count++;
@@ -139,6 +147,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
       save_frames_to_log(frames.back());
+      if (last_frame->frame_error) {
+        v_cout_1 << "Frame Error: " << last_frame->frame_error << std::endl;
+        v_cout_1 << "Frame Payload times: ";
+        for (const auto& time_point : last_frame->received_chrono_times) {
+            v_cout_1 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
+        }
+        v_cout_1 << std::endl;
+      }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
       frame_count++;
@@ -209,7 +225,7 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
   UVC_Payload_Header payload_header = {};
   if (uvc_payload.size() < 2) {
     v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
-    save_payload_header_to_log(payload_header, received_time);
+    //save_payload_header_to_log(payload_header, received_time);
     return payload_header;  // check if payload is too small for payload header
   }
 
@@ -238,7 +254,7 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     payload_header.SCR = 0;
   }
 
-  save_payload_header_to_log(payload_header, received_time);
+  //save_payload_header_to_log(payload_header, received_time);
 
   return payload_header;
 }
