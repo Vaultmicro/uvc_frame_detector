@@ -191,7 +191,8 @@ ONLY ON LINUX environment
 1. sudo ./uvcperf  
 ctrl + c to end  
 
-
+# UML Diagram
+![uml_img](./dark_uvc_frame_detector.drawio.png)
 
 
 ### TODO
