@@ -65,7 +65,7 @@ Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet <br/>
 Bus 001 Device 004: ID 2e1a:4c01 Insta360 Insta360 Link <br/>
 Bus 001 Device 005: ID 046d:085e Logitech, Inc. BRIO Ultra HD Webcam <br/>
 Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub <br/>
-2. sudo ./moncapler -in usbmon1 -bs 41536 -bn 1 -dn 4 -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf -mp -v 2 -lv 1 <br/>
+2. sudo ./uvc_frame_detector -in usbmon1 -bs 41536 -bn 1 -dn 4 -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216 -v 2 -lv 1 <br/>
 
 -interface <br/>
 usbmon0 for all usb transfers, usbmon1 only for usb bus 1, usbmon2 only for usb bus 2 ...<br/>
