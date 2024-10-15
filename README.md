@@ -113,28 +113,31 @@ Below is one of them <br/>
 
 press ctrl + c once to see statistics  
 
-Payload Error Statistics:  
-No Error: 133 (100%)  
-Empty Payload: 0 (0%)  
-Max Payload Overflow: 0 (0%)  
-Error Bit Set: 0 (0%)  
-Length Out of Range: 0 (0%)  
-Length Invalid: 0 (0%)  
-Reserved Bit Set: 0 (0%)  
-End of Header Bit: 0 (0%)  
-Toggle Bit Overlapped: 0 (0%)  
-Frame Identifier Mismatch: 0 (0%)    
-Swap: 0 (0%)  
-Missing EOF: 0 (0%)  
-Unknown Error: 0 (0%)  
-  
-Frame Error Statistics:  
-No Error: 133 (79.6407%)  
-Frame Drop: 34 (20.3593%)  
-Frame Error: 0 (0%)  
-Max Frame Overflow: 0 (0%)  
-Invalid YUYV Raw Size: 0 (0%)  
-Same Different PTS: 0 (0%)  
+UVCPHeaderChecker Destructor
+Payload Error Statistics:
+No Error: 1064 (99.2537%)
+Empty Payload: 0 (0%)
+Max Payload Overflow: 0 (0%)
+Error Bit Set: 3 (0.279851%)
+Length Out of Range: 1 (0.0932836%)
+Length Invalid: 0 (0%)
+Reserved Bit Set: 0 (0%)
+End of Header Bit: 0 (0%)
+Toggle Bit Overlapped: 0 (0%)
+Frame Identifier Mismatch: 4 (0.373134%)
+Swap: 0 (0%)
+Missing EOF: 0 (0%)
+Unknown Error: 0 (0%)
+
+Frame Error Statistics:
+No Error: 1064 (94.1593%)
+Frame Drop: 66 (5.84071%)
+Frame Error: 0 (0%)
+Max Frame Overflow: 0 (0%)
+Invalid YUYV Raw Size: 0 (0%)
+Same Different PTS: 0 (0%)
+Exiting safely...
+End of main
 
 
 ### For Linux only

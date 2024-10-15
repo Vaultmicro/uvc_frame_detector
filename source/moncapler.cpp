@@ -376,7 +376,13 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
 
           temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
                              packet + pkthdr->caplen);
-          auto now = std::chrono::steady_clock::now();
+          // auto now = std::chrono::steady_clock::now();
+          uint64_t urb_sec_hex = urb_data->urb_sec_hex;
+          uint32_t urb_usec_hex = urb_data->urb_usec_hex;
+          std::chrono::seconds sec(urb_sec_hex);
+          std::chrono::microseconds usec(urb_usec_hex);
+          std::chrono::time_point now = std::chrono::steady_clock::time_point(sec + usec);
+
 #ifdef UNIT_TEST
           packet_push_count++;
 #endif
@@ -433,7 +439,12 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
             temp_buffer.insert(temp_buffer.end(), packet + start_offset,
                                packet + end_offset);
 
-            auto now = std::chrono::steady_clock::now();
+            // auto now = std::chrono::steady_clock::now();
+            uint64_t urb_sec_hex = urb_data->urb_sec_hex;
+            uint32_t urb_usec_hex = urb_data->urb_usec_hex;
+            std::chrono::seconds sec(urb_sec_hex);
+            std::chrono::microseconds usec(urb_usec_hex);
+            std::chrono::time_point now = std::chrono::steady_clock::time_point(sec + usec);
 #ifdef UNIT_TEST
             packet_push_count++;
 #endif
