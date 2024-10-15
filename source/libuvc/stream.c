@@ -919,11 +919,11 @@ uvc_error_t uvc_start_streaming(
     uvc_stream_handle_t *strmh;
 
     // 원시 데이터 파일 열기
-    raw_data_file = fopen("uvc_raw_data.txt", "w");
-    if (!raw_data_file) {
-        fprintf(stderr, "Error opening file for raw data\n");
-        return UVC_ERROR_IO;
-    }
+    // raw_data_file = fopen("uvc_raw_data.txt", "w");
+    // if (!raw_data_file) {
+    //     fprintf(stderr, "Error opening file for raw data\n");
+    //     return UVC_ERROR_IO;
+    // }
 
     ret = uvc_stream_open_ctrl(devh, &strmh, ctrl);
     if (ret != UVC_SUCCESS)
