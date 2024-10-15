@@ -200,7 +200,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->frame_error = ERR_FRAME_ERROR;
     }
     update_payload_error_stat(payload_header_valid_return);
-    
+
     return payload_header_valid_return;
   }
 
@@ -208,21 +208,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   update_payload_error_stat(ERR_UNKNOWN);
   return ERR_UNKNOWN;
 }
-
-void UVCPHeaderChecker::timer_thread() {
-  while (!stop_timer_thread) {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    // std::cout << "FPS: " << frame_count.load() << " frames per second"
-    //           << std::endl;
-
-    // int fps_difference = ControlConfig::fps - frame_count.load();
-    // if (frame_count != ControlConfig::fps){
-    //   frame_stats.count_frame_drop += std::abs(fps_difference);
-    // }
-    // frame_count = 0;
-  }
-}
-
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     const std::vector<u_char>& uvc_payload,

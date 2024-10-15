@@ -221,11 +221,7 @@ class ValidFrame{
 class UVCPHeaderChecker {
     private:
 
-        std::atomic<bool> stop_timer_thread;  
         std::atomic<uint32_t> frame_count;  
-        std::thread fps_thread;
-
-        void timer_thread();
         
         UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
@@ -277,19 +273,12 @@ class UVCPHeaderChecker {
 
     public:
      
-        UVCPHeaderChecker()          : stop_timer_thread(false), frame_count(0), current_frame_number(0) {
-       fps_thread = std::thread(&UVCPHeaderChecker::timer_thread, this);
+        UVCPHeaderChecker()          :  frame_count(0), current_frame_number(0) {
         }
 
         ~UVCPHeaderChecker() {
             std::cout << "UVCPHeaderChecker Destructor" << std::endl;
-
-            stop_timer_thread = true;
-            if (fps_thread.joinable()) {
-                fps_thread.join();
-            }
             print_stats();
-
         }
 
         std::list<std::unique_ptr<ValidFrame>> frames;
