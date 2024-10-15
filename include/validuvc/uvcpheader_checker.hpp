@@ -184,8 +184,6 @@ class ValidFrame{
         std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
         
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
-        std::vector<uint64_t> scr_list;  // System Clock Reference (SCR) list
-        std::vector<std::pair<uint32_t, uint32_t>> urb_sec_usec_list;  // URB timestamp list (seconds, microseconds)
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
@@ -206,15 +204,6 @@ class ValidFrame{
         void add_received_chrono_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
             received_chrono_times.push_back(time_point);
         }
-
-        void add_scr(uint64_t scr_value) {
-            scr_list.push_back(scr_value);
-        }
-
-        void add_urb_sec_usec(uint32_t sec, uint32_t usec) {
-            urb_sec_usec_list.emplace_back(sec, usec);
-        }
-
     
 };
 
