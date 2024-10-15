@@ -8,7 +8,9 @@ each using usbmon and tshark for stream
 
 
 ### In Window  
-(only cmd works, not ps1, open in dev mode if possible)
+(only cmd works, not ps1, open in dev mode if possible)  
+in ps1, put "cmd /c" at the start of command  
+
 ### Build
 0. mkdir log
 1. mkdir build
@@ -176,6 +178,8 @@ test_packaet_handler is also available for linux
 
 
 # uvcperf
+
+Modified Libuvc stream file to get the live stream from the camera and validate the data at the final stage  
 
 ## Usage
 Same building method written above  

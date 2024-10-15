@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <numeric>
-#include <cstddef> // Add this line to include the definition of size_t
+#include <cstddef>
 #include <stddef.h>
 
 #include "utils/verbose.hpp"

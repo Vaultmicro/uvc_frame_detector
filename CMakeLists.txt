@@ -50,22 +50,13 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
-endif(UNIX)
 
-if (UNIX)
-    target_link_libraries(
+target_link_libraries(
         uvc_frame_detector
         PRIVATE
             ${PCAP_LIBRARIES}
     )
 endif(UNIX)
-# if (WIN32)
-#     target_link_libraries(
-#         uvc_frame_detector
-#         PRIVATE
-#             ${NPCAP_LIBRARIES}
-#     )
-# endif (WIN32)
 
 if(WIN32)
 set(CMAKE_BUILD_TYPE Debug)
