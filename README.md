@@ -8,7 +8,9 @@ each using usbmon and tshark for stream
 
 
 ### In Window  
-(only cmd works, not ps1, open in dev mode if possible)
+(only cmd works, not ps1, open in dev mode if possible)  
+in ps1, put "cmd /c" at the start of command  
+
 ### Build
 0. mkdir log
 1. mkdir build
@@ -21,10 +23,10 @@ each using usbmon and tshark for stream
 To run this code in window, must install wireshark in computer with USBPcap  
 If USBPcap is not installed with Wireshark, reinstall wireshark and check USBPcap install  
 After install, reboot  
-C:\Program Files\Wireshark
+C:\Program Files\Wireshark  
 Find Wireshark.exe > go to Help(H) > Wireshark info(A) > Folder  
 Check if Extcap Path is set extcap/wireshark  
-If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wireshark directory  
+If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wireshark directory   
   
 Go to project Directory  
 0. cd build  
@@ -175,4 +177,4 @@ test_packaet_handler is also available for linux
 
 ### TODO
 make that with graph togeth <br/>
-make jpeg data into .jpeg file to sea the err frame <br/>
+make jpeg data into .jpeg file to see the err frame <br/>

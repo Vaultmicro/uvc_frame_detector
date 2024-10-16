@@ -67,7 +67,6 @@ set(CMAKE_BUILD_TYPE Debug)
 add_executable(
     oldmanandsea
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/source/circular_buffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
