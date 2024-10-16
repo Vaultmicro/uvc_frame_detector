@@ -65,7 +65,7 @@ Bus 001 Device 002: ID 80ee:0021 VirtualBox USB Tablet <br/>
 Bus 001 Device 004: ID 2e1a:4c01 Insta360 Insta360 Link <br/>
 Bus 001 Device 005: ID 046d:085e Logitech, Inc. BRIO Ultra HD Webcam <br/>
 Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub <br/>
-2. sudo ./moncapler -in usbmon1 -bs 41536 -bn 1 -dn 4 -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf -mp -v 2 -lv 1 <br/>
+2. sudo ./uvc_frame_detector -in usbmon1 -bs 41536 -bn 1 -dn 4 -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216 -v 2 -lv 1 <br/>
 
 -interface <br/>
 usbmon0 for all usb transfers, usbmon1 only for usb bus 1, usbmon2 only for usb bus 2 ...<br/>
@@ -113,28 +113,31 @@ Below is one of them <br/>
 
 press ctrl + c once to see statistics  
 
-Payload Error Statistics:  
-No Error: 133 (100%)  
-Empty Payload: 0 (0%)  
-Max Payload Overflow: 0 (0%)  
-Error Bit Set: 0 (0%)  
-Length Out of Range: 0 (0%)  
-Length Invalid: 0 (0%)  
-Reserved Bit Set: 0 (0%)  
-End of Header Bit: 0 (0%)  
-Toggle Bit Overlapped: 0 (0%)  
-Frame Identifier Mismatch: 0 (0%)    
-Swap: 0 (0%)  
-Missing EOF: 0 (0%)  
-Unknown Error: 0 (0%)  
-  
-Frame Error Statistics:  
-No Error: 133 (79.6407%)  
-Frame Drop: 34 (20.3593%)  
-Frame Error: 0 (0%)  
-Max Frame Overflow: 0 (0%)  
-Invalid YUYV Raw Size: 0 (0%)  
-Same Different PTS: 0 (0%)  
+UVCPHeaderChecker Destructor
+Payload Error Statistics:
+No Error: 1064 (99.2537%)
+Empty Payload: 0 (0%)
+Max Payload Overflow: 0 (0%)
+Error Bit Set: 3 (0.279851%)
+Length Out of Range: 1 (0.0932836%)
+Length Invalid: 0 (0%)
+Reserved Bit Set: 0 (0%)
+End of Header Bit: 0 (0%)
+Toggle Bit Overlapped: 0 (0%)
+Frame Identifier Mismatch: 4 (0.373134%)
+Swap: 0 (0%)
+Missing EOF: 0 (0%)
+Unknown Error: 0 (0%)
+
+Frame Error Statistics:
+No Error: 1064 (94.1593%)
+Frame Drop: 66 (5.84071%)
+Frame Error: 0 (0%)
+Max Frame Overflow: 0 (0%)
+Invalid YUYV Raw Size: 0 (0%)
+Same Different PTS: 0 (0%)
+Exiting safely...
+End of main
 
 
 ### For Linux only
@@ -173,6 +176,26 @@ is available
 all tests passed 100  
 
 test_packaet_handler is also available for linux  
+
+
+
+
+# uvcperf
+
+Modified Libuvc stream file to get the live stream from the camera and validate the data at the final stage  
+
+## Usage
+Same building method written above  
+Changed libuvc streaming part and made valiate statistics for streaming  
+ONLY ON LINUX environment  
+
+## RUN
+0. cd build
+1. sudo ./uvcperf  
+ctrl + c to end  
+
+# UML Diagram
+![uml_img](./dark_uvc_frame_detector.drawio.png)
 
 
 ### TODO

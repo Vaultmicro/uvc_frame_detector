@@ -184,8 +184,6 @@ class ValidFrame{
         std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
         
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
-        std::vector<uint64_t> scr_list;  // System Clock Reference (SCR) list
-        std::vector<std::pair<uint32_t, uint32_t>> urb_sec_usec_list;  // URB timestamp list (seconds, microseconds)
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
@@ -206,26 +204,13 @@ class ValidFrame{
         void add_received_chrono_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
             received_chrono_times.push_back(time_point);
         }
-
-        void add_scr(uint64_t scr_value) {
-            scr_list.push_back(scr_value);
-        }
-
-        void add_urb_sec_usec(uint32_t sec, uint32_t usec) {
-            urb_sec_usec_list.emplace_back(sec, usec);
-        }
-
     
 };
 
 class UVCPHeaderChecker {
     private:
 
-        std::atomic<bool> stop_timer_thread;  
         std::atomic<uint32_t> frame_count;  
-        std::thread fps_thread;
-
-        void timer_thread();
         
         UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
@@ -277,19 +262,12 @@ class UVCPHeaderChecker {
 
     public:
      
-        UVCPHeaderChecker()          : stop_timer_thread(false), frame_count(0), current_frame_number(0) {
-       fps_thread = std::thread(&UVCPHeaderChecker::timer_thread, this);
+        UVCPHeaderChecker()          :  frame_count(0), current_frame_number(0) {
         }
 
         ~UVCPHeaderChecker() {
             std::cout << "UVCPHeaderChecker Destructor" << std::endl;
-
-            stop_timer_thread = true;
-            if (fps_thread.joinable()) {
-                fps_thread.join();
-            }
             print_stats();
-
         }
 
         std::list<std::unique_ptr<ValidFrame>> frames;

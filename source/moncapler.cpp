@@ -153,7 +153,7 @@ void log_packet_xxd_format(std::ofstream* log_file, const u_char* data,
 
 void coutnlog(const std::string& message, std::ofstream* log_file) {
   // Print to console
-  v_cout_3 << message << std::endl;
+  v_cout_2 << message << std::endl;
 
   // Print to log file if it's open
   if (log_file && log_file->is_open()) {
@@ -215,12 +215,12 @@ void clean_exit(int signum) {
     // Get capture statistics
 
     if (pcap_stats(handle, &stats) >= 0) {
-      // // Print capture statistics
-      // print_capture_statistics(stats, total_packet_count,
-      // total_packet_length,
-      //                          total_captured_length, filtered_packet_count,
-      //                          filtered_total_packet_length,
-      //                          filtered_total_captured_length, &log_file);
+      // Print capture statistics
+      print_capture_statistics(stats, total_packet_count,
+      total_packet_length,
+                               total_captured_length, filtered_packet_count,
+                               filtered_total_packet_length,
+                               filtered_total_captured_length, &log_file);
     } else {
       v_cerr_3 << "pcap_stats failed: " << pcap_geterr(handle) << std::endl;
     }
@@ -376,7 +376,13 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
 
           temp_buffer.insert(temp_buffer.end(), packet + sizeof(URB_Data),
                              packet + pkthdr->caplen);
-          auto now = std::chrono::steady_clock::now();
+          // auto now = std::chrono::steady_clock::now();
+          uint64_t urb_sec_hex = urb_data->urb_sec_hex;
+          uint32_t urb_usec_hex = urb_data->urb_usec_hex;
+          std::chrono::seconds sec(urb_sec_hex);
+          std::chrono::microseconds usec(urb_usec_hex);
+          std::chrono::time_point now = std::chrono::steady_clock::time_point(sec + usec);
+
 #ifdef UNIT_TEST
           packet_push_count++;
 #endif
@@ -433,7 +439,12 @@ void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr,
             temp_buffer.insert(temp_buffer.end(), packet + start_offset,
                                packet + end_offset);
 
-            auto now = std::chrono::steady_clock::now();
+            // auto now = std::chrono::steady_clock::now();
+            uint64_t urb_sec_hex = urb_data->urb_sec_hex;
+            uint32_t urb_usec_hex = urb_data->urb_usec_hex;
+            std::chrono::seconds sec(urb_sec_hex);
+            std::chrono::microseconds usec(urb_usec_hex);
+            std::chrono::time_point now = std::chrono::steady_clock::time_point(sec + usec);
 #ifdef UNIT_TEST
             packet_push_count++;
 #endif
@@ -767,16 +778,17 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  // Log file path
-  std::string log_path = log_dir + "/log_pcap_" + current_time_str + ".txt";
+  // // Log file path
+  // std::string log_path = log_dir + "/log_pcap_" + current_time_str + ".txt";
 
-  // Open log file
-  log_file.open(log_path, std::ios::out);
-  if (!log_file) {
-    v_cerr_3 << "Failed to open log file" << std::endl;
-    return 1;
-  }
-  v_cout_3 << "Log file created" << std::endl;
+  // // Open log file
+  // log_file.open(log_path, std::ios::out);
+  // if (!log_file) {
+  //   v_cerr_3 << "Failed to open log file" << std::endl;
+  //   return 1;
+  // }
+  // v_cout_3 << "Log file created" << std::endl;
+  std::ofstream log_file(nullptr);
 
   // Free the device list
   pcap_freealldevs(interfaces);

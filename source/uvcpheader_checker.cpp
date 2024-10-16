@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <numeric>
-#include <cstddef> // Add this line to include the definition of size_t
+#include <cstddef>
 #include <stddef.h>
 
 #include "utils/verbose.hpp"
@@ -102,7 +102,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           update_frame_error_stat(last_frame->frame_error);
           save_frames_to_log(last_frame);
           if (last_frame->frame_error) {
-            v_cout_1 << "Frame Error: " << last_frame->frame_error << std::endl;
+            v_cout_1 << "Frame Error_: " << last_frame->frame_error << std::endl;
             v_cout_1 << "Frame Payload times: ";
             for (const auto& time_point : last_frame->received_chrono_times) {
                 v_cout_1 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
@@ -144,16 +144,17 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     if (payload_header.bmBFH.BFH_EOF) {
       auto& last_frame = frames.back();
+      last_frame->eof_reached = true;
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
       save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
-        v_cout_1 << "Frame Error: " << last_frame->frame_error << std::endl;
-        v_cout_1 << "Frame Payload times: ";
+        v_cout_2 << "Frame Error__: " << last_frame->frame_error << std::endl;
+        v_cout_2 << "Frame Payload times: ";
         for (const auto& time_point : last_frame->received_chrono_times) {
-            v_cout_1 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
+            v_cout_2 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
         }
-        v_cout_1 << std::endl;
+        v_cout_2 << std::endl;
       }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
@@ -194,8 +195,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     return payload_header_valid_return;
 
   } else {
-    // TODO save in the error frame heap
+    if (!frames.empty()) {
+      auto& last_frame = frames.back();
+      last_frame->frame_error = ERR_FRAME_ERROR;
+    }
     update_payload_error_stat(payload_header_valid_return);
+
     return payload_header_valid_return;
   }
 
@@ -203,21 +208,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   update_payload_error_stat(ERR_UNKNOWN);
   return ERR_UNKNOWN;
 }
-
-void UVCPHeaderChecker::timer_thread() {
-  while (!stop_timer_thread) {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    // std::cout << "FPS: " << frame_count.load() << " frames per second"
-    //           << std::endl;
-
-    // int fps_difference = ControlConfig::fps - frame_count.load();
-    // if (frame_count != ControlConfig::fps){
-    //   frame_stats.count_frame_drop += std::abs(fps_difference);
-    // }
-    // frame_count = 0;
-  }
-}
-
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     const std::vector<u_char>& uvc_payload,
@@ -345,7 +335,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   //     not set." << std::endl; return 1;
   // }
 
-  v_cout_2 << "UVC payload header is valid." << std::endl;
+  // v_cout_2 << "UVC payload header is valid." << std::endl;
   return ERR_NO_ERROR;
 }
 
