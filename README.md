@@ -31,10 +31,10 @@ If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wiresha
 Go to project Directory  
 0. cd build  
 For BULK  
-"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
+"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -E separator=; -l -Y "usb.device_address == 7" | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
 
 For ISO
-"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data -E separator=; -l | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
+"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data -E separator=; -l -Y "usb.device_address == 7" | C:\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
 
 Can find maximum frame size and maximum payload size in  
 for Window > download usb device tree viewer and check video streaming format type descriptor: dwMaxVideoFrameBufferSize
@@ -113,31 +113,31 @@ Below is one of them <br/>
 
 press ctrl + c once to see statistics  
 
-UVCPHeaderChecker Destructor
-Payload Error Statistics:
-No Error: 1064 (99.2537%)
-Empty Payload: 0 (0%)
-Max Payload Overflow: 0 (0%)
-Error Bit Set: 3 (0.279851%)
-Length Out of Range: 1 (0.0932836%)
-Length Invalid: 0 (0%)
-Reserved Bit Set: 0 (0%)
-End of Header Bit: 0 (0%)
-Toggle Bit Overlapped: 0 (0%)
-Frame Identifier Mismatch: 4 (0.373134%)
-Swap: 0 (0%)
-Missing EOF: 0 (0%)
-Unknown Error: 0 (0%)
-
-Frame Error Statistics:
-No Error: 1064 (94.1593%)
-Frame Drop: 66 (5.84071%)
-Frame Error: 0 (0%)
-Max Frame Overflow: 0 (0%)
-Invalid YUYV Raw Size: 0 (0%)
-Same Different PTS: 0 (0%)
-Exiting safely...
-End of main
+UVCPHeaderChecker Destructor  
+Payload Error Statistics:  
+No Error: 1064 (99.2537%)  
+Empty Payload: 0 (0%)  
+Max Payload Overflow: 0 (0%)  
+Error Bit Set: 3 (0.279851%)  
+Length Out of Range: 1 (0.0932836%)  
+Length Invalid: 0 (0%)  
+Reserved Bit Set: 0 (0%)  
+End of Header Bit: 0 (0%)  
+Toggle Bit Overlapped: 0 (0%)  
+Frame Identifier Mismatch: 4 (0.373134%)  
+Swap: 0 (0%)  
+Missing EOF: 0 (0%)  
+Unknown Error: 0 (0%)  
+  
+Frame Error Statistics:  
+No Error: 1064 (94.1593%)  
+Frame Drop: 66 (5.84071%)  
+Frame Error: 0 (0%)  
+Max Frame Overflow: 0 (0%)  
+Invalid YUYV Raw Size: 0 (0%)  
+Same Different PTS: 0 (0%)  
+Exiting safely...  
+End of main  
 
 
 ### For Linux only
