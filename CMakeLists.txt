@@ -67,6 +67,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/source/curses.cpp
 )
 endif(WIN32)
 

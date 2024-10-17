@@ -208,10 +208,12 @@ class ValidFrame{
 };
 
 class UVCPHeaderChecker {
-    private:
+    private:  
 
-        std::atomic<uint32_t> frame_count;  
-        
+        UVC_Payload_Header parse_uvc_payload_header(
+            const std::vector<u_char>& uvc_payload,
+            std::chrono::time_point<std::chrono::steady_clock> received_time);
+
         UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
         void payload_frame_develope();
@@ -261,8 +263,10 @@ class UVCPHeaderChecker {
 
 
     public:
-     
-        UVCPHeaderChecker()          :  frame_count(0), current_frame_number(0) {
+        uint32_t frame_count;
+        double average_frame_rate;
+
+        UVCPHeaderChecker()          :  frame_count(0), average_frame_rate(0), current_frame_number(0) {
         }
 
         ~UVCPHeaderChecker() {
@@ -277,10 +281,6 @@ class UVCPHeaderChecker {
             const std::vector<u_char>& uvc_payload,
             std::chrono::time_point<std::chrono::steady_clock> received_time);
         
-        UVC_Payload_Header parse_uvc_payload_header(
-            const std::vector<u_char>& uvc_payload,
-            std::chrono::time_point<std::chrono::steady_clock> received_time);
-
         void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);
 
         void print_stats() const {

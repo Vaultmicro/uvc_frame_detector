@@ -36,20 +36,26 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     return ERR_MAX_PAYLAOD_OVERFLOW;
   }
 
-  if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
+  static uint64_t received_frames_cnt = 0;
+  if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>()) {
+    temp_received_time = received_time;
+  } else if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
       std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 1) {
     
-    std::cout << "FPS: " << frame_count.load() << " frames per second"
+    std::cout << "FPS: " << frame_count << " frames per second"
               << std::endl;
 
-    int fps_difference = ControlConfig::fps - frame_count.load();
+    int fps_difference = ControlConfig::fps - frame_count;
     if (frame_count != ControlConfig::fps){
       frame_stats.count_frame_drop += std::abs(fps_difference);
     }
-    frame_count = 0;
-    temp_received_time = received_time;
 
-  }
+    average_frame_rate = (average_frame_rate * received_frames_cnt + frame_count)/(received_frames_cnt + 1);
+    received_frames_cnt++;
+
+    frame_count = 0;
+    temp_received_time = received_time - std::chrono::milliseconds(1);
+  } 
 
   static UVC_Payload_Header previous_previous_payload_header;
   static uint8_t previous_previous_error = 0;
@@ -93,7 +99,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
       //Process the last frame when EOF is missing
       if (payload_header_valid_return == ERR_MISSING_EOF) {
-        v_cerr_2 << "Missing EOF" << std::endl;
+        v_cerr_3 << "Missing EOF" << std::endl;
         if (!frames.empty()) {
           auto& last_frame = frames.back();
           last_frame->frame_error = ERR_FRAME_ERROR;
@@ -207,6 +213,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   // v_cout_2 << "Payload is valid." << std::endl;
   update_payload_error_stat(ERR_UNKNOWN);
   return ERR_UNKNOWN;
+}
+
+void UVCPHeaderChecker::frame_valid_ctrl(
+    const std::vector<u_char>& uvc_payload) {
+  // Save the format of the frame
+  // Save them on the multiple stack with the time, so err frame be detected and
+  // pop from the stack The algorithm to detect the error frame is to compare
+  // the frame with the previous frame
 }
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
@@ -337,14 +351,6 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   // v_cout_2 << "UVC payload header is valid." << std::endl;
   return ERR_NO_ERROR;
-}
-
-void UVCPHeaderChecker::frame_valid_ctrl(
-    const std::vector<u_char>& uvc_payload) {
-  // Save the format of the frame
-  // Save them on the multiple stack with the time, so err frame be detected and
-  // pop from the stack The algorithm to detect the error frame is to compare
-  // the frame with the previous frame
 }
 
 void UVCPHeaderChecker::payload_frame_develope() {
