@@ -241,7 +241,6 @@ void process_packets() {
   std::cout << "Process packet() end" << std::endl;
 }
 
-
 int main(int argc, char* argv[]) {
 
     bool fw_set = false;
@@ -310,7 +309,7 @@ int main(int argc, char* argv[]) {
     // Create threads for capture and processing
     std::thread capture_thread(capture_packets);
 
-    std::thread process_thread(process_packets);  // Process packets in another thread (empty for now)
+    std::thread process_thread(process_packets);
 
     // Wait for the threads to finish
     capture_thread.join();
