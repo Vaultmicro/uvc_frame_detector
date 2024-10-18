@@ -1,3 +1,7 @@
 build
 .vscode/
 log/
+tests/change_shark/whole_brav_bulk.txt
+tests/change_shark/whole_insta_bulk.txt
+tests/change_shark/whole_brio_iso.txt
+tests/change_shark/whole_logi_iso.txt

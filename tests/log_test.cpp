@@ -5,7 +5,7 @@
 
 int main() {
     UVCPHeaderChecker whole_frame_checker;
-    std::ifstream inputFile("../tests/brio_whole.txt"); 
+    std::ifstream inputFile("../tests/change_shark/logi_iso.txt"); 
     std::string line;
 
     if (!inputFile.is_open()) {
