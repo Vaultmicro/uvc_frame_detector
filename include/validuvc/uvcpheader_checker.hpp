@@ -69,6 +69,7 @@ typedef struct PACKED {
 #ifdef _MSC_VER
     #pragma pack(pop) // MSVC에서의 pack 해제
 #endif
+std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header);
 
 struct PayloadErrorStats {
     int count_no_error = 0;

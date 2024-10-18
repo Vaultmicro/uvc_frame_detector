@@ -193,4 +193,14 @@ target_link_libraries(
         ${PCAP_LIBRARIES}
 )
 
+
+add_executable(
+    log_test
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
+)
+
 endif(UNIX)

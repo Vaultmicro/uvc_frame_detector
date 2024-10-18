@@ -109,10 +109,16 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           save_frames_to_log(last_frame);
           if (last_frame->frame_error) {
             v_cout_1 << "Frame Error_: " << last_frame->frame_error << std::endl;
-            v_cout_1 << "Frame Payload times: ";
+            v_cout_2 << "Frame Payload times: ";
             for (const auto& time_point : last_frame->received_chrono_times) {
-                v_cout_1 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
+                v_cout_2 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
             }
+            v_cout_1 << "Previous Previous Payload Header: " << std::endl;
+            v_cout_1 << previous_previous_payload_header << std::endl;
+            v_cout_1 << "Previous Payload Header: " << std::endl;
+            v_cout_1 << previous_payload_header << std::endl;
+            v_cout_1 << "Current Payload Header: " << std::endl;
+            v_cout_1 << payload_header << std::endl;
             v_cout_1 << std::endl;
           }
           processed_frames.push_back(std::move(frames.back()));
@@ -144,8 +150,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
     }
 
-    previous_payload_header = payload_header;
-    previous_previous_payload_header = previous_payload_header;
   
 
     if (payload_header.bmBFH.BFH_EOF) {
@@ -155,12 +159,18 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       // finish the frame
       save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
-        v_cout_2 << "Frame Error__: " << last_frame->frame_error << std::endl;
+        v_cout_1 << "Frame Error__: " << last_frame->frame_error << std::endl;
         v_cout_2 << "Frame Payload times: ";
         for (const auto& time_point : last_frame->received_chrono_times) {
             v_cout_2 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
         }
-        v_cout_2 << std::endl;
+        v_cout_1 << "Previous Previous Payload Header: " << std::endl;
+        v_cout_1 << previous_previous_payload_header << std::endl;
+        v_cout_1 << "Previous Payload Header: " << std::endl;
+        v_cout_1 << previous_payload_header << std::endl;
+        v_cout_1 << "Current Payload Header: " << std::endl;
+        v_cout_1 << payload_header << std::endl;
+        v_cout_1 << std::endl;
       }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
@@ -196,6 +206,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         }
       }
     }
+
+    previous_payload_header = payload_header;
+    previous_previous_payload_header = previous_payload_header;
 
     update_payload_error_stat(payload_header_valid_return);
     return payload_header_valid_return;
@@ -335,7 +348,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
     }
   } else {
     if (!previous_payload_header.bmBFH.BFH_EOF &&
-        previous_payload_header.HLE != 0) {
+        previous_payload_header.HLE != 0) { //frame_test_bulk
       v_cerr_2 << "Missing EOF" << std::endl;
       return ERR_MISSING_EOF;  // missing frame for bulk for whole
     }
@@ -447,4 +460,27 @@ void UVCPHeaderChecker::save_payload_header_to_log(
            << "\n\n";  // Separate each entry with a double newline
 
   log_file.close();
+}
+
+std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
+    os << "HLE: " << static_cast<int>(header.HLE) << "\n";
+    
+    os << "BFH: 0x" << std::bitset<8>(header.BFH) << "\n";
+    os << "  BFH_FID: " << static_cast<int>(header.bmBFH.BFH_FID) << "\n";
+    os << "  BFH_EOF: " << static_cast<int>(header.bmBFH.BFH_EOF) << "\n";
+    os << "  BFH_PTS: " << static_cast<int>(header.bmBFH.BFH_PTS) << "\n";
+    os << "  BFH_SCR: " << static_cast<int>(header.bmBFH.BFH_SCR) << "\n";
+    os << "  BFH_RES: " << static_cast<int>(header.bmBFH.BFH_RES) << "\n";
+    os << "  BFH_STI: " << static_cast<int>(header.bmBFH.BFH_STI) << "\n";
+    os << "  BFH_ERR: " << static_cast<int>(header.bmBFH.BFH_ERR) << "\n";
+    os << "  BFH_EOH: " << static_cast<int>(header.bmBFH.BFH_EOH) << "\n";
+
+    os << "PTS: " << header.PTS << "\n";
+
+    os << "SCR: 0x" << std::hex << header.SCR << std::dec << "\n";
+    os << "  SCR_STC: " << header.bmSCR.SCR_STC << "\n";
+    os << "  SCR_TOK: " << header.bmSCR.SCR_TOK << "\n";
+    os << "  SCR_RES: " << header.bmSCR.SCR_RES << "\n";
+
+    return os;
 }
