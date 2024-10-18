@@ -1,12 +1,4 @@
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h> // For Sleep function
-
-#ifdef MOUSE_MOVED
-#undef MOUSE_MOVED
-#endif
-#include "cursed_output.hpp"
-
+#include "curse_ctrl.hpp"
 
 bool running = true; // Global flag to check for exit
 

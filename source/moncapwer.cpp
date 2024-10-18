@@ -303,8 +303,7 @@ int main(int argc, char* argv[]) {
     std::signal(SIGINT, clean_exit);
     std::signal(SIGTERM, clean_exit);
 
-
-    // Create buffers
+    
 
     // Create threads for capture and processing
     std::thread capture_thread(capture_packets);
