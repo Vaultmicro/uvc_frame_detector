@@ -61,7 +61,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   static uint8_t previous_previous_error = 0;
   static UVC_Payload_Header previous_payload_header;
   static uint8_t previous_error = 0;
-  // static std::queue<std::vector<u_char>> fid_queue;
 
   UVC_Payload_Header payload_header =
       parse_uvc_payload_header(uvc_payload, received_time);
@@ -119,6 +118,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             v_cout_1 << previous_payload_header << std::endl;
             v_cout_1 << "Current Payload Header: " << std::endl;
             v_cout_1 << payload_header << std::endl;
+            //v_cout_1 makegraph
             v_cout_1 << std::endl;
           }
           processed_frames.push_back(std::move(frames.back()));
@@ -223,17 +223,15 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     return payload_header_valid_return;
   }
 
-  // v_cout_2 << "Payload is valid." << std::endl;
+  // v_cout_5 << "Payload is valid." << std::endl;
   update_payload_error_stat(ERR_UNKNOWN);
   return ERR_UNKNOWN;
 }
 
 void UVCPHeaderChecker::frame_valid_ctrl(
     const std::vector<u_char>& uvc_payload) {
-  // Save the format of the frame
-  // Save them on the multiple stack with the time, so err frame be detected and
-  // pop from the stack The algorithm to detect the error frame is to compare
-  // the frame with the previous frame
+
+
 }
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
@@ -335,23 +333,24 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   }
 
   // Checks if the Frame Identifier bit is set
-  if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID) {
-    if (previous_payload_header.bmBFH.BFH_EOF) {
-      if ((payload_header.PTS == previous_payload_header.PTS) &&
-          payload_header.PTS != 0) {
-        v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
-                    "as the previous frame."
-                 << std::endl;
-        return ERR_SWAP;
-      }
+  // bmBFH.BFH_FID is for the start of the stream packet
+  if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
+      previous_payload_header.bmBFH.BFH_EOF && 
+      (payload_header.PTS == previous_payload_header.PTS) && 
+      payload_header.PTS != 0) {
+      v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
+                  "as the previous frame and PTS matches." << std::endl;
+      return ERR_SWAP;
+
+  } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
+            previous_payload_header.bmBFH.BFH_EOF) {
       return ERR_FID_MISMATCH;
-    }
-  } else {
-    if (!previous_payload_header.bmBFH.BFH_EOF &&
-        previous_payload_header.HLE != 0) { //frame_test_bulk
+
+  } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
+            !previous_payload_header.bmBFH.BFH_EOF && 
+            previous_payload_header.HLE != 0) {
       v_cerr_2 << "Missing EOF" << std::endl;
-      return ERR_MISSING_EOF;  // missing frame for bulk for whole
-    }
+      return ERR_MISSING_EOF;
   }
 
   // Checks if the Still Image bit is set is not needed
@@ -412,6 +411,8 @@ void UVCPHeaderChecker::save_frames_to_log(
 
   log_file.close();
 }
+
+//making graph
 
 void UVCPHeaderChecker::save_payload_header_to_log(
     const UVC_Payload_Header& payload_header,
@@ -484,3 +485,4 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
 
     return os;
 }
+
