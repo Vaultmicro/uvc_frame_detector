@@ -105,7 +105,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           last_frame->eof_reached = false;
           //finish the last frame
           update_frame_error_stat(last_frame->frame_error);
-          save_frames_to_log(last_frame);
+          //save_frames_to_log(last_frame);
           if (last_frame->frame_error) {
 
             plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
@@ -155,7 +155,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->eof_reached = true;
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
-      save_frames_to_log(frames.back());
+      // save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 
@@ -375,7 +375,7 @@ void UVCPHeaderChecker::save_frames_to_log(
   std::ofstream log_file("../log/frames_log.txt", std::ios::app);
 
   if (!log_file.is_open()) {
-    v_cerr_2 << "Error opening log file." << std::endl;
+    v_cerr_5 << "Error opening log file." << std::endl;
     return;
   }
 
@@ -490,8 +490,8 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
                                                     const std::vector<std::chrono::steady_clock::time_point>& received_error_times) {
     if (received_chrono_times.empty() && received_error_times.empty()) return;
 
-    const int zoom = 6;
-    const int cut = 30;
+    const int zoom = 5;
+    const int cut = 20;
     const int total_markers = ControlConfig::fps * zoom;         
     const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::fps) / (zoom *cut)));
 
