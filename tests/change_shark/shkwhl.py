@@ -3,7 +3,7 @@ def process_iso_data_file(input_file, output_file):
         collecting_data = False
         for line in infile:
             stripped_line = line.strip()
-            if stripped_line.startswith("ISO Data [truncated]:") or stripped_line.startswith("ISO Data:") or stripped_line.startswith("ISO Data […]") or stripped_line.startswith("Leftover Capture Data [truncated]:") or stripped_line.startswith("Leftover Capture Data:") or stripped_line.startswith("Leftover Capture Data […]:"):
+            if stripped_line.startswith("ISO Data [truncated]:") or stripped_line.startswith("ISO Data:") or stripped_line.startswith("ISO Data […]"):
 
                 if collecting_data:
                     outfile.write("\n")
@@ -20,4 +20,6 @@ def process_iso_data_file(input_file, output_file):
 input_file = 'whole_logi_iso.txt'
 output_file = 'logi_iso.txt'
 process_iso_data_file(input_file, output_file)
+
+#stripped_line.startswith("Leftover Capture Data [truncated]:") or stripped_line.startswith("Leftover Capture Data:") or stripped_line.startswith("Leftover Capture Data […]:"):
 
