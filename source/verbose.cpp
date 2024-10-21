@@ -1,7 +1,7 @@
 #include "utils/verbose.hpp"
 
 // Initialize verbose level
-int verbose_level = 1;
+int verbose_level = 2;
 
 // VerboseStream definitions
 VerboseStream v_cout_1(1, "CRUCIAL: ", std::cout);

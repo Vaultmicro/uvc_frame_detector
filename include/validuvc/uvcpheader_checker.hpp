@@ -67,7 +67,7 @@ typedef struct PACKED {
 } UVC_Payload_Header;
 
 #ifdef _MSC_VER
-    #pragma pack(pop) // MSVC에서의 pack 해제
+    #pragma pack(pop)
 #endif
 std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header);
 
@@ -185,6 +185,8 @@ class ValidFrame{
         std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
         
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
+        std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_error_times;  // Packet reception times
+
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
@@ -204,6 +206,10 @@ class ValidFrame{
 
         void add_received_chrono_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
             received_chrono_times.push_back(time_point);
+        }
+
+        void add_received_error_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
+            received_error_times.push_back(time_point);
         }
     
 };
@@ -259,6 +265,9 @@ class UVCPHeaderChecker {
         void save_payload_header_to_log(
             const UVC_Payload_Header& payload_header,
             std::chrono::time_point<std::chrono::steady_clock> received_time);
+
+        void plot_received_chrono_times(const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_chrono_times, 
+                                        const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_error_times);
 
 
 

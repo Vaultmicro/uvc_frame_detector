@@ -107,19 +107,17 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           update_frame_error_stat(last_frame->frame_error);
           save_frames_to_log(last_frame);
           if (last_frame->frame_error) {
-            v_cout_1 << "Frame Error_: " << last_frame->frame_error << std::endl;
-            v_cout_2 << "Frame Payload times: ";
-            for (const auto& time_point : last_frame->received_chrono_times) {
-                v_cout_2 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
-            }
-            v_cout_1 << "Previous Previous Payload Header: " << std::endl;
-            v_cout_1 << previous_previous_payload_header << std::endl;
-            v_cout_1 << "Previous Payload Header: " << std::endl;
-            v_cout_1 << previous_payload_header << std::endl;
-            v_cout_1 << "Current Payload Header: " << std::endl;
-            v_cout_1 << payload_header << std::endl;
-            //v_cout_1 makegraph
-            v_cout_1 << std::endl;
+
+            plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+
+            v_cout_2 << "Frame Error Type_: " << last_frame->frame_error << std::endl;
+            v_cout_2 << "Previous Previous Payload Header: " << std::endl;
+            v_cout_2 << previous_previous_payload_header << std::endl;
+            v_cout_2 << "Previous Payload Header: " << std::endl;
+            v_cout_2 << previous_payload_header << std::endl;
+            v_cout_2 << "Current Payload Header: " << std::endl;
+            v_cout_2 << payload_header << std::endl;
+            v_cout_2 << std::endl;
           }
           processed_frames.push_back(std::move(frames.back()));
           frames.pop_back();
@@ -159,18 +157,17 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       // finish the frame
       save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
-        v_cout_1 << "Frame Error__: " << last_frame->frame_error << std::endl;
-        v_cout_2 << "Frame Payload times: ";
-        for (const auto& time_point : last_frame->received_chrono_times) {
-            v_cout_2 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
-        }
-        v_cout_1 << "Previous Previous Payload Header: " << std::endl;
-        v_cout_1 << previous_previous_payload_header << std::endl;
-        v_cout_1 << "Previous Payload Header: " << std::endl;
-        v_cout_1 << previous_payload_header << std::endl;
-        v_cout_1 << "Current Payload Header: " << std::endl;
-        v_cout_1 << payload_header << std::endl;
-        v_cout_1 << std::endl;
+        plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+
+        v_cout_2 << "Frame Error Type__: " << last_frame->frame_error << std::endl;
+        v_cout_2 << "Previous Previous Payload Header: " << std::endl;
+        v_cout_2 << previous_previous_payload_header << std::endl;
+        v_cout_2 << "Previous Payload Header: " << std::endl;
+        v_cout_2 << previous_payload_header << std::endl;
+        v_cout_2 << "Current Payload Header: " << std::endl;
+        v_cout_2 << payload_header << std::endl;
+
+        v_cout_2 << std::endl;
       }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
@@ -179,7 +176,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       if (processed_frames.size() > 90) {
         processed_frames.erase(processed_frames.begin());
       }
-
 
       // Check the Frame width x height in here
       // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
@@ -214,9 +210,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     return payload_header_valid_return;
 
   } else {
+    // handle payload header errors
     if (!frames.empty()) {
       auto& last_frame = frames.back();
       last_frame->frame_error = ERR_FRAME_ERROR;
+      last_frame->add_received_error_time(received_time);
+      plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
     }
     update_payload_error_stat(payload_header_valid_return);
 
@@ -230,7 +229,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 void UVCPHeaderChecker::frame_valid_ctrl(
     const std::vector<u_char>& uvc_payload) {
-
 
 }
 
@@ -343,7 +341,9 @@ UVCError UVCPHeaderChecker::payload_header_valid(
       return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
-            previous_payload_header.bmBFH.BFH_EOF) {
+            previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
+      v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
+                  "as the previous frame and EOF is set." << std::endl;
       return ERR_FID_MISMATCH;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
@@ -425,7 +425,7 @@ void UVCPHeaderChecker::save_payload_header_to_log(
 #endif
 
   if (!log_file.is_open()) {
-    v_cerr_2 << "Error opening payload header log file." << std::endl;
+    v_cerr_3 << "Error opening payload header log file." << std::endl;
     return;
   }
 
@@ -486,3 +486,39 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     return os;
 }
 
+void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono::steady_clock::time_point>& received_chrono_times, 
+                                                    const std::vector<std::chrono::steady_clock::time_point>& received_error_times) {
+    if (received_chrono_times.empty() && received_error_times.empty()) return;
+
+    const int zoom = 6;
+    const int cut = 30;
+    const int total_markers = ControlConfig::fps * zoom;         
+    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::fps) / (zoom *cut)));
+
+
+    auto base_time = received_chrono_times[0];
+
+    std::string graph(total_markers, '_');
+
+    for (const auto& time_point : received_chrono_times) {
+        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
+
+        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
+
+        if (position < total_markers) {
+            graph[position] = 'o';
+        }
+    }
+    for (const auto& time_point : received_error_times) {
+        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
+
+        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
+
+        if (position < total_markers) {
+            graph[position] = 'x';
+        }
+    }
+
+    // v_cout_2 << "Graph Data (Payload Reception Times): " << std::endl;
+    v_cout_2 << graph << std::endl;
+}
