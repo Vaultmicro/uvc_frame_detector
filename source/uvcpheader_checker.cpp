@@ -42,7 +42,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   } else if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
       std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 1) {
     
-    std::cout << "FPS: " << frame_count << " frames per second"
+    v_cout_1 << "FPS: " << frame_count << " frames per second"
               << std::endl;
 
     int fps_difference = ControlConfig::fps - frame_count;

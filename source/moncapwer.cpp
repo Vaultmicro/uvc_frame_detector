@@ -11,9 +11,9 @@
 #include <queue>
 #include <csignal>
 
-#include <validuvc/control_config.hpp>
-#include <validuvc/uvcpheader_checker.hpp>
-#include <utils/verbose.hpp>
+#include "validuvc/control_config.hpp"
+#include "validuvc/uvcpheader_checker.hpp"
+#include "utils/verbose.hpp"
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
 std::mutex time_mutex;
@@ -83,14 +83,14 @@ void capture_packets() {
     //     std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
     //     return;
     // } else {
-    //     std::cout << "Log file opened successfully: " << output_path << std::endl;
+    //     v_cout_1 << "Log file opened successfully: " << output_path << std::endl;
     // }
 
     static std::vector<u_char> temp_buffer;
     static uint32_t bulk_maxlengthsize = 0;
 
     std::string line;
-    std::cout << "Waiting for input..." << std::endl;
+    v_cout_1 << "Waiting for input..." << std::endl;
 
     while (std::getline(std::cin, line)) {
         // Split the line by semicolon
@@ -178,9 +178,9 @@ void capture_packets() {
         }
 
         // // Print each field separately
-        // std::cout << "frame.time_epoch: " << frame_time_epoch << std::endl;
-        // std::cout << "frame.len: " << frame_len << std::endl;
-        // std::cout << "usb.capdata: " << usb_capdata << std::endl;
+        // v_cout_1 << "frame.time_epoch: " << frame_time_epoch << std::endl;
+        // v_cout_1 << "frame.len: " << frame_len << std::endl;
+        // v_cout_1 << "usb.capdata: " << usb_capdata << std::endl;
 
         // // Log the separated fields
         // log_file << "usb_transfer_type: " << usb_transfer_type << std::endl;
@@ -192,7 +192,7 @@ void capture_packets() {
     }
 
     // log_file.close();
-    // std::cout << "Log file closed." << std::endl;
+    // v_cout_1 << "Log file closed." << std::endl;
 }
 
 
@@ -238,7 +238,7 @@ void process_packets() {
     }
     // header_checker.print_packet(packet);
   }
-  std::cout << "Process packet() end" << std::endl;
+  v_cout_1 << "Process packet() end" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -278,19 +278,19 @@ int main(int argc, char* argv[]) {
     }
     if (!fw_set || !fh_set || !fps_set || !ff_set) {
         if (!fw_set) {
-        std::cout << "Frame width not specified, using default: "
+        v_cout_1 << "Frame width not specified, using default: "
                     << ControlConfig::get_width() << std::endl;
         }
         if (!fh_set) {
-        std::cout << "Frame height not specified, using default: "
+        v_cout_1 << "Frame height not specified, using default: "
                     << ControlConfig::get_height() << std::endl;
         }
         if (!fps_set) {
-        std::cout << "FPS not specified, using default: "
+        v_cout_1 << "FPS not specified, using default: "
                     << ControlConfig::get_fps() << std::endl;
         }
         if (!ff_set) {
-        std::cout << "Frame format not specified, using default: "
+        v_cout_1 << "Frame format not specified, using default: "
                     << ControlConfig::get_frame_format() << std::endl;
         }
     }
@@ -316,6 +316,6 @@ int main(int argc, char* argv[]) {
     process_thread.join();
 
     clean_exit(0);
-    std::cout << "End of main" << std::endl;
+    v_cout_1 << "End of main" << std::endl;
     return 0;
 }
