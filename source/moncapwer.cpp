@@ -14,7 +14,10 @@
 #include "validuvc/control_config.hpp"
 #include "validuvc/uvcpheader_checker.hpp"
 #include "utils/verbose.hpp"
+
+#ifdef TUI_SET
 #include "utils/tui_win.hpp"
+#endif
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
 std::mutex time_mutex;
@@ -25,6 +28,11 @@ bool stop_processing = false;
 
 
 void clean_exit(int signum) {
+
+#ifdef TUI_SET
+  handle_sigint(signum);
+#endif
+
   {
     std::lock_guard<std::mutex> lock(queue_mutex);
     stop_processing = true;
@@ -91,8 +99,18 @@ void capture_packets() {
     static uint32_t bulk_maxlengthsize = 0;
 
     std::string line;
-    v_cout_1 << "Waiting for input..." << std::endl;
-
+#ifdef TUI_SET
+    // static int first = 1;
+    // if (first){
+    //     setCursorPosition(2, 28);
+    //     setColor(BLACK | BG_WHITE);
+    //     first = 0;
+    // }
+    window_number = 4;
+    v_cout_1 << "Waiting for input...     " << std::endl;
+#else
+    v_cout_1 << "Waiting for input...     " << std::endl;
+#endif
     while (std::getline(std::cin, line)) {
         // Split the line by semicolon
         std::vector<std::string> tokens = split(line, ';');
@@ -295,17 +313,20 @@ int main(int argc, char* argv[]) {
                     << ControlConfig::get_frame_format() << std::endl;
         }
     }
+#ifndef TUI_SET
     v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
     v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
     v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
     v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
             << std::endl;
+#endif
 
     std::signal(SIGINT, clean_exit);
     std::signal(SIGTERM, clean_exit);
 
-
+#ifdef TUI_SET
     tui();
+#endif
 
     // Create threads for capture and processing
     std::thread capture_thread(capture_packets);

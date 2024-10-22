@@ -1,4 +1,5 @@
 #include "utils/verbose.hpp"
+#include "utils/tui_win.hpp"
 
 // Initialize verbose level
 int verbose_level = 2;
@@ -21,8 +22,7 @@ VerboseStream::VerboseStream(int level, const std::string& prefix,
     : level_(level), prefix_(prefix), output_stream_(output_stream) {}
 
 // VerboseStream implementation
-VerboseStream& VerboseStream::operator<<(
-    std::ostream& (*manip)(std::ostream&) ) {
+VerboseStream& VerboseStream::operator<<(std::ostream& (*manip)(std::ostream&) ) {
   if (verbose_level >= level_) {
     buffer_ << manip;
     flush();
@@ -32,7 +32,17 @@ VerboseStream& VerboseStream::operator<<(
 
 void VerboseStream::flush() {
   if (verbose_level >= level_) {
+#ifdef TUI_SET
+    std::string content = buffer_.str();
+
+    // Remove any newline characters from the content
+    content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());
+
+    // Send the processed content (without newlines) to print_scroll
+    print_scroll(window_number, prefix_ + content);
+#else
     output_stream_ << buffer_.str();
+#endif
     buffer_.str("");  // Clear the buffer after flushing
   }
 }

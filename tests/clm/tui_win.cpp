@@ -34,12 +34,12 @@ struct WindowConfig {
 };
 
 std::vector<WindowConfig> windowConfigs = {
-    {1, 1, 146, 1, BG_BLACK},   // First window
-    {1, 3, 48, 8, BG_BLACK},    // Second window
-    {50, 3, 48, 8, BG_BLACK},   // Third window
-    {99, 3, 48, 25, BG_BLACK},  // Fourth window
-    {1, 12, 97, 7, BG_BLACK},   // Fifth window (graph)
-    {1, 20, 97, 8, BG_BLACK}    // Sixth window (header logs)
+    {1, 1, 146, 1, BG_BLACK},   
+    {1, 3, 48, 8, BG_BLACK},   
+    {50, 3, 48, 8, BG_BLACK},   
+    {99, 3, 48, 25, BG_BLACK},
+    {1, 12, 97, 7, BG_BLACK}, 
+    {1, 20, 97, 8, BG_BLACK}   
 };
 
 void setCursorPosition(int x, int y) {

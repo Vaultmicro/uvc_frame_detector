@@ -1,4 +1,5 @@
 #include "utils/tui_win.hpp"
+#include "validuvc/control_config.hpp"
 
 std::vector<WindowConfig> windowConfigs = {
     {1, 1, 146, 1, BG_BLACK},   // First window
@@ -8,6 +9,8 @@ std::vector<WindowConfig> windowConfigs = {
     {1, 12, 97, 7, BG_BLACK},   // Fifth window (graph)
     {1, 20, 97, 8, BG_BLACK}    // Sixth window (header logs)
 };
+
+int window_number = 3;
 
 // Function to set the cursor position in the console
 void setCursorPosition(int x, int y) {
@@ -134,12 +137,16 @@ void tui() {
 
 
     setupWindows(); 
-    std::ostringstream ossWindow0;
-    std::ostringstream ossWindow1;
-    std::ostringstream ossWindow2;
-    std::ostringstream ossWindow3;
-    std::ostringstream ossWindow4;
-    std::ostringstream ossWindow5;
+
+    setCursorPosition (2, 1);
+    setColor(WHITE);
+    std::cout << "  Frame Width: " << ControlConfig::width 
+          << "     Frame Height: " << ControlConfig::height 
+          << "     FPS: " << ControlConfig::fps 
+          << "     Frame Format: " << ControlConfig::frame_format 
+          << "     Max Frame Size: " << ControlConfig::dwMaxVideoFrameSize 
+          << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
+          << std::endl;
 
 
     setCursorPosition(2, 29);
@@ -147,29 +154,28 @@ void tui() {
     std::cout << "Frame 0 saved to frame_0.jpg";
 
     // Wait for user input before closing
-    setCursorPosition(70, 29); // Move the cursor to the last line
+    setCursorPosition(40, 29); // Move the cursor to the last line
     setColor(WHITE | BG_BLACK); // Reset to default colors
     std::cout << "Vaultmicro Usb Video Class Camera Frame Detector..   ";
     std::cout << "Press any key to exit...";
 
     // while (true) {
-    //     ossWindow1.str("");
+    //     std::ostringstream ossWindow1;
     //     ossWindow1 << "Random Data: " << rand() % 100;
     //     print_scroll(1, ossWindow1.str());
     //     Sleep(200);
 
-    //     ossWindow2.str("");
+    //     std::ostringstream ossWindow2;
     //     ossWindow2 << "Random Data: " << rand() % 100;
     //     print_scroll(2, ossWindow2.str());
     //     Sleep(200);
 
-    //     ossWindow3.str("");
+    //     std::ostringstream ossWindow3;
     //     ossWindow3 << "This is the first line." << std::endl;
     //     ossWindow3 << "This is the second line, which is long and will wrap around." << std::endl;
     //     ossWindow3 << "This is the third line." << std::endl;
     //     ossWindow3 << "Random Data: " << rand() % 100;
-    //     std::string text = ossWindow3.str();
-    //     print_whole(3, text);
+    //     print_whole(3, ossWindow3.str());
 
     // }
 
