@@ -33,7 +33,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   window_number = 4;
 #endif
 
-  if (uvc_payload.empty()) {
+  if (uvc_payload.empty()) {          
     v_cerr_3 << "UVC payload is empty." << std::endl;
     update_payload_error_stat(ERR_EMPTY_PAYLOAD);
     return ERR_EMPTY_PAYLOAD;
@@ -53,11 +53,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 1) {
 
 #ifdef TUI_SET
-  window_number = 1;
+  window_number = 2;
 #endif
-
-    v_cout_1 << "FPS: " << frame_count << " frames per second"
-              << std::endl;
+    v_cout_1 << "FPS: " << frame_count << " frames per second" << std::endl;
 
 #ifdef TUI_SET
     window_number = 4;
@@ -74,7 +72,15 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     frame_count = 0;
     temp_received_time = received_time - std::chrono::milliseconds(1);
 
+#ifdef TUI_SET
+    window_number = 3;
+    print_whole_flag = 1;
 
+    print_stats();
+
+    print_whole_flag = 0;
+    window_number = 4;
+#endif
 
   } 
 
@@ -520,7 +526,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
     if (received_chrono_times.empty() && received_error_times.empty()) return;
 
 #ifdef TUI_SET
-  window_number = 4;
+  window_number = 5;
 #endif
 
     const int zoom = 5;

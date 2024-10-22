@@ -40,6 +40,7 @@ struct WindowConfig {
 // Extern declaration for window configuration vector
 extern std::vector<WindowConfig> windowConfigs;
 extern int window_number;
+extern int print_whole_flag;
 
 // Function declarations
 void setCursorPosition(int x, int y);

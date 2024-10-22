@@ -33,13 +33,19 @@ VerboseStream& VerboseStream::operator<<(std::ostream& (*manip)(std::ostream&) )
 void VerboseStream::flush() {
   if (verbose_level >= level_) {
 #ifdef TUI_SET
-    std::string content = buffer_.str();
+    if (print_whole_flag){
+      
+      print_whole(window_number, buffer_.str());
 
-    // Remove any newline characters from the content
-    content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());
+    } else {
+      std::string content = buffer_.str();
 
-    // Send the processed content (without newlines) to print_scroll
-    print_scroll(window_number, prefix_ + content);
+      // Remove any newline characters from the content
+      content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());
+
+      // Send the processed content (without newlines) to print_scroll
+      print_scroll(window_number, prefix_ + content);
+    }
 #else
     output_stream_ << buffer_.str();
 #endif

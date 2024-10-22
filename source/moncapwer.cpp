@@ -106,7 +106,7 @@ void capture_packets() {
     //     setColor(BLACK | BG_WHITE);
     //     first = 0;
     // }
-    window_number = 4;
+    window_number = 3;
     v_cout_1 << "Waiting for input...     " << std::endl;
 #else
     v_cout_1 << "Waiting for input...     " << std::endl;

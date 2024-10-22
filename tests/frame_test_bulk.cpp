@@ -192,7 +192,7 @@ TEST_F(frame_test, whole_frame_test_bravia) {
   auto first_frame_number =
       whole_frame_checker.processed_frames[0]->frame_number;
   auto second_frame_number = whole_frame_checker.frames.front()
-                                 ->frame_number;  // frames의 첫 번째 요소
+                                 ->frame_number; 
 
   // Check that two different frames are processed by comparing frame numbers
   ASSERT_NE(first_frame_number, second_frame_number)

@@ -2,15 +2,16 @@
 #include "validuvc/control_config.hpp"
 
 std::vector<WindowConfig> windowConfigs = {
-    {1, 1, 146, 1, BG_BLACK},   // First window
-    {1, 3, 48, 8, BG_BLACK},    // Second window
-    {50, 3, 48, 8, BG_BLACK},   // Third window
-    {99, 3, 48, 25, BG_BLACK},  // Fourth window
-    {1, 12, 97, 7, BG_BLACK},   // Fifth window (graph)
-    {1, 20, 97, 8, BG_BLACK}    // Sixth window (header logs)
+    {1, 1, 146, 1, BG_BLACK},  //0
+    {1, 3, 48, 8, BG_BLACK},   //1
+    {50, 3, 48, 8, BG_BLACK},  //2
+    {99, 3, 48, 25, BG_BLACK}, //3
+    {1, 12, 97, 7, BG_BLACK},  //4
+    {1, 20, 97, 8, BG_BLACK}   //5
 };
 
 int window_number = 3;
+int print_whole_flag = 0;
 
 // Function to set the cursor position in the console
 void setCursorPosition(int x, int y) {
@@ -74,18 +75,38 @@ void print_scroll(int windowNumber, const std::string& newData) {
     static std::vector<std::vector<std::string>> windowContents(6, std::vector<std::string>(windowConfigs[windowNumber].height, std::string(windowConfigs[windowNumber].width, ' ')));
     static std::vector<int> currentRows(6, 0);
 
-    int currentRow = currentRows[windowNumber];
-    windowContents[windowNumber][currentRow] = std::string(windowConfigs[windowNumber].width, ' ');
-    windowContents[windowNumber][currentRow].replace(0, newData.length(), newData);
+    // Split input string into lines of appropriate width
+    std::istringstream iss(newData);
+    std::string line;
+    while (std::getline(iss, line)) {
+        // Handle wrapping if line is too long for the window's width
+        while (line.length() > static_cast<size_t>(windowConfigs[windowNumber].width)) {
+            std::string wrappedLine = line.substr(0, windowConfigs[windowNumber].width);
+            line = line.substr(windowConfigs[windowNumber].width);
 
-    currentRows[windowNumber] = (currentRow + 1) % windowConfigs[windowNumber].height;
+            // Add the wrapped line to the window content
+            int currentRow = currentRows[windowNumber];
+            windowContents[windowNumber][currentRow] = wrappedLine;
 
+            currentRows[windowNumber] = (currentRow + 1) % windowConfigs[windowNumber].height;
+        }
+
+        // Add remaining line (if any) to the window content
+        if (!line.empty()) {
+            int currentRow = currentRows[windowNumber];
+            windowContents[windowNumber][currentRow] = line;
+            currentRows[windowNumber] = (currentRow + 1) % windowConfigs[windowNumber].height;
+        }
+    }
+
+    // Display the contents of the window
     for (int row = 0; row < windowConfigs[windowNumber].height; ++row) {
         int printRow = (currentRows[windowNumber] + row) % windowConfigs[windowNumber].height;
         setCursorPosition(windowConfigs[windowNumber].startX, windowConfigs[windowNumber].startY + row);
         std::cout << windowContents[windowNumber][printRow];
     }
 }
+
 
 // Function to clear and print the whole content in a window
 void print_whole(int windowNumber, const std::string& newData) {
@@ -94,28 +115,54 @@ void print_whole(int windowNumber, const std::string& newData) {
     int startX = windowConfigs[windowNumber].startX;
     int startY = windowConfigs[windowNumber].startY;
 
+    // Clear the window area before printing new content
     clearConsoleArea(startX, startY, width, height);
 
-    std::istringstream iss(newData);
-    std::string line;
+    std::string remainingData = newData;
     int row = 0;
 
-    while (std::getline(iss, line) && row < height) {
-        while (line.length() > static_cast<size_t>(width)) {
-            setCursorPosition(startX, startY + row);
-            std::cout << line.substr(0, width);
-            line = line.substr(width);
-            row++;
-            if (row >= height) break;
+    while (!remainingData.empty() && row < height) {
+        // Find the position of the next newline character (\n)
+        size_t newlinePos = remainingData.find('\n');
+        std::string line;
+
+        // If a newline is found, extract the line up to that point
+        if (newlinePos != std::string::npos) {
+            line = remainingData.substr(0, newlinePos + 1); // Include the newline in the extracted line
+            remainingData = remainingData.substr(newlinePos + 1); // Remove the processed part
+        } else {
+            // No newline found, process the entire remaining data
+            line = remainingData;
+            remainingData.clear();
         }
 
-        if (row < height) {
+        // Print the line if it fits within the window width
+        while (!line.empty()) {
+            std::string partToPrint;
+
+            if (line.length() > static_cast<size_t>(width)) {
+                // If the line exceeds the window width, split it
+                partToPrint = line.substr(0, width);
+                line = line.substr(width);
+            } else {
+                // The line fits within the window
+                partToPrint = line;
+                line.clear();
+            }
+
+            // Set the cursor position and print the part
             setCursorPosition(startX, startY + row);
-            std::cout << line;
+            std::cout << partToPrint;
             row++;
+
+            // If we've reached the bottom of the window, stop
+            if (row >= height) {
+                break;
+            }
         }
     }
 }
+
 
 // Function to set up windows with the specified configurations
 void setupWindows() {
@@ -124,8 +171,6 @@ void setupWindows() {
         clearConsoleArea(config.startX, config.startY, config.width, config.height);
     }
 }
-
-
 
 void tui() {
     // signal(SIGINT, handle_sigint); // Register SIGINT handler for Ctrl + C
