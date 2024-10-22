@@ -14,6 +14,7 @@
 #include "validuvc/control_config.hpp"
 #include "validuvc/uvcpheader_checker.hpp"
 #include "utils/verbose.hpp"
+#include "utils/tui_win.hpp"
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
 std::mutex time_mutex;
@@ -304,7 +305,7 @@ int main(int argc, char* argv[]) {
     std::signal(SIGTERM, clean_exit);
 
 
-    // Create buffers
+    tui();
 
     // Create threads for capture and processing
     std::thread capture_thread(capture_packets);

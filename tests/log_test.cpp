@@ -7,7 +7,7 @@
 
 int main() {
     UVCPHeaderChecker whole_frame_checker;
-    std::ifstream inputFile("../tests/change_shark/brav_new.txt"); 
+    std::ifstream inputFile("../tests/change_shark/brio_new.txt"); 
     std::string line;
 
     if (!inputFile.is_open()) {

@@ -2,7 +2,6 @@
 #include <iostream>
 #include <csignal>
 #include <sstream>
-
 #include <vector>
 #include <string>
 
@@ -16,7 +15,6 @@
 #define WHITE       (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 #define BRIGHT      FOREGROUND_INTENSITY // Bright color flag
 
-
 #define BG_BLACK    0
 #define BG_BLUE     BACKGROUND_BLUE
 #define BG_GREEN    BACKGROUND_GREEN
@@ -27,6 +25,22 @@
 #define BG_WHITE    (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
 #define BG_BRIGHT   BACKGROUND_INTENSITY // Bright background flag
 
+struct WindowConfig {
+    int startX;
+    int startY;
+    int width;
+    int height;
+    WORD backgroundColor;
+};
+
+std::vector<WindowConfig> windowConfigs = {
+    {1, 1, 146, 1, BG_BLACK},   // First window
+    {1, 3, 48, 8, BG_BLACK},    // Second window
+    {50, 3, 48, 8, BG_BLACK},   // Third window
+    {99, 3, 48, 25, BG_BLACK},  // Fourth window
+    {1, 12, 97, 7, BG_BLACK},   // Fifth window (graph)
+    {1, 20, 97, 8, BG_BLACK}    // Sixth window (header logs)
+};
 
 void setCursorPosition(int x, int y) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -83,78 +97,78 @@ void set_console_size(int width, int height) {
     SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), TRUE, &window_size); // Set window size
 }
 
-void print_scroll(int startX, int startY, int width, int height, const std::string& newData, int windowNumber) {
-    static std::vector<std::vector<std::string>> windowContents(6, std::vector<std::string>(height, std::string(width, ' ')));    
+void print_scroll(int windowNumber, const std::string& newData) {
+    static std::vector<std::vector<std::string>> windowContents(6, std::vector<std::string>(windowConfigs[windowNumber].height, std::string(windowConfigs[windowNumber].width, ' ')));
     static std::vector<int> currentRows(6, 0);
+    
     int currentRow = currentRows[windowNumber];
-    windowContents[windowNumber][currentRow] = std::string(width, ' '); 
+    windowContents[windowNumber][currentRow] = std::string(windowConfigs[windowNumber].width, ' ');
     windowContents[windowNumber][currentRow].replace(0, newData.length(), newData);
 
-    currentRows[windowNumber] = (currentRow + 1) % height;
+    currentRows[windowNumber] = (currentRow + 1) % windowConfigs[windowNumber].height;
 
-    for (int row = 0; row < height; ++row) {
-        int printRow = (currentRows[windowNumber] + row) % height;
-        setCursorPosition(startX, startY + row);
+    for (int row = 0; row < windowConfigs[windowNumber].height; ++row) {
+        int printRow = (currentRows[windowNumber] + row) % windowConfigs[windowNumber].height;
+        setCursorPosition(windowConfigs[windowNumber].startX, windowConfigs[windowNumber].startY + row);
         std::cout << windowContents[windowNumber][printRow];
     }
 }
 
-int main() {
-    std::ostringstream oss;
+void print_whole(int windowNumber, const std::string& newData) {
+    int width = windowConfigs[windowNumber].width;
+    int height = windowConfigs[windowNumber].height;
+    int startX = windowConfigs[windowNumber].startX;
+    int startY = windowConfigs[windowNumber].startY;
 
+    clearConsoleArea(startX, startY, width, height);
+
+    std::istringstream iss(newData);
+    std::string line;
+    int row = 0;
+
+    while (std::getline(iss, line) && row < height) {
+        while (line.length() > static_cast<size_t>(width)) {
+            setCursorPosition(startX, startY + row);
+            std::cout << line.substr(0, width);  
+            line = line.substr(width);
+            row++;
+            if (row >= height) break; 
+        }
+
+        if (row < height) {
+            setCursorPosition(startX, startY + row);
+            std::cout << line;
+            row++;
+        }
+    }
+}
+
+void setupWindows() {
+    for (const auto& config : windowConfigs) {
+        fillBackgroundColor(config.startX, config.startY, config.width, config.height, config.backgroundColor);
+        clearConsoleArea(config.startX, config.startY, config.width, config.height);
+    }
+}
+
+void tui() {
     signal(SIGINT, handle_sigint); // Register SIGINT handler for Ctrl + C
 
     set_console_size(148, 30); // Set the console size
-
-    // Clear the entire console window, setting width = 180 and height = 50
     clearConsoleArea(0, 0, 148, 30);
-
-    // Set the main window size to 90x25 with gray background and black text
     fillBackgroundColor(0, 0, 148, 30, BG_WHITE); // Gray background
     setColor(BLACK); // Black text
 
-    // First window
-    clearConsoleArea(1, 1, 146, 1);
-    fillBackgroundColor(1, 1, 48, 1, BG_BLACK); // Black background
-    setCursorPosition(2, 1);
-    setColor(WHITE); // White text
-    std::cout << "UVC Camera Device:     Frame Width:     Frame Height:     FPS:     Frame Format:     Max Frame Size:     Max Transfer Size:";
+
+    setupWindows(); 
+    std::ostringstream ossWindow0;
+    std::ostringstream ossWindow1;
+    std::ostringstream ossWindow2;
+    std::ostringstream ossWindow3;
+    std::ostringstream ossWindow4;
+    std::ostringstream ossWindow5;
 
 
-    // Second window
-    clearConsoleArea(1, 3, 48, 8);
-    fillBackgroundColor(1, 3, 48, 8, BG_BLACK); // Black background
-    setCursorPosition(1, 4);
-    setColor(WHITE); // White text
-    
-    // std::cout << "Count: 61\nCount: 62\nCount: 63\nCount: 64";
-
-    // Third window
-    clearConsoleArea(50, 3, 48, 8);
-    fillBackgroundColor(50, 3, 48, 8, BG_BLACK); // Black background
-    setCursorPosition(50, 4);
-    setColor(WHITE); // White text
-    // std::cout << "Count: 30\nCount: 40\nCount: 50\nCount: 60";
-
-    // Fourth window //for stats
-    clearConsoleArea(99, 3, 48, 25);
-    fillBackgroundColor(99, 3, 48, 25, BG_BLACK); // Black background
-    setCursorPosition(99, 4);
-    setColor(WHITE); // White text
-
-    // Fifth window // for graph
-    clearConsoleArea(1, 12, 97, 7);
-    fillBackgroundColor(1, 12, 97, 7, BG_BLACK); // Black background
-    setCursorPosition(1, 12);
-    setColor(WHITE); // White text
-
-    // Sixth window // for header logs
-    clearConsoleArea(1, 20, 97, 8);
-    fillBackgroundColor(1, 20, 97, 8, BG_BLACK); // Black background
-    setCursorPosition(1, 21);
-    setColor(WHITE); // White text
-
-    setCursorPosition(2,29);
+    setCursorPosition(2, 29);
     setColor(BLACK | BG_WHITE);
     std::cout << "Frame 0 saved to frame_0.jpg";
 
@@ -163,22 +177,29 @@ int main() {
     setColor(WHITE | BG_BLACK); // Reset to default colors
     std::cout << "Vaultmicro Usb Video Class Camera Frame Detector..   ";
     std::cout << "Press any key to exit...";
-    // std::cin.get(); // Wait for user input
 
+    // while (true) {
+    //     ossWindow1.str("");
+    //     ossWindow1 << "Random Data: " << rand() % 100;
+    //     print_scroll(1, ossWindow1.str());
+    //     Sleep(200);
 
-    setCursorPosition(1, 4);
-    setColor(WHITE); // White text
-    while (true){
-        std::string dataWindow2 = std::to_string(rand() % 100);
-        print_scroll(1, 3, 48, 8, dataWindow2, 2);
-        Sleep(200);
-        std::string dataWindow3 = std::to_string(rand() % 100);
-        print_scroll(50, 3, 48, 8, dataWindow3, 3);
-        Sleep(200);
+    //     ossWindow2.str("");
+    //     ossWindow2 << "Random Data: " << rand() % 100;
+    //     print_scroll(2, ossWindow2.str());
+    //     Sleep(200);
 
-    }
-    
-    clearConsoleArea(0, 0, 150, 30);
+    //     ossWindow3.str("");
+    //     ossWindow3 << "This is the first line." << std::endl;
+    //     ossWindow3 << "This is the second line, which is long and will wrap around." << std::endl;
+    //     ossWindow3 << "This is the third line." << std::endl;
+    //     ossWindow3 << "Random Data: " << rand() % 100;
+    //     std::string text = ossWindow3.str();
+    //     print_whole(3, text);
 
-    return 0;
+    // }
+
+    // clearConsoleArea(0, 0, 150, 30);
+
+    // return 0;
 }
