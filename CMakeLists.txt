@@ -13,7 +13,6 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 
-if(UNIX)
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -22,8 +21,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+if (WIN32)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+
+endif(WIN32)
+
 # find_package(PkgConfig REQUIRED)
 # pkg_check_modules(PCAP REQUIRED libpcap)
+if(UNIX)
 
 set(LIBUSB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/libusb-1.0)
 set(LIBUSB_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/library/libusb-1.0.so.0.4.0)
@@ -33,10 +39,10 @@ set(PCAP_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so.1.10.4
 )
+endif(UNIX)
 
 include_directories(${googletest_SOURCE_DIR}/googlemock/include)
 include_directories(${googletest_SOURCE_DIR}/googletest/include)
-endif(UNIX)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -67,7 +73,11 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
 )
+
+target_compile_definitions(oldmanandsea PUBLIC TUI_SET)
+
 endif(WIN32)
 
 
@@ -103,6 +113,7 @@ target_link_libraries(
         ${LIBUSB_LIBRARIES}
 )
 
+endif(UNIX)
 
 add_executable(
     valid_test
@@ -120,6 +131,9 @@ target_link_libraries(
         gtest_main
 )
 
+
+
+
 add_executable(
     frame_test_bulk
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_bulk.cpp
@@ -128,6 +142,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
 )
+
 
 target_link_libraries(
     frame_test_bulk
@@ -152,6 +167,9 @@ target_link_libraries(
         gtest_main
 )
 
+
+if (UNIX)
+
 add_executable(
     test_packet_handler
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_packet_handler.cpp
@@ -171,7 +189,6 @@ target_link_libraries(
         gtest_main
         ${PCAP_LIBRARIES}
 )
-
 
 
 add_executable(

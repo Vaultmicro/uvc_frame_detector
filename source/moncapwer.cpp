@@ -11,9 +11,13 @@
 #include <queue>
 #include <csignal>
 
-#include <validuvc/control_config.hpp>
-#include <validuvc/uvcpheader_checker.hpp>
-#include <utils/verbose.hpp>
+#include "validuvc/control_config.hpp"
+#include "validuvc/uvcpheader_checker.hpp"
+#include "utils/verbose.hpp"
+
+#ifdef TUI_SET
+#include "utils/tui_win.hpp"
+#endif
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
 std::mutex time_mutex;
@@ -24,6 +28,11 @@ bool stop_processing = false;
 
 
 void clean_exit(int signum) {
+
+#ifdef TUI_SET
+  handle_sigint(signum);
+#endif
+
   {
     std::lock_guard<std::mutex> lock(queue_mutex);
     stop_processing = true;
@@ -83,15 +92,25 @@ void capture_packets() {
     //     std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
     //     return;
     // } else {
-    //     std::cout << "Log file opened successfully: " << output_path << std::endl;
+    //     v_cout_1 << "Log file opened successfully: " << output_path << std::endl;
     // }
 
     static std::vector<u_char> temp_buffer;
     static uint32_t bulk_maxlengthsize = 0;
 
     std::string line;
-    std::cout << "Waiting for input..." << std::endl;
-
+#ifdef TUI_SET
+    // static int first = 1;
+    // if (first){
+    //     setCursorPosition(2, 28);
+    //     setColor(BLACK | BG_WHITE);
+    //     first = 0;
+    // }
+    window_number = 3;
+    v_cout_1 << "Waiting for input...     " << std::endl;
+#else
+    v_cout_1 << "Waiting for input...     " << std::endl;
+#endif
     while (std::getline(std::cin, line)) {
         // Split the line by semicolon
         std::vector<std::string> tokens = split(line, ';');
@@ -178,9 +197,9 @@ void capture_packets() {
         }
 
         // // Print each field separately
-        // std::cout << "frame.time_epoch: " << frame_time_epoch << std::endl;
-        // std::cout << "frame.len: " << frame_len << std::endl;
-        // std::cout << "usb.capdata: " << usb_capdata << std::endl;
+        // v_cout_1 << "frame.time_epoch: " << frame_time_epoch << std::endl;
+        // v_cout_1 << "frame.len: " << frame_len << std::endl;
+        // v_cout_1 << "usb.capdata: " << usb_capdata << std::endl;
 
         // // Log the separated fields
         // log_file << "usb_transfer_type: " << usb_transfer_type << std::endl;
@@ -192,7 +211,7 @@ void capture_packets() {
     }
 
     // log_file.close();
-    // std::cout << "Log file closed." << std::endl;
+    // v_cout_1 << "Log file closed." << std::endl;
 }
 
 
@@ -238,7 +257,7 @@ void process_packets() {
     }
     // header_checker.print_packet(packet);
   }
-  std::cout << "Process packet() end" << std::endl;
+  v_cout_1 << "Process packet() end" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -278,32 +297,36 @@ int main(int argc, char* argv[]) {
     }
     if (!fw_set || !fh_set || !fps_set || !ff_set) {
         if (!fw_set) {
-        std::cout << "Frame width not specified, using default: "
+        v_cout_1 << "Frame width not specified, using default: "
                     << ControlConfig::get_width() << std::endl;
         }
         if (!fh_set) {
-        std::cout << "Frame height not specified, using default: "
+        v_cout_1 << "Frame height not specified, using default: "
                     << ControlConfig::get_height() << std::endl;
         }
         if (!fps_set) {
-        std::cout << "FPS not specified, using default: "
+        v_cout_1 << "FPS not specified, using default: "
                     << ControlConfig::get_fps() << std::endl;
         }
         if (!ff_set) {
-        std::cout << "Frame format not specified, using default: "
+        v_cout_1 << "Frame format not specified, using default: "
                     << ControlConfig::get_frame_format() << std::endl;
         }
     }
+#ifndef TUI_SET
     v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
     v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
     v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
     v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
             << std::endl;
+#endif
 
     std::signal(SIGINT, clean_exit);
     std::signal(SIGTERM, clean_exit);
 
-    
+#ifdef TUI_SET
+    tui();
+#endif
 
     // Create threads for capture and processing
     std::thread capture_thread(capture_packets);
@@ -315,6 +338,6 @@ int main(int argc, char* argv[]) {
     process_thread.join();
 
     clean_exit(0);
-    std::cout << "End of main" << std::endl;
+    v_cout_1 << "End of main" << std::endl;
     return 0;
 }

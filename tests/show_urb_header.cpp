@@ -49,7 +49,6 @@ std::vector<u_char> read_packet_data_from_file(const std::string& filename) {
 
     std::string hex_str;
     while (file >> hex_str) {
-        // 16진수 문자열을 u_char로 변환하여 벡터에 추가
         u_char byte = static_cast<u_char>(std::stoul(hex_str, nullptr, 16)); //stoul makes the hex to u_long type to u_char into 1 byte
         data.push_back(byte);
     }

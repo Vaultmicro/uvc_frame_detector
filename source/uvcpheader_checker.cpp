@@ -13,6 +13,10 @@
 #include "validuvc/uvcpheader_checker.hpp"
 #include "validuvc/control_config.hpp"
 
+#ifdef TUI_SET
+#include "utils/tui_win.hpp" 
+#endif
+
 #ifdef _WIN32
   typedef unsigned char u_char;
 #endif
@@ -25,13 +29,19 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
 
-  if (uvc_payload.empty()) {
-    v_cerr_5 << "UVC payload is empty." << std::endl;
+#ifdef TUI_SET
+  window_number = 4;
+#endif
+
+  if (uvc_payload.empty()) {          
+    v_cerr_3 << "UVC payload is empty." << std::endl;
     update_payload_error_stat(ERR_EMPTY_PAYLOAD);
     return ERR_EMPTY_PAYLOAD;
   }
   if (uvc_payload.size() > ControlConfig::dwMaxPayloadTransferSize) {
-    v_cerr_5 << "UVC payload size exceeds maximum transfer size." << std::endl;
+
+    v_cerr_3 << "UVC payload size exceeds maximum transfer size." << std::endl;
+
     update_payload_error_stat(ERR_MAX_PAYLAOD_OVERFLOW);
     return ERR_MAX_PAYLAOD_OVERFLOW;
   }
@@ -41,9 +51,15 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     temp_received_time = received_time;
   } else if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
       std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 1) {
-    
-    std::cout << "FPS: " << frame_count << " frames per second"
-              << std::endl;
+
+#ifdef TUI_SET
+  window_number = 2;
+#endif
+    v_cout_1 << "FPS: " << frame_count << " frames per second" << std::endl;
+
+#ifdef TUI_SET
+    window_number = 4;
+#endif
 
     int fps_difference = ControlConfig::fps - frame_count;
     if (frame_count != ControlConfig::fps){
@@ -55,13 +71,23 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     frame_count = 0;
     temp_received_time = received_time - std::chrono::milliseconds(1);
+
+#ifdef TUI_SET
+    window_number = 3;
+    print_whole_flag = 1;
+
+    print_stats();
+
+    print_whole_flag = 0;
+    window_number = 4;
+#endif
+
   } 
 
   static UVC_Payload_Header previous_previous_payload_header;
   static uint8_t previous_previous_error = 0;
   static UVC_Payload_Header previous_payload_header;
   static uint8_t previous_error = 0;
-  // static std::queue<std::vector<u_char>> fid_queue;
 
   UVC_Payload_Header payload_header =
       parse_uvc_payload_header(uvc_payload, received_time);
@@ -100,26 +126,26 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       //Process the last frame when EOF is missing
       if (payload_header_valid_return == ERR_MISSING_EOF) {
         v_cerr_3 << "Missing EOF" << std::endl;
+
         if (!frames.empty()) {
           auto& last_frame = frames.back();
           last_frame->frame_error = ERR_FRAME_ERROR;
           last_frame->eof_reached = false;
           //finish the last frame
           update_frame_error_stat(last_frame->frame_error);
-          save_frames_to_log(last_frame);
+          //save_frames_to_log(last_frame);
           if (last_frame->frame_error) {
-            v_cout_1 << "Frame Error_: " << last_frame->frame_error << std::endl;
-            v_cout_2 << "Frame Payload times: ";
-            for (const auto& time_point : last_frame->received_chrono_times) {
-                v_cout_2 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
-            }
-            v_cout_1 << "Previous Previous Payload Header: " << std::endl;
-            v_cout_1 << previous_previous_payload_header << std::endl;
-            v_cout_1 << "Previous Payload Header: " << std::endl;
-            v_cout_1 << previous_payload_header << std::endl;
-            v_cout_1 << "Current Payload Header: " << std::endl;
-            v_cout_1 << payload_header << std::endl;
-            v_cout_1 << std::endl;
+
+            plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+            v_cout_2 << "Frame Error Type_: " << last_frame->frame_error << std::endl;
+            v_cout_2 << "Previous Previous Payload Header: " << std::endl;
+            v_cout_2 << previous_previous_payload_header << std::endl;
+            v_cout_2 << "Previous Payload Header: " << std::endl;
+            v_cout_2 << previous_payload_header << std::endl;
+            v_cout_2 << "Current Payload Header: " << std::endl;
+            v_cout_2 << payload_header << std::endl;
+            v_cout_2 << std::endl;
+
           }
           processed_frames.push_back(std::move(frames.back()));
           frames.pop_back();
@@ -157,20 +183,19 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->eof_reached = true;
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
-      save_frames_to_log(frames.back());
+      // save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
-        v_cout_1 << "Frame Error__: " << last_frame->frame_error << std::endl;
-        v_cout_2 << "Frame Payload times: ";
-        for (const auto& time_point : last_frame->received_chrono_times) {
-            v_cout_2 << std::chrono::duration_cast<std::chrono::nanoseconds>(time_point.time_since_epoch()).count() << "ns, ";
-        }
-        v_cout_1 << "Previous Previous Payload Header: " << std::endl;
-        v_cout_1 << previous_previous_payload_header << std::endl;
-        v_cout_1 << "Previous Payload Header: " << std::endl;
-        v_cout_1 << previous_payload_header << std::endl;
-        v_cout_1 << "Current Payload Header: " << std::endl;
-        v_cout_1 << payload_header << std::endl;
-        v_cout_1 << std::endl;
+        plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+
+        v_cout_2 << "Frame Error Type__: " << last_frame->frame_error << std::endl;
+        v_cout_2 << "Previous Previous Payload Header: " << std::endl;
+        v_cout_2 << previous_previous_payload_header << std::endl;
+        v_cout_2 << "Previous Payload Header: " << std::endl;
+        v_cout_2 << previous_payload_header << std::endl;
+        v_cout_2 << "Current Payload Header: " << std::endl;
+        v_cout_2 << payload_header << std::endl;
+
+        v_cout_2 << std::endl;
       }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
@@ -179,7 +204,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       if (processed_frames.size() > 90) {
         processed_frames.erase(processed_frames.begin());
       }
-
 
       // Check the Frame width x height in here
       // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
@@ -214,31 +238,36 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     return payload_header_valid_return;
 
   } else {
+    // handle payload header errors
     if (!frames.empty()) {
       auto& last_frame = frames.back();
       last_frame->frame_error = ERR_FRAME_ERROR;
+      last_frame->add_received_error_time(received_time);
+      plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
     }
     update_payload_error_stat(payload_header_valid_return);
 
     return payload_header_valid_return;
   }
 
-  // v_cout_2 << "Payload is valid." << std::endl;
+  // v_cout_5 << "Payload is valid." << std::endl;
   update_payload_error_stat(ERR_UNKNOWN);
   return ERR_UNKNOWN;
 }
 
 void UVCPHeaderChecker::frame_valid_ctrl(
     const std::vector<u_char>& uvc_payload) {
-  // Save the format of the frame
-  // Save them on the multiple stack with the time, so err frame be detected and
-  // pop from the stack The algorithm to detect the error frame is to compare
-  // the frame with the previous frame
+
 }
 
 UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     const std::vector<u_char>& uvc_payload,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
+
+#ifdef TUI_SET
+  window_number = 4;
+#endif
+
   UVC_Payload_Header payload_header = {};
   if (uvc_payload.size() < 2) {
     v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
@@ -335,23 +364,27 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   }
 
   // Checks if the Frame Identifier bit is set
-  if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID) {
-    if (previous_payload_header.bmBFH.BFH_EOF) {
-      if ((payload_header.PTS == previous_payload_header.PTS) &&
-          payload_header.PTS != 0) {
-        v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
-                    "as the previous frame."
-                 << std::endl;
-        return ERR_SWAP;
-      }
+  // bmBFH.BFH_FID is for the start of the stream packet
+
+  if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
+            previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
+      v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
+                  "as the previous frame and EOF is set." << std::endl;
       return ERR_FID_MISMATCH;
-    }
-  } else {
-    if (!previous_payload_header.bmBFH.BFH_EOF &&
-        previous_payload_header.HLE != 0) { //frame_test_bulk
+      
+  } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
+      previous_payload_header.bmBFH.BFH_EOF && 
+      (payload_header.PTS == previous_payload_header.PTS) && 
+      payload_header.PTS != 0) {
+      v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
+                  "as the previous frame and PTS matches." << std::endl;
+      return ERR_SWAP;
+
+  } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
+            !previous_payload_header.bmBFH.BFH_EOF && 
+            previous_payload_header.HLE != 0) {
       v_cerr_2 << "Missing EOF" << std::endl;
-      return ERR_MISSING_EOF;  // missing frame for bulk for whole
-    }
+      return ERR_MISSING_EOF;
   }
 
   // Checks if the Still Image bit is set is not needed
@@ -376,7 +409,7 @@ void UVCPHeaderChecker::save_frames_to_log(
   std::ofstream log_file("../log/frames_log.txt", std::ios::app);
 
   if (!log_file.is_open()) {
-    v_cerr_2 << "Error opening log file." << std::endl;
+    v_cerr_5 << "Error opening log file." << std::endl;
     return;
   }
 
@@ -413,6 +446,8 @@ void UVCPHeaderChecker::save_frames_to_log(
   log_file.close();
 }
 
+//making graph
+
 void UVCPHeaderChecker::save_payload_header_to_log(
     const UVC_Payload_Header& payload_header,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
@@ -424,7 +459,7 @@ void UVCPHeaderChecker::save_payload_header_to_log(
 #endif
 
   if (!log_file.is_open()) {
-    v_cerr_2 << "Error opening payload header log file." << std::endl;
+    v_cerr_3 << "Error opening payload header log file." << std::endl;
     return;
   }
 
@@ -483,4 +518,51 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "  SCR_RES: " << header.bmSCR.SCR_RES << "\n";
 
     return os;
+}
+
+void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono::steady_clock::time_point>& received_chrono_times, 
+                                                    const std::vector<std::chrono::steady_clock::time_point>& received_error_times) {
+                                                      
+    if (received_chrono_times.empty() && received_error_times.empty()) return;
+
+#ifdef TUI_SET
+  window_number = 5;
+#endif
+
+    const int zoom = 5;
+    const int cut = 20;
+    const int total_markers = ControlConfig::fps * zoom;         
+    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::fps) / (zoom *cut)));
+
+
+    auto base_time = received_chrono_times[0];
+
+    std::string graph(total_markers, '_');
+
+    for (const auto& time_point : received_chrono_times) {
+        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
+
+        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
+
+        if (position < total_markers) {
+            graph[position] = 'o';
+        }
+    }
+    for (const auto& time_point : received_error_times) {
+        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
+
+        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
+
+        if (position < total_markers) {
+            graph[position] = 'x';
+        }
+    }
+    
+
+    // v_cout_2 << "Graph Data (Payload Reception Times): " << std::endl;
+    v_cout_2 << graph << std::endl;
+
+#ifdef TUI_SET
+  window_number = 4;
+#endif
 }

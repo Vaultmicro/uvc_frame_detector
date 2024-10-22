@@ -585,7 +585,7 @@ void process_packets() {
     }
     // header_checker.print_packet(packet);
   }
-  std::cout << "Process packet() end" << std::endl;
+  v_cout_1 << "Process packet() end" << std::endl;
 }
 
 void test_print_process_packets() {
@@ -699,19 +699,19 @@ int main(int argc, char* argv[]) {
 
   if (!fw_set || !fh_set || !fps_set || !ff_set) {
     if (!fw_set) {
-      std::cout << "Frame width not specified, using default: "
+      v_cout_1 << "Frame width not specified, using default: "
                 << ControlConfig::get_width() << std::endl;
     }
     if (!fh_set) {
-      std::cout << "Frame height not specified, using default: "
+      v_cout_1 << "Frame height not specified, using default: "
                 << ControlConfig::get_height() << std::endl;
     }
     if (!fps_set) {
-      std::cout << "FPS not specified, using default: "
+      v_cout_1 << "FPS not specified, using default: "
                 << ControlConfig::get_fps() << std::endl;
     }
     if (!ff_set) {
-      std::cout << "Frame format not specified, using default: "
+      v_cout_1 << "Frame format not specified, using default: "
                 << ControlConfig::get_frame_format() << std::endl;
     }
   }
@@ -815,7 +815,7 @@ int main(int argc, char* argv[]) {
   // This code will not be reached if pcap_loop runs indefinitely
   clean_exit(0);
 
-  std::cout << "End of main" << std::endl;
+  v_cout_1 << "End of main" << std::endl;
 
   return 0;
 }
