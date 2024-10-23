@@ -76,7 +76,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
 )
 
-target_compile_definitions(oldmanandsea PUBLIC TUI_SET)
+# target_compile_definitions(oldmanandsea PUBLIC TUI_SET)
 
 endif(WIN32)
 
@@ -201,7 +201,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
 
-target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
+# target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
 
 target_link_libraries(
     show_urb_header

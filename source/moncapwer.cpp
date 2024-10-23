@@ -156,28 +156,29 @@ void capture_packets() {
           } else if (usb_transfer_type == "0x01") {
               // Skip interrupt transfer
           } else if (usb_transfer_type == "0x02") {
-              // Skip control transfer
+              
+
           } else if (usb_transfer_type == "0x03") {
 
-            if (bulk_maxlengthsize == frame_length && start_flag == 1) {
-              // Continue the transfer
+            // if (bulk_maxlengthsize == frame_length && start_flag == 1) {
+            //   // Continue the transfer
+            //   std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
+            //   temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
+            //   // temp_buffer = hex_string_to_bytes(usb_capdata);
+            // } else {
+            //   if (bulk_maxlengthsize < frame_length) {
+            //     bulk_maxlengthsize = frame_length;
+            //   }
+
+            //   start_flag = 1;
               std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
               temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
-              // temp_buffer = hex_string_to_bytes(usb_capdata);
-            } else {
-              if (bulk_maxlengthsize < frame_length) {
-                bulk_maxlengthsize = frame_length;
-              }
+            //   // temp_buffer = hex_string_to_bytes(usb_capdata);
 
-              start_flag = 1;
-              std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
-              temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
-              // temp_buffer = hex_string_to_bytes(usb_capdata);
-
-              // log_file << "temp_buffer: ";
-              // for (u_char byte : temp_buffer) {
-              //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-              // }
+            //   // log_file << "temp_buffer: ";
+            //   // for (u_char byte : temp_buffer) {
+            //   //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
+            //   // }
 
               {
                   std::lock_guard<std::mutex> lock(queue_mutex);
@@ -188,7 +189,7 @@ void capture_packets() {
               }
               temp_buffer.clear();
               queue_cv.notify_one();
-            }
+            // }
 
           } else {
               // Handle unexpected transfer type
