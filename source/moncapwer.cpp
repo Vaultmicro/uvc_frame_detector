@@ -27,7 +27,10 @@ std::condition_variable queue_cv;
 bool stop_processing = false;
 
 
-
+struct FrameSize{
+  int frame_width;
+  int frame_height;
+};
 
 void clean_exit(int signum) {
 
@@ -124,10 +127,27 @@ void capture_packets() {
         std::string frame_time_epoch = (tokens.size() > 1 && !tokens[1].empty()) ? tokens[1] : "N/A";
         std::string frame_len = (tokens.size() > 2 && !tokens[2].empty()) ? tokens[2] : "N/A";
         std::string usb_capdata = (tokens.size() > 3 && !tokens[3].empty()) ? tokens[3] : "N/A";
+        std::string format_index = (tokens.size() > 4 && !tokens[4].empty()) ? tokens[4] : "N/A";
+        std::string frame_index = (tokens.size() > 5 && !tokens[5].empty()) ? tokens[5] : "N/A";
+        std::string frame_widths = (tokens.size() > 6 && !tokens[6].empty()) ? tokens[6] : "N/A";
+        std::string frame_heights = (tokens.size() > 7 && !tokens[7].empty()) ? tokens[7] : "N/A";
+        std::string frame_interval_fps = (tokens.size() > 8 && !tokens[8].empty()) ? tokens[8] : "N/A";
+        std::string max_frame_size = (tokens.size() > 9 && !tokens[9].empty()) ? tokens[9] : "N/A";
+        std::string max_payload_size = (tokens.size() > 10 && !tokens[10].empty()) ? tokens[10] : "N/A";
+
         auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
         uint32_t frame_length = (frame_len != "N/A") ? std::stoul(frame_len) : 0;
-        static int start_flag = 0;
+
+        // std::vector<uint32_t> format_indices;
+        // std::vector<uint32_t> frame_indices;
+        // std::vector<uint32_t> frame_width_list;
+        // std::vector<uint32_t> frame_height_list;
+
+#ifdef __linux__
+        // This for linux urb
+        // static int start_flag = 0;
+#endif
 
         if (usb_capdata == "N/A") {
             continue;
@@ -159,8 +179,37 @@ void capture_packets() {
               // Skip interrupt transfer
           } else if (usb_transfer_type == "0x02") {
 
+            if (frame_widths != "N/A" && frame_heights != "N/A") {
+              std::vector<std::string> format_indices = split(format_index, ',');
+              std::vector<std::string> frame_indices = split(frame_index, ',');
+              std::vector<std::string> frame_widths_list = split(frame_widths, ',');
+              std::vector<std::string> frame_heights_list = split(frame_heights, ',');
+              std::vector<std::vector<FrameSize>> frame_lists;
+              std::vector<FrameSize> temp_frame_list;
+              size_t format_index_counter = 0;
+
+              for (size_t i = 0; i < frame_indices.size(); ++i) {
+                  if (frame_indices[i] == "1" && !temp_frame_list.empty()) {
+                      frame_lists.push_back(temp_frame_list);
+                      temp_frame_list.clear();
+                      ++format_index_counter;
+                  }
+
+
+
+            }
+
+
+
+
+
+
+
+
 
           } else if (usb_transfer_type == "0x03") {
+
+#ifdef __linux__
 
             // if (bulk_maxlengthsize == frame_length && start_flag == 1) {
             //   // Continue the transfer
@@ -171,10 +220,11 @@ void capture_packets() {
             //   if (bulk_maxlengthsize < frame_length) {
             //     bulk_maxlengthsize = frame_length;
             //   }
-
             //   start_flag = 1;
+#endif
               std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
               temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
+              
             //   // temp_buffer = hex_string_to_bytes(usb_capdata);
 
             //   // log_file << "temp_buffer: ";
