@@ -27,6 +27,8 @@ std::condition_variable queue_cv;
 bool stop_processing = false;
 
 
+
+
 void clean_exit(int signum) {
 
 #ifdef TUI_SET
@@ -118,10 +120,10 @@ void capture_packets() {
         // Prepare fields with defaults if they are missing
         // -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata or usb.iso.data
         // MUST BE IN CORRECT ORDER
-        std::string usb_transfer_type = tokens.size() > 0 ? tokens[0] : "N/A";
-        std::string frame_time_epoch = tokens.size() > 1 ? tokens[1] : "N/A";
-        std::string frame_len = tokens.size() > 2 ? tokens[2] : "N/A";
-        std::string usb_capdata = tokens.size() > 3 ? tokens[3] : "N/A";
+        std::string usb_transfer_type = (tokens.size() > 0 && !tokens[0].empty()) ? tokens[0] : "N/A";
+        std::string frame_time_epoch = (tokens.size() > 1 && !tokens[1].empty()) ? tokens[1] : "N/A";
+        std::string frame_len = (tokens.size() > 2 && !tokens[2].empty()) ? tokens[2] : "N/A";
+        std::string usb_capdata = (tokens.size() > 3 && !tokens[3].empty()) ? tokens[3] : "N/A";
         auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
         uint32_t frame_length = (frame_len != "N/A") ? std::stoul(frame_len) : 0;
@@ -156,7 +158,7 @@ void capture_packets() {
           } else if (usb_transfer_type == "0x01") {
               // Skip interrupt transfer
           } else if (usb_transfer_type == "0x02") {
-              
+
 
           } else if (usb_transfer_type == "0x03") {
 
