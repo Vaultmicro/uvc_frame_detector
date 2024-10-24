@@ -10,6 +10,7 @@
 #include <mutex>
 #include <queue>
 #include <csignal>
+#include <map>
 
 #include "validuvc/control_config.hpp"
 #include "validuvc/uvcpheader_checker.hpp"
@@ -18,6 +19,7 @@
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
 #endif
+#include <map>
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
 std::mutex time_mutex;
@@ -27,9 +29,10 @@ std::condition_variable queue_cv;
 bool stop_processing = false;
 
 
-struct FrameSize{
+struct FrameInfo{
   int frame_width;
   int frame_height;
+  //int frame_format_subtype;
 };
 
 void clean_exit(int signum) {
@@ -127,13 +130,15 @@ void capture_packets() {
         std::string frame_time_epoch = (tokens.size() > 1 && !tokens[1].empty()) ? tokens[1] : "N/A";
         std::string frame_len = (tokens.size() > 2 && !tokens[2].empty()) ? tokens[2] : "N/A";
         std::string usb_capdata = (tokens.size() > 3 && !tokens[3].empty()) ? tokens[3] : "N/A";
-        std::string format_index = (tokens.size() > 4 && !tokens[4].empty()) ? tokens[4] : "N/A";
-        std::string frame_index = (tokens.size() > 5 && !tokens[5].empty()) ? tokens[5] : "N/A";
-        std::string frame_widths = (tokens.size() > 6 && !tokens[6].empty()) ? tokens[6] : "N/A";
-        std::string frame_heights = (tokens.size() > 7 && !tokens[7].empty()) ? tokens[7] : "N/A";
-        std::string frame_interval_fps = (tokens.size() > 8 && !tokens[8].empty()) ? tokens[8] : "N/A";
-        std::string max_frame_size = (tokens.size() > 9 && !tokens[9].empty()) ? tokens[9] : "N/A";
-        std::string max_payload_size = (tokens.size() > 10 && !tokens[10].empty()) ? tokens[10] : "N/A";
+        std::string usb_isodata = (tokens.size() > 4 && !tokens[4].empty()) ? tokens[4] : "N/A";
+        std::string format_index = (tokens.size() > 5 && !tokens[5].empty()) ? tokens[5] : "N/A";
+        std::string frame_index = (tokens.size() > 6 && !tokens[6].empty()) ? tokens[6] : "N/A";
+        std::string frame_widths = (tokens.size() > 7 && !tokens[7].empty()) ? tokens[7] : "N/A";
+        std::string frame_heights = (tokens.size() > 8 && !tokens[8].empty()) ? tokens[8] : "N/A";
+        std::string subtype_frame_format = (tokens.size() > 9 && !tokens[9].empty()) ? tokens[9] : "N/A";
+        std::string frame_interval_fps = (tokens.size() > 10 && !tokens[10].empty()) ? tokens[10] : "N/A";
+        std::string max_frame_size = (tokens.size() > 11 && !tokens[11].empty()) ? tokens[11] : "N/A";
+        std::string max_payload_size = (tokens.size() > 12 && !tokens[12].empty()) ? tokens[12] : "N/A";
 
         auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
@@ -149,13 +154,13 @@ void capture_packets() {
         // static int start_flag = 0;
 #endif
 
-        if (usb_capdata == "N/A") {
+        if (usb_capdata == "N/A" && usb_isodata == "N/A" && format_index == "N/A") {
             continue;
         } else {
 
           // Process based on usb_transfer_type
           if (usb_transfer_type == "0x00") {
-            std::vector<std::string> capdata_tokens = split(usb_capdata, ',');
+            std::vector<std::string> capdata_tokens = split(usb_isodata, ',');
             
             for (const std::string& token : capdata_tokens) {
                 temp_buffer = hex_string_to_bytes(token);
@@ -179,33 +184,95 @@ void capture_packets() {
               // Skip interrupt transfer
           } else if (usb_transfer_type == "0x02") {
 
+            std::vector<std::string> format_indices = split(format_index, ',');
+            std::vector<std::string> frame_indices = split(frame_index, ',');
+            std::vector<std::string> frame_widths_list = split(frame_widths, ',');
+            std::vector<std::string> frame_heights_list = split(frame_heights, ',');
+            // std::vector<std::string> subtype_frame_format = split(frame_interval_fps, ',');
+
+            static std::map<int, std::map<int, FrameInfo>> format_map;
+
             if (frame_widths != "N/A" && frame_heights != "N/A") {
-              std::vector<std::string> format_indices = split(format_index, ',');
-              std::vector<std::string> frame_indices = split(frame_index, ',');
-              std::vector<std::string> frame_widths_list = split(frame_widths, ',');
-              std::vector<std::string> frame_heights_list = split(frame_heights, ',');
-              std::vector<std::vector<FrameSize>> frame_lists;
-              std::vector<FrameSize> temp_frame_list;
+
+              std::cout << "in" << std::endl;
+
               size_t format_index_counter = 0;
+              
 
               for (size_t i = 0; i < frame_indices.size(); ++i) {
-                  if (frame_indices[i] == "1" && !temp_frame_list.empty()) {
-                      frame_lists.push_back(temp_frame_list);
-                      temp_frame_list.clear();
-                      ++format_index_counter;
-                  }
+                // Check for new format group when encountering "1" in frame_index
+                if (frame_indices[i] == "1" && i != 0) {
+                    ++format_index_counter;
+                }
 
+                FrameInfo frame_info;
+                frame_info.frame_width = std::stoi(frame_widths_list[i]);
+                frame_info.frame_height = std::stoi(frame_heights_list[i]);
 
+                // Insert into map where the key is format_index value, and frame_index value maps to FrameInfo
+                int format_key = std::stoi(format_indices[format_index_counter]);
+                int frame_key = std::stoi(frame_indices[i]);
 
+                format_map[format_key][frame_key] = frame_info;
+              }
+
+              // for (const auto& format_pair : format_map) {
+              //     int format_key = format_pair.first;
+              //     std::cout << "Available Format Index: " << format_key << std::endl;
+              //     for (const auto& frame_pair : format_pair.second) {
+              //         int frame_key = frame_pair.first;
+              //         std::cout << "  Available Frame Index: " << frame_key << std::endl;
+              //     }
+              // }
             }
 
+            if (max_frame_size != "N/A" && max_payload_size != "N/A") {
+              
+              std::vector<std::string> format_indices = split(format_index, ',');
+              std::vector<std::string> frame_indices = split(frame_index, ',');
 
+              int format_index_int = std::stoi(format_indices[0]);
+              int frame_index_int = std::stoi(frame_indices[0]);
 
+              std::cout << "format_index_int: " << format_index_int << std::endl;
+              std::cout << "frame_index_int: " << frame_index_int << std::endl;
 
+              if (format_map.find(format_index_int) != format_map.end() &&
+                  format_map[format_index_int].find(frame_index_int) != format_map[format_index_int].end()) {
 
+                  int width = format_map[format_index_int][frame_index_int].frame_width;
+                  int height = format_map[format_index_int][frame_index_int].frame_height;
 
+                  ControlConfig::set_width(width);
+                  ControlConfig::set_height(height);
 
+                  ControlConfig::set_fps(10000000 / std::stoi(frame_interval_fps));
 
+                  ControlConfig::set_dwMaxVideoFrameSize(std::stoi(max_frame_size));
+                  ControlConfig::set_dwMaxPayloadTransferSize(std::stoi(max_payload_size));
+                  
+              } else {
+                  std::cerr << "Error: Invalid format_index or frame_index." << std::endl;
+              }
+#ifdef TUI_SET
+              setCursorPosition (2, 1);
+              setColor(WHITE);
+              std::cout << "  Frame Width: " << ControlConfig::width 
+                    << "     Frame Height: " << ControlConfig::height 
+                    << "     FPS: " << ControlConfig::fps 
+                    << "     Frame Format: " << ControlConfig::frame_format 
+                    << "     Max Frame Size: " << ControlConfig::dwMaxVideoFrameSize 
+                    << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
+                    << std::endl;
+#else
+              std::cout << "width: " << ControlConfig::get_width() << std::endl;
+              std::cout << "height: " << ControlConfig::get_height() << std::endl;
+              std::cout << "fps: " << ControlConfig::get_fps() << std::endl;
+              std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << std::endl;
+              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << std::endl;
+              
+#endif
+            }
 
           } else if (usb_transfer_type == "0x03") {
 

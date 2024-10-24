@@ -4,12 +4,20 @@
 #include <iostream>
 #include <cstdint>
 
-int ControlConfig::width = 1280;
-int ControlConfig::height = 720;
-int ControlConfig::fps = 30;
+// int ControlConfig::width = 1280;
+// int ControlConfig::height = 720;
+// int ControlConfig::fps = 30;
+// std::string ControlConfig::frame_format = "mjpeg";
+// uint64_t ControlConfig::dwMaxVideoFrameSize = 16777216;
+// uint64_t ControlConfig::dwMaxPayloadTransferSize = 1310720;
+
+int ControlConfig::width = 1;
+int ControlConfig::height = 1;
+int ControlConfig::fps = 1;
 std::string ControlConfig::frame_format = "mjpeg";
-uint64_t ControlConfig::dwMaxVideoFrameSize = 16777216;
-uint64_t ControlConfig::dwMaxPayloadTransferSize = 1310720;
+uint64_t ControlConfig::dwMaxVideoFrameSize = 1;
+uint64_t ControlConfig::dwMaxPayloadTransferSize = 1;
+
 
 void ControlConfig::set_width(int w) { width = w; }
 
@@ -49,3 +57,9 @@ int ControlConfig::get_height() { return height; }
 int ControlConfig::get_fps() { return fps; }
 
 std::string ControlConfig::get_frame_format() { return frame_format; }
+
+uint64_t ControlConfig::get_dwMaxVideoFrameSize() { return dwMaxVideoFrameSize; }
+
+uint64_t ControlConfig::get_dwMaxPayloadTransferSize() { return dwMaxPayloadTransferSize; }
+
+
