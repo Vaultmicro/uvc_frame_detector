@@ -19,17 +19,19 @@ int main() {
         return 1;
     }
 
-#ifdef TUI_SET
-    tui();
-#endif
-
-    std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();  // Default current time
     ControlConfig::set_width(1280);
     ControlConfig::set_height(720);
     ControlConfig::set_fps(30);
     ControlConfig::set_frame_format("mjpeg");
     ControlConfig::set_dwMaxVideoFrameSize(16777216);
     ControlConfig::set_dwMaxPayloadTransferSize(1310720);
+
+
+#ifdef TUI_SET
+    tui();
+#endif
+
+    std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();  // Default current time
     
     
     while (std::getline(inputFile, line)) {

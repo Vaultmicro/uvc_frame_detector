@@ -211,7 +211,7 @@ void tui() {
     std::cout << "Frame 0 saved to frame_0.jpg";
 
     // Wait for user input before closing
-    setCursorPosition(40, 29); // Move the cursor to the last line
+    setCursorPosition(65, 29); // Move the cursor to the last line
     setColor(WHITE | BG_BLACK); // Reset to default colors
     std::cout << "Vaultmicro Usb Video Class Camera Frame Detector..   ";
     std::cout << "Press any key to exit...";
