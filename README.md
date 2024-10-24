@@ -6,10 +6,17 @@ each using usbmon and tshark for stream
 
 ## Usage
 
-
 ### In Window  
 (only cmd works, not ps1, open in dev mode if possible)  
 in ps1, put "cmd /c" at the start of command  
+To run this code in window, must install wireshark in computer with USBPcap  
+If USBPcap is not installed with Wireshark, reinstall wireshark and check USBPcap install  
+After install, reboot  
+C:\Program Files\Wireshark  
+Find Wireshark.exe > go to Help(H) > Wireshark info(A) > Folder  
+Check if Extcap Path is set extcap/wireshark  
+If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wireshark directory   
+
 
 ### Build
 0. mkdir log
@@ -20,22 +27,15 @@ in ps1, put "cmd /c" at the start of command
 5. cd Debug
 
 ### Run  
-To run this code in window, must install wireshark in computer with USBPcap  
-If USBPcap is not installed with Wireshark, reinstall wireshark and check USBPcap install  
-After install, reboot  
-C:\Program Files\Wireshark  
-Find Wireshark.exe > go to Help(H) > Wireshark info(A) > Folder  
-Check if Extcap Path is set extcap/wireshark  
-If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wireshark directory   
   
 Go to project Directory  
 0. cd build  
 
 For both BULK & ISO & CTRL  
 "C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -E separator=; -Y "usb.device_address == 3" | .\debug\oldmanandsea.exe  
+  
 
-
-
+  
 If want to force the format then type down below...  
 Can find maximum frame size and maximum payload size in  
 for Window > download usb device tree viewer and check video streaming format type descriptor: dwMaxVideoFrameBufferSize
@@ -45,8 +45,6 @@ each indicate frame_width frame_height frame_per_sec frame_format max_frame_size
 
 -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data // Must be in correct order  
 if you are in build directory, can change C:\\-----PROJECT_DIRECTORY_PATH-----\build into .\Debug\oldmanandsea.exe  
-
-
 
 ### In LINUX
 
