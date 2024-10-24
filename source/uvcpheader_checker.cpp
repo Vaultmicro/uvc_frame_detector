@@ -561,6 +561,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
 
     // v_cout_2 << "Graph Data (Payload Reception Times): " << std::endl;
     v_cout_2 << graph << std::endl;
+    v_cout_2 << "-------------------------------------------------------------------" << std::endl;
 
 #ifdef TUI_SET
   window_number = 4;
