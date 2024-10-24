@@ -185,16 +185,19 @@ class ValidFrame{
         std::vector<UVC_Payload_Header> payload_headers;  // To store UVC_Payload_Header
         std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
         
+        std::vector<std::vector<u_char>> payloads;  // To store the uvc_payloads
+        
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_error_times;  // Packet reception times
 
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
-        void add_payload(const UVC_Payload_Header& header, size_t payload_size) {
+        void add_payload(const UVC_Payload_Header& header, size_t payload_size, const std::vector<u_char>& payload) {
             payload_headers.push_back(header);  // Add header to the vector
             payload_sizes.push_back(payload_size);  // Add payload size to the vector
             packet_number++;
+            payloads.push_back(payload);
         }
 
         void set_frame_error() {
@@ -221,6 +224,8 @@ class UVCPHeaderChecker {
         UVC_Payload_Header parse_uvc_payload_header(
             const std::vector<u_char>& uvc_payload,
             std::chrono::time_point<std::chrono::steady_clock> received_time);
+
+        std::vector<u_char> payload = {};
 
         UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         

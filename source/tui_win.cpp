@@ -69,6 +69,7 @@ void set_console_size(int width, int height) {
     SMALL_RECT window_size = { 0, 0, static_cast<SHORT>(width - 1), static_cast<SHORT>(height - 1) };
     SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), TRUE, &window_size);
 }
+
 // Function to scroll and print text in a window using dynamic buffer based on window's width and height
 void print_scroll(int windowNumber, const std::string& newData) {
     int width = windowConfigs[windowNumber].width;
@@ -214,7 +215,7 @@ void tui() {
     setCursorPosition(65, 29); // Move the cursor to the last line
     setColor(WHITE | BG_BLACK); // Reset to default colors
     std::cout << "Vaultmicro Usb Video Class Camera Frame Detector..   ";
-    std::cout << "Press any key to exit...";
+    std::cout << "Press ctrl+c key to exit...";
 
     // while (true) {
     //     std::ostringstream ossWindow1;

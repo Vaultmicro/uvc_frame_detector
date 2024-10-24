@@ -104,7 +104,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       if (payload_header.PTS && frame->frame_pts == payload_header.PTS) {
         frame_found = true;
 
-        frame->add_payload(payload_header, uvc_payload.size());
+        frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
         frame->add_received_chrono_time(received_time);
 
         size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
@@ -163,7 +163,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       auto& new_frame = frames.back();
       new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
 
-      new_frame->add_payload(payload_header, uvc_payload.size());
+      new_frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
       new_frame->add_received_chrono_time(received_time);
 
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
@@ -296,8 +296,15 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     // scr if present
     std::memcpy(&payload_header.SCR, &uvc_payload[current_offset],
                 sizeof(uint64_t));
+    current_offset += sizeof(uint64_t);
   } else {
     payload_header.SCR = 0;
+  }
+
+  if (current_offset < uvc_payload.size()) {
+    payload.assign(uvc_payload.begin() + current_offset, uvc_payload.end());
+  } else {
+    payload.clear();
   }
 
   //save_payload_header_to_log(payload_header, received_time);
