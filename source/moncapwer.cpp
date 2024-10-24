@@ -32,7 +32,7 @@ bool stop_processing = false;
 struct FrameInfo{
   int frame_width;
   int frame_height;
-  //int frame_format_subtype;
+  int frame_format_subtype;
 };
 
 void clean_exit(int signum) {
@@ -188,16 +188,24 @@ void capture_packets() {
             std::vector<std::string> frame_indices = split(frame_index, ',');
             std::vector<std::string> frame_widths_list = split(frame_widths, ',');
             std::vector<std::string> frame_heights_list = split(frame_heights, ',');
-            // std::vector<std::string> subtype_frame_format = split(frame_interval_fps, ',');
-
+            std::vector<std::string> frame_formats = split(subtype_frame_format, ',');
+             
             static std::map<int, std::map<int, FrameInfo>> format_map;
 
             if (frame_widths != "N/A" && frame_heights != "N/A") {
 
-              std::cout << "in" << std::endl;
+              // std::cout << "in" << std::endl;
 
               size_t format_index_counter = 0;
-              
+
+              std::vector<std::string> filtered_subtype_frame_format;
+              for (const auto& value : frame_formats) {
+                  int num_value = std::stoi(value);
+                  // Exclude 1, 4, 6, 12, 16
+                  if (num_value != 1 && num_value != 4 && num_value != 6 && num_value != 12 && num_value != 16) {
+                      filtered_subtype_frame_format.push_back(value);
+                  }
+              }
 
               for (size_t i = 0; i < frame_indices.size(); ++i) {
                 // Check for new format group when encountering "1" in frame_index
@@ -208,6 +216,7 @@ void capture_packets() {
                 FrameInfo frame_info;
                 frame_info.frame_width = std::stoi(frame_widths_list[i]);
                 frame_info.frame_height = std::stoi(frame_heights_list[i]);
+                frame_info.frame_format_subtype = std::stoi(filtered_subtype_frame_format[i]);
 
                 // Insert into map where the key is format_index value, and frame_index value maps to FrameInfo
                 int format_key = std::stoi(format_indices[format_index_counter]);
@@ -234,17 +243,43 @@ void capture_packets() {
               int format_index_int = std::stoi(format_indices[0]);
               int frame_index_int = std::stoi(frame_indices[0]);
 
-              std::cout << "format_index_int: " << format_index_int << std::endl;
-              std::cout << "frame_index_int: " << frame_index_int << std::endl;
+              // std::cout << "format_index_int: " << format_index_int << std::endl;
+              // std::cout << "frame_index_int: " << frame_index_int << std::endl;
 
               if (format_map.find(format_index_int) != format_map.end() &&
                   format_map[format_index_int].find(frame_index_int) != format_map[format_index_int].end()) {
 
                   int width = format_map[format_index_int][frame_index_int].frame_width;
                   int height = format_map[format_index_int][frame_index_int].frame_height;
-
+                  int frame_format_subtype = format_map[format_index_int][frame_index_int].frame_format_subtype;
+              
                   ControlConfig::set_width(width);
                   ControlConfig::set_height(height);
+                  std::string frame_format;
+                  switch (frame_format_subtype) {
+                      case 5:
+                      //uncompressed
+                          frame_format = "yuyv";
+                          break;
+                      case 7:
+                      //mjpeg
+                          frame_format = "mjpeg";
+                          break;
+                      case 13:
+                      //color format
+                          frame_format = "rgb";
+                          break;
+                      case 17:
+                      //frame based
+                          frame_format = "h264";
+                          break;
+                      default:
+                          std::cerr << "Unsupported frame format subtype: " << frame_format_subtype << ". Using default format 'mjpeg'." << std::endl;
+                          frame_format = "mjpeg";
+                          break;
+                  }
+                  
+                  ControlConfig::set_frame_format(frame_format);
 
                   ControlConfig::set_fps(10000000 / std::stoi(frame_interval_fps));
 
@@ -265,11 +300,13 @@ void capture_packets() {
                     << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
                     << std::endl;
 #else
-              std::cout << "width: " << ControlConfig::get_width() << std::endl;
-              std::cout << "height: " << ControlConfig::get_height() << std::endl;
-              std::cout << "fps: " << ControlConfig::get_fps() << std::endl;
-              std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << std::endl;
-              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << std::endl;
+              std::cout << "width: " << ControlConfig::get_width() << "   ";
+              std::cout << "height: " << ControlConfig::get_height() << "   ";
+              std::cout << "frame_format: " << ControlConfig::get_frame_format() << "   ";
+              std::cout << "fps: " << ControlConfig::get_fps() << "   ";
+              std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "   ";
+              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   ";
+              std::cout << std::endl;
               
 #endif
             }
