@@ -1,6 +1,6 @@
 # uvc_frame_detector
 
-version 0.0.2
+version 0.1.2
 included linux and window verison  
 each using usbmon and tshark for stream  
 
@@ -30,16 +30,17 @@ If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wiresha
   
 Go to project Directory  
 0. cd build  
-For BULK  
-"C:\Program Files\Wireshark\tshark" -i \\\\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -E separator=; -l -Y "usb.device_address == 7" | C:\\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
 
-For ISO
-"C:\Program Files\Wireshark\tshark" -i \\\\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data -E separator=; -l -Y "usb.device_address == 7" | C:\\-----PROJECT_DIRECTORY_PATH-----\uvc_frame_detector\build\Debug\oldmanandsea.exe -fw 1280 -fh 720 -fps 30 -ff mjpeg -mf 16777216
+For both BULK & ISO & CTRL  
+"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -E separator=; -Y "usb.device_address == 3" | .\debug\oldmanandsea.exe  
 
+
+
+If want to force the format then type down below...  
 Can find maximum frame size and maximum payload size in  
 for Window > download usb device tree viewer and check video streaming format type descriptor: dwMaxVideoFrameBufferSize
 for linux type lsusb -v and find dwMaxVideoFrameBufferSize  
-if leave blank for -fw -fh -fps -ff -mf -mp, 1024 720 30 mjpg 16777216 and 1310720 will be set automatically  
+if leave blank for -fw -fh -fps -ff -mf -mp, everything will be set automatically  
 each indicate frame_width frame_height frame_per_sec frame_format max_frame_size max_payload_size  
 
 -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.iso.data // Must be in correct order  
@@ -148,11 +149,9 @@ Total Packets received in usbmon: 6982<br/>
 Total Packets dropped by system buffer: 10122<br/>
 Total Packets dropped by interface: 0<br/>
   
-    
 Total Packets counted in usbmon by application: 6952<br/>
 Total Packet Length bytes: 40249996<br/>
 Total Captured Packet Length bytes: 40249996<br/>
-  
   
 Filtered Packets (busnum=1, devnum=4): 6940<br/>
 Filtered Packet Length bytes (busnum=1, devnum=4): 40249115<br/>
@@ -168,15 +167,11 @@ To compare raw data with result, go to log dir<br/>
 frames_log.txt can see every frame packets information  
 
 ### Test Codes
-For now  
-frame_test_bulk,  
-frame_test_iso,  
-valid_test  
-is available  
+valid_tests  
+frame_tests  
 all tests passed 100  
 
 test_packaet_handler is also available for linux  
-
 
 
 
@@ -199,5 +194,4 @@ ctrl + c to end
 
 
 ### TODO
-make that with graph togeth <br/>
 make jpeg data into .jpeg file to see the err frame <br/>
