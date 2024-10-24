@@ -78,6 +78,19 @@ add_executable(
 
 # target_compile_definitions(oldmanandsea PUBLIC TUI_SET)
 
+add_executable(
+    oldmanandsea_t
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
+)
+
+target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
+
+
 endif(WIN32)
 
 
@@ -201,7 +214,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
 )
 
-# target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
+target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
 
 target_link_libraries(
     show_urb_header
@@ -220,3 +233,18 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
 )
+
+if(WIN32)
+
+add_executable(
+    log_test_t
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
+)
+target_compile_definitions(log_test_t PUBLIC TUI_SET)
+
+endif(WIN32)

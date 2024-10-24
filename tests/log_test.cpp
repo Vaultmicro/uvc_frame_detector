@@ -2,8 +2,12 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include "validuvc/uvcpheader_checker.hpp"
 #include <string.h>
+#include "validuvc/uvcpheader_checker.hpp"
+
+#include "utils/tui_win.hpp"
+#include "validuvc/control_config.hpp"
+
 
 int main() {
     UVCPHeaderChecker whole_frame_checker;
@@ -15,7 +19,18 @@ int main() {
         return 1;
     }
 
+#ifdef TUI_SET
+    tui();
+#endif
+
     std::chrono::steady_clock::time_point current_time = std::chrono::steady_clock::now();  // Default current time
+    ControlConfig::set_width(1280);
+    ControlConfig::set_height(720);
+    ControlConfig::set_fps(30);
+    ControlConfig::set_frame_format("mjpeg");
+    ControlConfig::set_dwMaxVideoFrameSize(16777216);
+    ControlConfig::set_dwMaxPayloadTransferSize(1310720);
+    
     
     while (std::getline(inputFile, line)) {
         std::vector<u_char> packet;
@@ -45,3 +60,12 @@ int main() {
     inputFile.close();
     return 0;
 }
+
+
+
+// int ControlConfig::width = 1280;
+// int ControlConfig::height = 720;
+// int ControlConfig::fps = 30;
+// std::string ControlConfig::frame_format = "mjpeg";
+// uint64_t ControlConfig::dwMaxVideoFrameSize = 16777216;
+// uint64_t ControlConfig::dwMaxPayloadTransferSize = 1310720;
