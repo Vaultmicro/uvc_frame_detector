@@ -69,41 +69,53 @@ void set_console_size(int width, int height) {
     SMALL_RECT window_size = { 0, 0, static_cast<SHORT>(width - 1), static_cast<SHORT>(height - 1) };
     SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), TRUE, &window_size);
 }
-
-// Function to scroll and print text in a window
+// Function to scroll and print text in a window using dynamic buffer based on window's width and height
 void print_scroll(int windowNumber, const std::string& newData) {
-    static std::vector<std::vector<std::string>> windowContents(6, std::vector<std::string>(windowConfigs[windowNumber].height, std::string(windowConfigs[windowNumber].width, ' ')));
-    static std::vector<int> currentRows(6, 0);
+    int width = windowConfigs[windowNumber].width;
+    int height = windowConfigs[windowNumber].height;
+
+    // Create a static buffer based on window's width and height
+    static std::unique_ptr<char[]> windowBuffer[6];  // Buffer for up to 6 windows
+    static int currentRow[6] = { 0 };  // Current row for each window
+
+    // Initialize buffer if not already initialized
+    if (!windowBuffer[windowNumber]) {
+        windowBuffer[windowNumber] = std::make_unique<char[]>(width * height);  // Create a 1D array for the buffer
+        std::fill(windowBuffer[windowNumber].get(), windowBuffer[windowNumber].get() + width * height, ' ');  // Fill with empty spaces
+    }
 
     // Split input string into lines of appropriate width
     std::istringstream iss(newData);
     std::string line;
+
     while (std::getline(iss, line)) {
         // Handle wrapping if line is too long for the window's width
-        while (line.length() > static_cast<size_t>(windowConfigs[windowNumber].width)) {
-            std::string wrappedLine = line.substr(0, windowConfigs[windowNumber].width);
-            line = line.substr(windowConfigs[windowNumber].width);
+        while (line.length() > static_cast<size_t>(width)) {
+            std::string wrappedLine = line.substr(0, width);
+            line = line.substr(width);
 
-            // Add the wrapped line to the window content
-            int currentRow = currentRows[windowNumber];
-            windowContents[windowNumber][currentRow] = wrappedLine;
-
-            currentRows[windowNumber] = (currentRow + 1) % windowConfigs[windowNumber].height;
+            // Add the wrapped line to the window content (current row)
+            int current = currentRow[windowNumber];
+            std::copy(wrappedLine.begin(), wrappedLine.end(), windowBuffer[windowNumber].get() + current * width);
+            
+            currentRow[windowNumber] = (current + 1) % height;
         }
 
         // Add remaining line (if any) to the window content
         if (!line.empty()) {
-            int currentRow = currentRows[windowNumber];
-            windowContents[windowNumber][currentRow] = line;
-            currentRows[windowNumber] = (currentRow + 1) % windowConfigs[windowNumber].height;
+            int current = currentRow[windowNumber];
+            std::copy(line.begin(), line.end(), windowBuffer[windowNumber].get() + current * width);
+            std::fill(windowBuffer[windowNumber].get() + current * width + line.length(), windowBuffer[windowNumber].get() + (current + 1) * width, ' ');  // Fill remaining space with ' '
+
+            currentRow[windowNumber] = (current + 1) % height;
         }
     }
 
     // Display the contents of the window
-    for (int row = 0; row < windowConfigs[windowNumber].height; ++row) {
-        int printRow = (currentRows[windowNumber] + row) % windowConfigs[windowNumber].height;
+    for (int row = 0; row < height; ++row) {
+        int printRow = (currentRow[windowNumber] + row) % height;
         setCursorPosition(windowConfigs[windowNumber].startX, windowConfigs[windowNumber].startY + row);
-        std::cout << windowContents[windowNumber][printRow];
+        std::cout.write(windowBuffer[windowNumber].get() + printRow * width, width);
     }
 }
 
