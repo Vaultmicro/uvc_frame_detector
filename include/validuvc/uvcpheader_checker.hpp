@@ -215,7 +215,6 @@ class ValidFrame{
         void add_received_error_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
             received_error_times.push_back(time_point);
         }
-    
 };
 
 class UVCPHeaderChecker {

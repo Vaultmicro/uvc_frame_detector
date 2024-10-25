@@ -1,0 +1,7 @@
+
+
+
+
+void develope_photo(){
+
+};

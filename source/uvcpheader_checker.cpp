@@ -151,7 +151,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           frames.pop_back();
           frame_count++;
 
-          if (processed_frames.size() > 30) {
+          if (processed_frames.size() > 3) {
             processed_frames.erase(processed_frames.begin());
           }
 
@@ -201,7 +201,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       frames.pop_back();
       frame_count++;
 
-      if (processed_frames.size() > 90) {
+      if (processed_frames.size() > 3) {
         processed_frames.erase(processed_frames.begin());
       }
 
