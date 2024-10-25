@@ -55,7 +55,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
   window_number = 2;
 #endif
-    v_cout_1 << "FPS: " << frame_count << " frames per second" << std::endl;
+    v_cout_1 << "FPS: " << frame_count << std::endl;
 
 #ifdef TUI_SET
     window_number = 4;
@@ -73,13 +73,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     temp_received_time = received_time - std::chrono::milliseconds(1);
 
 #ifdef TUI_SET
-    window_number = 3;
-    print_whole_flag = 1;
 
     print_stats();
 
-    print_whole_flag = 0;
-    window_number = 4;
 #endif
 
   } 
@@ -89,12 +85,20 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   static UVC_Payload_Header previous_payload_header;
   static uint8_t previous_error = 0;
 
+#ifdef TUI_SET
+  window_number = 1;
+#endif
+
   UVC_Payload_Header payload_header =
       parse_uvc_payload_header(uvc_payload, received_time);
 
   UVCError payload_header_valid_return =
       payload_header_valid(payload_header, previous_payload_header,
                            previous_previous_payload_header);
+
+#ifdef TUI_SET
+  window_number = 4;
+#endif
 
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF) {
 
@@ -125,7 +129,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
       //Process the last frame when EOF is missing
       if (payload_header_valid_return == ERR_MISSING_EOF) {
-        v_cerr_3 << "Missing EOF" << std::endl;
+        v_cerr_3 << "Invalid UVC payload header: Missing EOF." << std::endl;
 
         if (!frames.empty()) {
           auto& last_frame = frames.back();
@@ -264,10 +268,6 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     const std::vector<u_char>& uvc_payload,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
 
-#ifdef TUI_SET
-  window_number = 4;
-#endif
-
   UVC_Payload_Header payload_header = {};
   if (uvc_payload.size() < 2) {
     v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
@@ -316,6 +316,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
     const UVC_Payload_Header& payload_header,
     const UVC_Payload_Header& previous_payload_header,
     const UVC_Payload_Header& previous_previous_payload_header) {
+
   // Checks if the Error bit is set
   if (payload_header.bmBFH.BFH_ERR) {
     v_cerr_2 << "Invalid UVC payload header: Error bit is set." << std::endl;
@@ -390,7 +391,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
             !previous_payload_header.bmBFH.BFH_EOF && 
             previous_payload_header.HLE != 0) {
-      v_cerr_2 << "Missing EOF" << std::endl;
+      v_cerr_2 << "Invalid UVC payload header: Missing EOF." << std::endl;
       return ERR_MISSING_EOF;
   }
 
@@ -536,7 +537,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
   window_number = 5;
 #endif
 
-    const int zoom = 5;
+    const int zoom = 4;
     const int cut = 20;
     const int total_markers = ControlConfig::fps * zoom;         
     const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::fps) / (zoom *cut)));
@@ -571,5 +572,22 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
 
 #ifdef TUI_SET
   window_number = 4;
+#endif
+}
+
+
+void UVCPHeaderChecker::print_stats() const {
+#ifdef TUI_SET
+    window_number = 3;
+    print_whole_flag = 1;
+#endif
+
+    payload_stats.print_stats();
+    frame_stats.print_stats();
+    v_cout_1 << std::flush;
+
+#ifdef TUI_SET
+    print_whole_flag = 0;
+    window_number = 4;
 #endif
 }

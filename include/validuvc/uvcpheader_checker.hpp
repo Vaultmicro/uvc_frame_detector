@@ -298,11 +298,7 @@ class UVCPHeaderChecker {
         
         void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);
 
-        void print_stats() const {
-            payload_stats.print_stats();
-            frame_stats.print_stats();
-            v_cout_1 << std::flush;
-        }
+        void print_stats() const;
 
 };
 #endif // UVCPHEADER_CHECKER_HPP

@@ -5,16 +5,16 @@
 int verbose_level = 2;
 
 // VerboseStream definitions
-VerboseStream v_cout_1(1, "CRUCIAL: ", std::cout);
-VerboseStream v_cerr_1(1, "CRUCIAL ERROR: ", std::cerr);
-VerboseStream v_cout_2(2, "BASIC: ", std::cout);
-VerboseStream v_cerr_2(2, "BASIC ERROR: ", std::cerr);
-VerboseStream v_cout_3(3, "DETAIL: ", std::cout);
-VerboseStream v_cerr_3(3, "DETAIL ERROR: ", std::cerr);
-VerboseStream v_cout_4(4, "DEV: ", std::cout);
-VerboseStream v_cerr_4(4, "DEV ERROR: ", std::cerr);
-VerboseStream v_cout_5(5, "ALL: ", std::cout);
-VerboseStream v_cerr_5(5, "ALL ERROR: ", std::cerr);
+VerboseStream v_cout_1(1, "1O:", std::cout);
+VerboseStream v_cerr_1(1, "1E:", std::cerr);
+VerboseStream v_cout_2(2, "2O:", std::cout);
+VerboseStream v_cerr_2(2, "2E:", std::cerr);
+VerboseStream v_cout_3(3, "3O:", std::cout);
+VerboseStream v_cerr_3(3, "3E:", std::cerr);
+VerboseStream v_cout_4(4, "4O:", std::cout);
+VerboseStream v_cerr_4(4, "4E:", std::cerr);
+VerboseStream v_cout_5(5, "5O:", std::cout);
+VerboseStream v_cerr_5(5, "5E:", std::cerr);
 
 // VerboseStream constructor implementation
 VerboseStream::VerboseStream(int level, const std::string& prefix,

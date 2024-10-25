@@ -3,11 +3,11 @@
 
 std::vector<WindowConfig> windowConfigs = {
     {1, 1, 146, 1, BG_BLACK},  //0
-    {1, 3, 48, 8, BG_BLACK},   //1
-    {50, 3, 48, 8, BG_BLACK},  //2
+    {1, 3, 72, 8, BG_BLACK},   //1
+    {74, 3, 24, 8, BG_BLACK},  //2
     {99, 3, 48, 25, BG_BLACK}, //3
-    {1, 12, 97, 7, BG_BLACK},  //4
-    {1, 20, 97, 8, BG_BLACK}   //5
+    {1, 12, 97, 16, BG_BLACK},  //4
+    {1, 30, 146, 8, BG_BLACK}   //5
 };
 
 int window_number = 3;
@@ -56,7 +56,7 @@ void fillBackgroundColor(int startX, int startY, int width, int height, WORD bac
 
 // SIGINT signal handler (Ctrl + C)
 void handle_sigint(int sig) {
-    clearConsoleArea(0, 0, 150, 30);
+    clearConsoleArea(0, 0, 150, 40);
     printf("\nSIGINT received. Exiting...\n");
     exit(0);
 }
@@ -188,9 +188,9 @@ void setupWindows() {
 void tui() {
     // signal(SIGINT, handle_sigint); // Register SIGINT handler for Ctrl + C
 
-    set_console_size(148, 30); // Set the console size
-    clearConsoleArea(0, 0, 148, 30);
-    fillBackgroundColor(0, 0, 148, 30, BG_WHITE); // Gray background
+    set_console_size(148, 40); // Set the console size
+    clearConsoleArea(0, 0, 148, 40);
+    fillBackgroundColor(0, 0, 148, 40, BG_WHITE); // Gray background
     setColor(BLACK); // Black text
 
 
@@ -207,12 +207,12 @@ void tui() {
           << std::endl;
 
 
-    setCursorPosition(2, 29);
+    setCursorPosition(2, 39);
     setColor(BLACK | BG_WHITE);
     std::cout << "Frame 0 saved to frame_0.jpg";
 
     // Wait for user input before closing
-    setCursorPosition(67, 29); // Move the cursor to the last line
+    setCursorPosition(67, 39); // Move the cursor to the last line
     setColor(WHITE | BG_BLACK); // Reset to default colors
     std::cout << "Vaultmicro Usb Video Class Camera Frame Detector..   ";
     std::cout << "Press ctrl+c key to exit...";
