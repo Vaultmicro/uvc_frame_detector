@@ -298,7 +298,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   // Checks if the Error bit is set
   if (payload_header.bmBFH.BFH_ERR) {
-    v_cerr_2 << "Invalid UVC payload header: Error bit is set." << std::endl;
+    v_cerr_2 << "Invalid UVC payload header: Error bit is set." << received_time_clock<< std::endl;
     return ERR_ERR_BIT_SET;
   }
 
@@ -306,7 +306,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.HLE < 0x02 || payload_header.HLE > 0x0C) {
     v_cerr_2 << "Invalid UVC payload header: Unexpected start byte 0x"
              << std::hex << std::setw(2) << std::setfill('0')
-             << static_cast<int>(payload_header.HLE) << "." << std::endl;
+             << static_cast<int>(payload_header.HLE) << "." << received_time_clock << std::endl;
     return ERR_LENGTH_OUT_OF_RANGE; 
   }
 
@@ -315,26 +315,26 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
       payload_header.HLE != 0x0C) {
     v_cerr_2 << "Invalid UVC payload header: Both Presentation Time Stamp and "
-                "Source Clock Reference bits are set."
+                "Source Clock Reference bits are set." << received_time_clock
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x06) {
     v_cerr_2 << "Invalid UVC payload header: Presentation Time Stamp bit is "
-                "set but header length is less than 6."
+                "set but header length is less than 6." << received_time_clock
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x08) {
     v_cerr_2 << "Invalid UVC payload header: Source Clock Reference bit is "
-                "set but header length is less than 12."
+                "set but header length is less than 12." << received_time_clock
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x02) {
     v_cerr_2
         << "Invalid UVC payload header: Neither Presentation Time Stamp nor "
-           "Source Clock Reference bits are set but header length is not 2."
+           "Source Clock Reference bits are set but header length is not 2." << received_time_clock
         << std::endl;
     return ERR_LENGTH_INVALID;
   }
@@ -344,7 +344,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_EOF) {
   } else {
     if (payload_header.bmBFH.BFH_RES) {
-      v_cerr_2 << "Invalid UVC payload header: Reserved bit is set."
+      v_cerr_2 << "Invalid UVC payload header: Reserved bit is set." << received_time_clock
                << std::endl;
       return ERR_RESERVED_BIT_SET;
     }
@@ -356,7 +356,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
             previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
       v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
-                  "as the previous frame and EOF is set." << std::endl;
+                  "as the previous frame and EOF is set." << received_time_clock << std::endl;
       return ERR_FID_MISMATCH;
       
   } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
@@ -364,13 +364,13 @@ UVCError UVCPHeaderChecker::payload_header_valid(
       (payload_header.PTS == previous_payload_header.PTS) && 
       payload_header.PTS != 0) {
       v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
-                  "as the previous frame and PTS matches." << std::endl;
+                  "as the previous frame and PTS matches." << received_time_clock << std::endl;
       return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
             !previous_payload_header.bmBFH.BFH_EOF && 
             previous_payload_header.HLE != 0) {
-      v_cerr_2 << "Invalid UVC payload header: Missing EOF." << std::endl;
+      v_cerr_2 << "Invalid UVC payload header: Missing EOF.       " << received_time_clock << std::endl;
       return ERR_MISSING_EOF;
   }
 
@@ -575,7 +575,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
     
 
     // v_cout_2 << "Graph Data (Payload Reception Times): " << std::endl;
-    v_cout_2 << graph << std::endl;
+    v_cout_2 << graph << received_time_clock << std::endl;
 
 #ifdef TUI_SET
   window_number = 1;
