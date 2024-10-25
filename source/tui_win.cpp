@@ -2,12 +2,14 @@
 #include "validuvc/control_config.hpp"
 
 std::vector<WindowConfig> windowConfigs = {
-    {1, 1, 146, 1, BG_BLACK},  //0
+    {1, 1, 147, 1, BG_BLACK},  //0
     {1, 3, 72, 8, BG_BLACK},   //1
-    {74, 3, 24, 8, BG_BLACK},  //2
-    {99, 3, 48, 25, BG_BLACK}, //3
-    {1, 12, 97, 16, BG_BLACK},  //4
-    {1, 30, 146, 8, BG_BLACK}   //5
+    {74, 3, 25, 8, BG_BLACK},  //2
+    {100, 3, 48, 25, BG_BLACK}, //3
+    {1, 12, 32, 16, BG_BLACK},  //4
+    {34, 12, 32, 16, BG_BLACK},  //5
+    {67, 12, 32, 16, BG_BLACK},  //6
+    {1, 29, 147, 9, BG_BLACK}   //7
 };
 
 int window_number = 3;
@@ -56,7 +58,7 @@ void fillBackgroundColor(int startX, int startY, int width, int height, WORD bac
 
 // SIGINT signal handler (Ctrl + C)
 void handle_sigint(int sig) {
-    clearConsoleArea(0, 0, 150, 40);
+    clearConsoleArea(0, 0, 149, 40);
     printf("\nSIGINT received. Exiting...\n");
     exit(0);
 }
@@ -76,8 +78,8 @@ void print_scroll(int windowNumber, const std::string& newData) {
     int height = windowConfigs[windowNumber].height;
 
     // Create a static buffer based on window's width and height
-    static std::unique_ptr<char[]> windowBuffer[6];  // Buffer for up to 6 windows
-    static int currentRow[6] = { 0 };  // Current row for each window
+    static std::unique_ptr<char[]> windowBuffer[8];  // Buffer for up to 6 windows
+    static int currentRow[8] = { 0 };  // Current row for each window
 
     // Initialize buffer if not already initialized
     if (!windowBuffer[windowNumber]) {
@@ -188,9 +190,9 @@ void setupWindows() {
 void tui() {
     // signal(SIGINT, handle_sigint); // Register SIGINT handler for Ctrl + C
 
-    set_console_size(148, 40); // Set the console size
-    clearConsoleArea(0, 0, 148, 40);
-    fillBackgroundColor(0, 0, 148, 40, BG_WHITE); // Gray background
+    set_console_size(149, 40); // Set the console size
+    clearConsoleArea(0, 0, 149, 40);
+    fillBackgroundColor(0, 0, 149, 40, BG_WHITE); // Gray background
     setColor(BLACK); // Black text
 
 
@@ -212,7 +214,7 @@ void tui() {
     std::cout << "Frame 0 saved to frame_0.jpg";
 
     // Wait for user input before closing
-    setCursorPosition(67, 39); // Move the cursor to the last line
+    setCursorPosition(68, 39); // Move the cursor to the last line
     setColor(WHITE | BG_BLACK); // Reset to default colors
     std::cout << "Vaultmicro Usb Video Class Camera Frame Detector..   ";
     std::cout << "Press ctrl+c key to exit...";

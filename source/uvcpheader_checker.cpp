@@ -28,9 +28,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   // Make picture file having mjpeg, yuyv, h264
 
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
+  received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
 
 #ifdef TUI_SET
-  window_number = 4;
+  window_number = 1;
 #endif
 
   if (uvc_payload.empty()) {          
@@ -55,10 +56,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
   window_number = 2;
 #endif
-    v_cout_1 << "FPS: " << frame_count << std::endl;
+    v_cout_1 << "FPS: " << frame_count << ":" << received_time_clock << std::endl;
 
 #ifdef TUI_SET
-    window_number = 4;
+    window_number = 1;
 #endif
 
     int fps_difference = ControlConfig::fps - frame_count;
@@ -85,9 +86,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   static UVC_Payload_Header previous_payload_header;
   static uint8_t previous_error = 0;
 
-#ifdef TUI_SET
-  window_number = 1;
-#endif
 
   UVC_Payload_Header payload_header =
       parse_uvc_payload_header(uvc_payload, received_time);
@@ -95,10 +93,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   UVCError payload_header_valid_return =
       payload_header_valid(payload_header, previous_payload_header,
                            previous_previous_payload_header);
-
-#ifdef TUI_SET
-  window_number = 4;
-#endif
 
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF) {
 
@@ -141,14 +135,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           if (last_frame->frame_error) {
 
             plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
-            v_cout_2 << "Frame Error Type_: " << last_frame->frame_error << std::endl;
-            v_cout_2 << "Previous Previous Payload Header: " << std::endl;
-            v_cout_2 << previous_previous_payload_header << std::endl;
-            v_cout_2 << "Previous Payload Header: " << std::endl;
-            v_cout_2 << previous_payload_header << std::endl;
-            v_cout_2 << "Current Payload Header: " << std::endl;
-            v_cout_2 << payload_header << std::endl;
-            v_cout_2 << std::endl;
+            print_error_bits(last_frame->frame_error, previous_previous_payload_header, previous_payload_header, payload_header, previous_previous_error, previous_error);
 
           }
           processed_frames.push_back(std::move(frames.back()));
@@ -190,16 +177,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       // save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+        print_error_bits(last_frame->frame_error, previous_previous_payload_header, previous_payload_header, payload_header, previous_previous_error, previous_error);
 
-        v_cout_2 << "Frame Error Type__: " << last_frame->frame_error << std::endl;
-        v_cout_2 << "Previous Previous Payload Header: " << std::endl;
-        v_cout_2 << previous_previous_payload_header << std::endl;
-        v_cout_2 << "Previous Payload Header: " << std::endl;
-        v_cout_2 << previous_payload_header << std::endl;
-        v_cout_2 << "Current Payload Header: " << std::endl;
-        v_cout_2 << payload_header << std::endl;
-
-        v_cout_2 << std::endl;
       }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
@@ -505,6 +484,34 @@ void UVCPHeaderChecker::save_payload_header_to_log(
   log_file.close();
 }
 
+void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Header& previous_previous_payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& payload_header, uint8_t previous_previous_error, uint8_t previous_error) {
+    // v_cout_2 << "Frame Error Type__: " << frame_error << std::endl;
+
+#ifdef TUI_SET
+  window_number = 4;
+  print_whole_flag = 1;
+#endif
+    v_cout_2 << "Previous Previous Payload Header: " << std::endl
+     << previous_previous_payload_header << std::endl;
+#ifdef TUI_SET
+  window_number = 5;
+#endif
+    v_cout_2 << "Previous Payload Header: " << std::endl
+     << previous_payload_header << std::endl;
+#ifdef TUI_SET
+  window_number = 6;
+#endif
+    v_cout_2 << "Current Payload Header: " << std::endl
+     << payload_header << std::endl;
+#ifdef TUI_SET
+  window_number = 1;
+  print_whole_flag = 0;
+#else
+    v_cout_2 << std::endl;
+#endif
+}
+
+
 std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "HLE: " << static_cast<int>(header.HLE) << "\n";
     
@@ -534,7 +541,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
     if (received_chrono_times.empty() && received_error_times.empty()) return;
 
 #ifdef TUI_SET
-  window_number = 5;
+  window_number = 7;
 #endif
 
     const int zoom = 4;
@@ -571,7 +578,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
     v_cout_2 << graph << std::endl;
 
 #ifdef TUI_SET
-  window_number = 4;
+  window_number = 1;
 #endif
 }
 
@@ -588,6 +595,6 @@ void UVCPHeaderChecker::print_stats() const {
 
 #ifdef TUI_SET
     print_whole_flag = 0;
-    window_number = 4;
+    window_number = 1;
 #endif
 }
