@@ -224,7 +224,7 @@ class UVCPHeaderChecker {
             const std::vector<u_char>& uvc_payload,
             std::chrono::time_point<std::chrono::steady_clock> received_time);
 
-        std::chrono::milliseconds::rep received_time_clock;
+        std::chrono::milliseconds::rep received_time_clock; 
         std::chrono::milliseconds::rep p_received_time_clock;
         std::chrono::milliseconds::rep pp_received_time_clock;
 
