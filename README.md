@@ -1,6 +1,6 @@
 # uvc_frame_detector
 
-version 0.1.2
+version 0.2.0
 included linux and window verison  
 each using usbmon and tshark for stream  
 
