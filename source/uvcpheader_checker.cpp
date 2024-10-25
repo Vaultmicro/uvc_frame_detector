@@ -596,5 +596,6 @@ void UVCPHeaderChecker::print_stats() const {
 #ifdef TUI_SET
     print_whole_flag = 0;
     window_number = 1;
+
 #endif
 }
