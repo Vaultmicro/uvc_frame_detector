@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "validuvc/uvcpheader_checker.hpp"
+#include "validuvc/control_config.hpp"
 
 class frame_test : public ::testing::Test {
  protected:
@@ -16,6 +17,14 @@ class frame_test : public ::testing::Test {
 
 // Test for whole frame
 TEST_F(frame_test, whole_frame_test_brio) {
+
+  ControlConfig::set_width(1280);
+  ControlConfig::set_height(720);
+  ControlConfig::set_frame_format("mjpeg");
+  ControlConfig::set_fps(30);
+  ControlConfig::set_dwMaxPayloadTransferSize(1310720);
+  ControlConfig::set_dwMaxVideoFrameSize(16777216);
+
   // Packet 0
   std::vector<u_char> packet_0 = create_packet(
       {0x0c, 0x0c, 0x37, 0x1e, 0x96, 0xa8, 0x19, 0x71, 0x9d, 0xa8, 0x00, 0x00,

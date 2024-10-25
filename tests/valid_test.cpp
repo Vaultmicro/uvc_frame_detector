@@ -14,9 +14,16 @@ class uvc_header_checker_test : public ::testing::Test {
     return data;
   }
 };
-
+ 
 // Test cases for valid payload
 TEST_F(uvc_header_checker_test, valid_payload_test_0) {
+  ControlConfig::set_width(1280);
+  ControlConfig::set_height(720);
+  ControlConfig::set_frame_format("mjpeg");
+  ControlConfig::set_fps(30);
+  ControlConfig::set_dwMaxPayloadTransferSize(1310720);
+  ControlConfig::set_dwMaxVideoFrameSize(16777216);
+  
   std::vector<u_char> valid_packet = create_packet({
       0x0c, 0b00001101,                    // HLE and BFH (valid payload)
       0x00, 0x00, 0x00, 0x01,              // PTS (valid)
