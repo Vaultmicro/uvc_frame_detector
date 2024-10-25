@@ -1,5 +1,8 @@
 #include "utils/verbose.hpp"
+
+#ifdef TUI_SET
 #include "utils/tui_win.hpp"
+#endif
 
 // Initialize verbose level
 int verbose_level = 2;

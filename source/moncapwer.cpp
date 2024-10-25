@@ -11,6 +11,10 @@
 #include <queue>
 #include <csignal>
 #include <map>
+#ifdef __linux__
+#include <condition_variable>
+#include <cstring>
+#endif
 
 #include "validuvc/control_config.hpp"
 #include "validuvc/uvcpheader_checker.hpp"
@@ -151,7 +155,7 @@ void capture_packets() {
 
 #ifdef __linux__
         // This for linux urb
-        // static int start_flag = 0;
+        static int start_flag = 0;
 #endif
 
         if (usb_capdata == "N/A" && usb_isodata == "N/A" && format_index == "N/A") {
@@ -315,16 +319,16 @@ void capture_packets() {
 
 #ifdef __linux__
 
-            // if (bulk_maxlengthsize == frame_length && start_flag == 1) {
-            //   // Continue the transfer
-            //   std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
-            //   temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
-            //   // temp_buffer = hex_string_to_bytes(usb_capdata);
-            // } else {
-            //   if (bulk_maxlengthsize < frame_length) {
-            //     bulk_maxlengthsize = frame_length;
-            //   }
-            //   start_flag = 1;
+            if (bulk_maxlengthsize == frame_length && start_flag == 1) {
+              // Continue the transfer
+              std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
+              temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
+              // temp_buffer = hex_string_to_bytes(usb_capdata);
+            } else {
+              if (bulk_maxlengthsize < frame_length) {
+                bulk_maxlengthsize = frame_length;
+              }
+              start_flag = 1;
 #endif
               std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
               temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
@@ -345,7 +349,10 @@ void capture_packets() {
               }
               temp_buffer.clear();
               queue_cv.notify_one();
-            // }
+
+#ifdef __linux__
+            }
+#endif
 
           } else {
               // Handle unexpected transfer type
