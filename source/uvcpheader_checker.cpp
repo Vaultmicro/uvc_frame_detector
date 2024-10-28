@@ -14,7 +14,9 @@
 #include "validuvc/control_config.hpp"
 
 #ifdef TUI_SET
-#include "utils/tui_win.hpp" 
+#include "utils/tui_win.hpp"
+#elif GUI_SET
+#include "gui_win.hpp"
 #endif
 
 #ifdef _WIN32
@@ -32,6 +34,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 #ifdef TUI_SET
   window_number = 1;
+#elif GUI_SET
+  gui_window_number = 5;
 #endif
 
   if (uvc_payload.empty()) {          
@@ -55,11 +59,15 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 #ifdef TUI_SET
   window_number = 2;
+#elif GUI_SET
+  gui_window_number = 2;
 #endif
     v_cout_1 << "FPS: " << frame_count << ":" << received_time_clock << std::endl;
 
 #ifdef TUI_SET
     window_number = 1;
+#elif GUI_SET
+  gui_window_number = 5;
 #endif
 
     int fps_difference = ControlConfig::fps - frame_count;
@@ -73,7 +81,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     frame_count = 0;
     temp_received_time = received_time - std::chrono::milliseconds(1);
 
-#ifdef TUI_SET
+#if defined(TUI_SET) || defined(GUI_SET)
 
     print_stats();
 
@@ -490,6 +498,8 @@ void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Head
 #ifdef TUI_SET
   window_number = 4;
   print_whole_flag = 1;
+#elif GUI_SET
+  gui_window_number = 2;
 #endif
     v_cout_2 << "Previous Previous Payload Header: " << std::endl
      << previous_previous_payload_header << std::endl;
@@ -506,6 +516,8 @@ void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Head
 #ifdef TUI_SET
   window_number = 1;
   print_whole_flag = 0;
+#elif GUI_SET
+  gui_window_number = 5;
 #else
     v_cout_2 << std::endl;
 #endif
@@ -587,6 +599,9 @@ void UVCPHeaderChecker::print_stats() const {
 #ifdef TUI_SET
     window_number = 3;
     print_whole_flag = 1;
+#elif GUI_SET
+  gui_window_number = 4;
+
 #endif
 
     payload_stats.print_stats();
@@ -596,6 +611,7 @@ void UVCPHeaderChecker::print_stats() const {
 #ifdef TUI_SET
     print_whole_flag = 0;
     window_number = 1;
-
+#elif GUI_SET
+  gui_window_number = 5;
 #endif
 }

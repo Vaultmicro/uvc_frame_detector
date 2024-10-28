@@ -61,7 +61,6 @@ void process_packets() {
 
       pthread_mutex_unlock(&queue_mutex);
 
-      
 
       // Convert the packet to std::vector for C++ processing
       std::vector<uint8_t> packet_vector(packet, packet + packet_size);

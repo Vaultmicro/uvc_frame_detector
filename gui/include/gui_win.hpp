@@ -20,7 +20,7 @@ extern int gui_window_number;
 
 // Function declarations
 int start_screen();
-int screen();
+void screen();
 void end_screen();
 
 #endif // GUI_WIN_HPP

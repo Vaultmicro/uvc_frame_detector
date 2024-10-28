@@ -1,8 +1,10 @@
 #include "gui_win.hpp"
 
-int gui_window_number = 3;
+int gui_window_number = 5;
+
 #ifndef GUI_SET
 std::thread one_thread;
+#else
 #endif
 
 int start_screen(){
@@ -24,7 +26,7 @@ int start_screen(){
     return 0;
 }
 
-int screen(){
+void screen(){
 
     WindowManager& manager = WindowManager::getInstance();
 
@@ -135,7 +137,6 @@ int screen(){
         glfwSwapBuffers(window);
     }
 
-    return 0;
 }
 
 void end_screen(){

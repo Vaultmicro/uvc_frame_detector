@@ -3,7 +3,7 @@
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
 #elif GUI_SET
-#include "gui/include/gui_win.hpp"
+#include "gui_win.hpp"
 #endif
 
 // Initialize verbose level

@@ -23,7 +23,7 @@
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
 #elif GUI_SET
-#include "gui/include/gui_win.hpp"
+#include "gui_win.hpp"
 #endif
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
@@ -55,7 +55,6 @@ void clean_exit(int signum) {
 //   if (log_file.is_open()) {
 //     log_file.close();
 //   }
-
   v_cout_2 << "Exiting safely..." << std::endl;
 
   //exit(signum);
@@ -120,6 +119,9 @@ void capture_packets() {
     //     first = 0;
     // }
     window_number = 3;
+    v_cout_1 << "Waiting for input...     " << std::endl;
+#elif GUI_SET
+    gui_window_number = 0;
     v_cout_1 << "Waiting for input...     " << std::endl;
 #else
     v_cout_1 << "Waiting for input...     " << std::endl;
@@ -305,6 +307,16 @@ void capture_packets() {
                     << "     Max Frame Size: " << ControlConfig::dwMaxVideoFrameSize 
                     << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
                     << std::endl;
+#elif GUI_SET
+              gui_window_number = 0;
+              v_cout_1 << "width: " << ControlConfig::get_width() << "\n";
+              v_cout_1 << "height: " << ControlConfig::get_height() << "\n";
+              v_cout_1 << "frame_format: " << ControlConfig::get_frame_format() << "\n";
+              v_cout_1 << "fps: " << ControlConfig::get_fps() << "\n";
+              v_cout_1 << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
+              v_cout_1 << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
+              v_cout_1 << std::endl;
+
 #else
               std::cout << "width: " << ControlConfig::get_width() << "   ";
               std::cout << "height: " << ControlConfig::get_height() << "   ";
@@ -499,11 +511,25 @@ int main(int argc, char* argv[]) {
 
     std::thread process_thread(process_packets);
 
+#ifdef GUI_SET
+    if (start_screen() == -1) {
+        return -1;
+    }
+    screen();
+#endif
+
     // Wait for the threads to finish
     capture_thread.join();
     process_thread.join();
 
     clean_exit(0);
+
+#ifdef GUI_SET
+  end_screen();
+#else
     v_cout_1 << "End of main" << std::endl;
+#endif
+
+
     return 0;
 }

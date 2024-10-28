@@ -46,6 +46,26 @@ include_directories(${googletest_SOURCE_DIR}/googletest/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+if(WIN32)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
+
+link_directories(${CMAKE_SOURCE_DIR}/gui/lib)
+
+set(IMGUI_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_draw.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_widgets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_demo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_tables.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_glfw.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_opengl3.cpp
+)
+
+endif(WIN32)
+
+
 
 if(UNIX)
 add_executable(
@@ -87,6 +107,36 @@ add_executable(
 )
 
 target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
+
+
+add_executable(
+    oldmanandsea_g
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
+    ${IMGUI_SOURCES}
+)
+
+target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET)
+
+
+find_package(OpenGL REQUIRED)
+
+target_link_libraries(oldmanandsea_g
+    glfw3        # GLFW 
+    glew32       # GLEW 
+    ${OPENGL_LIBRARIES} # OpenGL 
+)
+
+add_custom_command(TARGET oldmanandsea_g POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/gui/lib/glew32.dll" $<TARGET_FILE_DIR:oldmanandsea_g>
+)
+
 
 
 endif(WIN32)
