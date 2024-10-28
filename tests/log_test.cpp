@@ -5,7 +5,9 @@
 #include <string.h>
 #include "validuvc/uvcpheader_checker.hpp"
 
+#ifdef TUI_SET
 #include "utils/tui_win.hpp"
+#endif
 #include "validuvc/control_config.hpp"
 
 
