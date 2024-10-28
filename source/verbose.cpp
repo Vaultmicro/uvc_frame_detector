@@ -2,22 +2,24 @@
 
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
+#elif GUI_SET
+#include "gui/include/gui_win.hpp"
 #endif
 
 // Initialize verbose level
 int verbose_level = 2;
 
 // VerboseStream definitions
-VerboseStream v_cout_1(1, "1O:", std::cout);
-VerboseStream v_cerr_1(1, "1E:", std::cerr);
-VerboseStream v_cout_2(2, "2O:", std::cout);
-VerboseStream v_cerr_2(2, "2E:", std::cerr);
-VerboseStream v_cout_3(3, "3O:", std::cout);
-VerboseStream v_cerr_3(3, "3E:", std::cerr);
-VerboseStream v_cout_4(4, "4O:", std::cout);
-VerboseStream v_cerr_4(4, "4E:", std::cerr);
-VerboseStream v_cout_5(5, "5O:", std::cout);
-VerboseStream v_cerr_5(5, "5E:", std::cerr);
+VerboseStream v_cout_1(1, "", std::cout);
+VerboseStream v_cerr_1(1, "", std::cerr);
+VerboseStream v_cout_2(2, "", std::cout);
+VerboseStream v_cerr_2(2, "", std::cerr);
+VerboseStream v_cout_3(3, "", std::cout);
+VerboseStream v_cerr_3(3, "", std::cerr);
+VerboseStream v_cout_4(4, "", std::cout);
+VerboseStream v_cerr_4(4, "", std::cerr);
+VerboseStream v_cout_5(5, "", std::cout);
+VerboseStream v_cerr_5(5, "", std::cerr);
 
 // VerboseStream constructor implementation
 VerboseStream::VerboseStream(int level, const std::string& prefix,
@@ -49,6 +51,11 @@ void VerboseStream::flush() {
       // Send the processed content (without newlines) to print_scroll
       print_scroll(window_number, prefix_ + content);
     }
+#elif GUI_SET
+    WindowManager& manager = WindowManager::getInstance();
+    WindowData& data = manager.getWindowData(gui_window_number);
+
+    data.custom_text = prefix_ + buffer_.str();
 #else
     output_stream_ << buffer_.str();
 #endif

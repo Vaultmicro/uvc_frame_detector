@@ -23,7 +23,7 @@ set(IMGUI_SOURCES
 )
 
 add_executable(MyImGuiProject 
-src/screen.cpp
+src/gui_win.cpp
 src/dearimgui.cpp
 src/other_file.cpp
 ${IMGUI_SOURCES})

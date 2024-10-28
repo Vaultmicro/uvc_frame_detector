@@ -22,6 +22,8 @@
 
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
+#elif GUI_SET
+#include "gui/include/gui_win.hpp"
 #endif
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
@@ -477,7 +479,7 @@ int main(int argc, char* argv[]) {
                     << ControlConfig::get_frame_format() << std::endl;
         }
     }
-#ifndef TUI_SET
+#if !defined(TUI_SET) && !defined(GUI_SET)
     v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
     v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
     v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;

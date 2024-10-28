@@ -1,28 +1,19 @@
-#include <iostream>
-#include <chrono>
-#include <thread>
+#include "gui_win.hpp"
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-#include "window_manager.hpp"
-#include "dearimgui.hpp"
+int gui_window_number = 3;
+#ifndef GUI_SET
+std::thread one_thread;
+#endif
 
-#include "other_file.hpp"
-
-int main() {
+int start_screen(){
     if (!init_imgui()) {
         return -1;
     }
-
     WindowManager& manager = WindowManager::getInstance();
-
-    std::thread one_thread(one_thread_func, &manager);
-
+#ifndef GUI_SET
+    one_thread = std::thread(one_thread_func, &manager);
+#endif
     // std::array<std::thread, 6> threads;
-
     // threads[0] = std::thread(printing_thread_func_1, &manager.getWindowData(0));
     // threads[1] = std::thread(printing_thread_func_2, &manager.getWindowData(1));
     // threads[2] = std::thread(printing_thread_func_3, &manager.getWindowData(2));
@@ -30,10 +21,18 @@ int main() {
     // threads[4] = std::thread(printing_thread_func_5, &manager.getWindowData(4));
     // threads[5] = std::thread(printing_thread_func_6, &manager.getWindowData(5));
 
+    return 0;
+}
+
+int screen(){
+
+    WindowManager& manager = WindowManager::getInstance();
+
     const ImVec2 initial_positions[6] = {
         ImVec2(0, 360), ImVec2(480, 360), ImVec2(960, 360),
         ImVec2(0, 720),   ImVec2(480, 720),  ImVec2(960, 720)
     };
+
     const ImVec2 window_size(480, 360);
 
     while (!glfwWindowShouldClose(window)) {
@@ -136,6 +135,12 @@ int main() {
         glfwSwapBuffers(window);
     }
 
+    return 0;
+}
+
+void end_screen(){
+    WindowManager& manager = WindowManager::getInstance();
+
     for (int i = 0; i < 6; ++i) {
         WindowData& data = manager.getWindowData(i);
         {
@@ -143,11 +148,11 @@ int main() {
             data.stop_flag = true;
         }
     }
-
+#ifndef GUI_SET
     if (one_thread.joinable()) {
         one_thread.join();
     }
-
+#endif
     // for (int i = 0; i < 6; ++i) {
     //     if (threads[i].joinable()) {
     //         threads[i].join();
@@ -155,5 +160,16 @@ int main() {
     // }
 
     finish_imgui();
+
+}
+
+#ifndef GUI_SET
+int main(){
+    if (start_screen() == -1) {
+        return -1;
+    }
+    screen();
+    end_screen();
     return 0;
 }
+#endif
