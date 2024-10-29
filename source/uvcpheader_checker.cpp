@@ -53,9 +53,21 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   }
 
   static uint64_t received_frames_cnt = 0;
-  static uint64_t received_throughput = 0;
+  static uint64_t received_throughput = 0;  
   if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>()) {
     temp_received_time = received_time;
+//   } else if( temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
+//       std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 0.5 ||
+//       std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() < 1){
+// #ifdef GUI_SET
+
+//   WindowManager& manager = WindowManager::getInstance();
+//   GraphData& data = manager.getGraphData(0);
+//   data.addThroughputData(static_cast<float>(graph_throughput * 8));
+//   gui_window_number = 5;
+//   graph_throughput = 0;
+
+// #endif
   } else if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
       std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 1) {
 
@@ -101,6 +113,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   }
 
   throughput += uvc_payload.size();
+  graph_throughput += uvc_payload.size();
 
   static UVC_Payload_Header previous_previous_payload_header;
   static UVC_Payload_Header previous_payload_header;

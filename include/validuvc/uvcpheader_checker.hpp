@@ -291,6 +291,7 @@ class UVCPHeaderChecker {
     public:
         uint32_t frame_count;
         uint64_t throughput;
+        uint64_t graph_throughput;
         double average_frame_rate;
 
         UVCPHeaderChecker()          :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
