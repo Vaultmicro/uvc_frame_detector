@@ -59,7 +59,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[1], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[1], ImGuiCond_Always);
 
-            ImGui::Begin("Time Data");
+            ImGui::Begin("Time & Payload Size Data");
             // ImGui::Text("Custom Text:");
             ImGui::Text("%s", data.custom_text.c_str());
 

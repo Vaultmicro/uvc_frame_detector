@@ -8,6 +8,7 @@
 #include <numeric>
 #include <cstddef>
 #include <stddef.h>
+#include <algorithm>
 
 #include "utils/verbose.hpp"
 #include "validuvc/uvcpheader_checker.hpp"
@@ -144,6 +145,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifndef GUI_SET
             plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
+            print_received_times(*last_frame);
             print_error_bits(last_frame->frame_error, previous_previous_payload_header, previous_payload_header, payload_header, previous_previous_error, previous_error);
 
           }
@@ -188,6 +190,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifndef GUI_SET
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
+        print_received_times(*last_frame);
         print_error_bits(last_frame->frame_error, previous_previous_payload_header, previous_payload_header, payload_header, previous_previous_error, previous_error);
 
       }
@@ -237,6 +240,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       auto& last_frame = frames.back();
       last_frame->frame_error = ERR_FRAME_ERROR;
       last_frame->add_received_error_time(received_time);
+      last_frame->payload_sizes.push_back(uvc_payload.size());
+
 #ifndef GUI_SET
       plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
@@ -250,6 +255,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   update_payload_error_stat(ERR_UNKNOWN);
   return ERR_UNKNOWN;
 }
+
+
+
 
 void UVCPHeaderChecker::frame_valid_ctrl(
     const std::vector<u_char>& uvc_payload) {
@@ -602,6 +610,60 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
 
 #ifdef TUI_SET
   window_number = 1;
+#endif
+}
+
+void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
+#ifdef GUI_SET
+    gui_window_number = 1;
+#endif
+    // Vector to store all times and labels
+    std::vector<std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string>> all_times;
+
+    // Populate vector with both chrono times and error times along with labels
+    for (const auto& time_point : frame.received_chrono_times) {
+        all_times.emplace_back(time_point, "Valid : Time");
+    }
+    for (const auto& error_time : frame.received_error_times) {
+        all_times.emplace_back(error_time, "Error : Time");
+    }
+
+    // Sort all times in ascending order
+    std::sort(all_times.begin(), all_times.end(), [](const auto& a, const auto& b) {
+        return a.first < b.first;
+    });
+
+    // Print sorted times with labels and matching payload sizes
+    v_cout_2 << "Received Times and Payload Sizes in Order:" << frame.frame_number << std::endl;
+    for (size_t i = 0; i < all_times.size(); ++i) {
+        auto duration = all_times[i].first.time_since_epoch();
+        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+        
+        v_cout_2 << all_times[i].second << ": " << millis << " ms";
+
+        // Match with payload size if available
+        if (i < frame.payload_sizes.size()) {
+            v_cout_2 << ", Payload Size: " << frame.payload_sizes[i];
+        }
+
+        v_cout_2 << std::endl;
+    }
+    v_cout_2 << std::endl;
+
+    if (!all_times.empty()) {
+        auto first_time = all_times.front().first;
+        auto last_time = all_times.back().first;
+        auto time_diff = std::chrono::duration_cast<std::chrono::milliseconds>(last_time - first_time).count();
+        v_cout_2 << "Time Taken: " << time_diff << " ms" << std::endl;
+    }
+
+    // Calculate total payload size
+    size_t total_payload_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
+    v_cout_2 << "Total Size: " << total_payload_size << " bytes" << std::endl;
+    v_cout_2 << std::endl << std::endl;
+
+#ifdef GUI_SET
+    gui_window_number = 5;
 #endif
 }
 

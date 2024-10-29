@@ -176,7 +176,7 @@ enum FrameError {
 
 class ValidFrame{
     public:
-        uint32_t frame_number;
+        uint64_t frame_number;
         uint16_t packet_number;
         uint32_t frame_pts;
         FrameError frame_error;
@@ -189,7 +189,6 @@ class ValidFrame{
         
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_error_times;  // Packet reception times
-
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
@@ -283,7 +282,7 @@ class UVCPHeaderChecker {
         void plot_received_chrono_times(const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_chrono_times, 
                                         const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_error_times);
 
-
+        void print_received_times(const ValidFrame& frame);
 
 
     public:
