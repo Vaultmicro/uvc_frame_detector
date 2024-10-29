@@ -54,8 +54,11 @@ void VerboseStream::flush() {
 #elif GUI_SET
     WindowManager& manager = WindowManager::getInstance();
     WindowData& data = manager.getWindowData(gui_window_number);
-
-    data.custom_text = prefix_ + buffer_.str();
+    if (print_whole_flag){
+      data.custom_text = prefix_ + buffer_.str();
+    } else {
+      data.custom_text += prefix_ + buffer_.str();
+    }
 #else
     output_stream_ << buffer_.str();
 #endif

@@ -121,7 +121,7 @@ void capture_packets() {
     window_number = 3;
     v_cout_1 << "Waiting for input...     " << std::endl;
 #elif GUI_SET
-    gui_window_number = 0;
+    gui_window_number = 5;
     v_cout_1 << "Waiting for input...     " << std::endl;
 #else
     v_cout_1 << "Waiting for input...     " << std::endl;
@@ -308,7 +308,7 @@ void capture_packets() {
                     << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
                     << std::endl;
 #elif GUI_SET
-              gui_window_number = 0;
+              gui_window_number = 3;
               v_cout_1 << "width: " << ControlConfig::get_width() << "\n";
               v_cout_1 << "height: " << ControlConfig::get_height() << "\n";
               v_cout_1 << "frame_format: " << ControlConfig::get_frame_format() << "\n";
@@ -316,7 +316,6 @@ void capture_packets() {
               v_cout_1 << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
               v_cout_1 << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
               v_cout_1 << std::endl;
-
 #else
               std::cout << "width: " << ControlConfig::get_width() << "   ";
               std::cout << "height: " << ControlConfig::get_height() << "   ";
@@ -473,6 +472,9 @@ int main(int argc, char* argv[]) {
         return 1;
         }
     }
+#ifdef GUI_SET
+  gui_window_number = 3;
+#endif
     if (!fw_set || !fh_set || !fps_set || !ff_set) {
         if (!fw_set) {
         v_cout_1 << "Frame width not specified, using default: "
@@ -497,6 +499,8 @@ int main(int argc, char* argv[]) {
     v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
     v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
             << std::endl;
+#elif GUI_SET
+    gui_window_number = 5;
 #endif
 
     std::signal(SIGINT, clean_exit);

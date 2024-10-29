@@ -22,7 +22,7 @@ bool init_imgui() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(1920, 1080, "Dear ImGui + OpenGL + GLFW", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "Vaultmicro UVC_Frame_Detector", NULL, NULL);
     if (window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();

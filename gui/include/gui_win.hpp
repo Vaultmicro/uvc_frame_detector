@@ -17,6 +17,7 @@
 
 // Global variable declaration
 extern int gui_window_number;
+extern int print_whole_flag;
 
 // Function declarations
 int start_screen();

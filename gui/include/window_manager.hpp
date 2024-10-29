@@ -38,7 +38,7 @@ private:
         }
     }
 
-    std::array<WindowData, 6> windows;
+    std::array<WindowData, 11> windows;
 
     WindowManager(const WindowManager&) = delete;
     WindowManager& operator=(const WindowManager&) = delete;
