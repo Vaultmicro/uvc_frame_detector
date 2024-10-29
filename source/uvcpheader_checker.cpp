@@ -153,6 +153,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
             print_received_times(*last_frame);
             print_frame_data(*last_frame);
+            printFrameErrorExplanation(last_frame->frame_error);
 #else
             plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
@@ -200,7 +201,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
-
+        printFrameErrorExplanation(last_frame->frame_error);
 #else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
@@ -262,6 +263,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     }
     temp_error_payload_header = payload_header;
     update_payload_error_stat(payload_header_valid_return);
+#ifdef GUI_SET
+    printUVCErrorExplanation(payload_header_valid_return);
+#endif
     return payload_header_valid_return;
   }
 
@@ -764,95 +768,66 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 #endif
 }
 
-
 void UVCPHeaderChecker::printUVCErrorExplanation(UVCError error) {
 #ifdef GUI_SET
-  gui_window_number = 3;
+    gui_window_number = 2;
 #endif
-    switch (error) {
-        case ERR_NO_ERROR:
-            v_cout_2 << "No Error, Valid - No errors detected.\n";
-            break;
-        case ERR_EMPTY_PAYLOAD:
-            v_cout_2 << "No Payload - UVC payload is empty.\n";
-            v_cout_2 << "Occurs when there is no payload header.\n";
-            break;
-        case ERR_MAX_PAYLAOD_OVERFLOW:
-            v_cout_2 << "Payload Overflow - UVC payload size exceeds max transfer size.\n";
-            v_cout_2 << "Occurs if payload size is larger than the max payload set in the interface descriptor.\n";
-            break;
-        case ERR_ERR_BIT_SET:
-            v_cout_2 << "BFH Error Bit Set - The Error bit in the UVC payload header is set.\n";
-            break;
-        case ERR_LENGTH_OUT_OF_RANGE:
-            v_cout_2 << "Payload Header Length Out of Range - HLE is outside of expected range (2 to 12).\n";
-            break;
-        case ERR_LENGTH_INVALID:
-            v_cout_2 << "Payload Header Length Incorrect with BFH - Header length does not match BFH flags.\n";
-            v_cout_2 << "Expected values: PTS=0, SCR=0, HLE=2; PTS=1, SCR=1, HLE=6; PTS=0, SCR=1, HLE=8; PTS=1, SCR=1, HLE=12.\n";
-            break;
-        case ERR_RESERVED_BIT_SET:
-            v_cout_2 << "BFH Reserved Bit Set - Reserved bit is set, only checked when EOF=0.\n";
-            break;
-        case ERR_EOH_BIT:
-            v_cout_2 << "EOH Bit Error - EOH is not properly set.\n";
-            break;
-        case ERR_TOGGLE_BIT_OVERLAPPED:
-            v_cout_2 << "Toggle Bit Frame Overlapped - Toggle Bit in BFH has overlapping error.\n";
-            break;
-        case ERR_FID_MISMATCH:
-            v_cout_2 << "FID Mismatch - Frame Identifier mismatch with previous frame.\n";
-            break;
-        case ERR_SWAP:
-            v_cout_2 << "BFH Toggle Bit Error with PTS Difference - PTS matches but Toggle Bit mismatch detected.\n";
-            break;
-        case ERR_MISSING_EOF:
-            v_cout_2 << "Missing EOF - EOF expected but not found in payload header.\n";
-            break;
-        default:
-            v_cout_2 << "Unknown Error - The error code is not recognized.\n";
-            break;
+    if (error == ERR_NO_ERROR) {
+        v_cout_2 << "No Error, \n Valid - No errors detected.\n";
+    } else if (error == ERR_EMPTY_PAYLOAD) {
+        v_cout_2 << "No Payload \n- UVC payload is empty.\nOccurs when there is no payload header.\n";
+    } else if (error == ERR_MAX_PAYLAOD_OVERFLOW) {
+        v_cout_2 << "Payload Overflow \n- UVC payload size exceeds max transfer size.\nOccurs if payload size is larger than the max payload set in the interface descriptor.\n";
+    } else if (error == ERR_ERR_BIT_SET) {
+        v_cout_2 << "BFH Error Bit Set \n- The Error bit in the UVC payload header is set.\n";
+    } else if (error == ERR_LENGTH_OUT_OF_RANGE) {
+        v_cout_2 << "Payload Header Length Out of Range \n- HLE is outside of expected range (2 to 12).\n";
+    } else if (error == ERR_LENGTH_INVALID) {
+        v_cout_2 << "Payload Header Length Incorrect with BFH \n- Header length does not match BFH flags.\nExpected values: PTS=0, SCR=0, HLE=2; PTS=1, SCR=1, HLE=6; PTS=0, SCR=1, HLE=8; PTS=1, SCR=1, HLE=12.\n";
+    } else if (error == ERR_RESERVED_BIT_SET) {
+        v_cout_2 << "BFH Reserved Bit Set \n- Reserved bit is set, only checked when EOF=0.\n";
+    } else if (error == ERR_EOH_BIT) {
+        v_cout_2 << "EOH Bit Error \n- EOH is not properly set.\n";
+    } else if (error == ERR_TOGGLE_BIT_OVERLAPPED) {
+        v_cout_2 << "Toggle Bit Frame Overlapped \n- Toggle Bit in BFH has overlapping error.\n";
+    } else if (error == ERR_FID_MISMATCH) {
+        v_cout_2 << "FID Mismatch \n- Frame Identifier mismatch with previous frame.\n";
+    } else if (error == ERR_SWAP) {
+        v_cout_2 << "BFH Toggle Bit Error with PTS Difference \n- PTS matches but Toggle Bit mismatch detected.\n";
+    } else if (error == ERR_MISSING_EOF) {
+        v_cout_2 << "Missing EOF \n- EOF expected but not found in payload header.\n";
+    } else {
+        v_cout_2 << "Unknown Error \n- The error code is not recognized.\n";
     }
+  v_cout_2 << " " << std::endl;
 #ifdef GUI_SET
     gui_window_number = 5;
 #endif
-
 }
 
 void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
 #ifdef GUI_SET
-  gui_window_number = 2;
+    gui_window_number = 2;
 #endif
-    switch (error) {
-        case ERR_FRAME_NO_ERROR:
-            v_cout_2 << "No Frame Error - No frame errors detected.\n";
-            break;
-        case ERR_FRAME_DROP:
-            v_cout_2 << "Frame Drop - Frame rate is lower than expected.\n";
-            v_cout_2 << "Indicates missing frames based on FPS measurement.\n";
-            break;
-        case ERR_FRAME_ERROR:
-            v_cout_2 << "Frame Error - General frame error, often due to missing EOF.\n";
-            v_cout_2 << "Caused by payload validation errors.\n";
-            break;
-        case ERR_FRAME_MAX_FRAME_OVERFLOW:
-            v_cout_2 << "Max Frame Size Overflow - Frame size exceeds max frame size setting.\n";
-            v_cout_2 << "Indicates potential dummy data or erroneous payload.\n";
-            break;
-        case ERR_FRAME_INVALID_YUYV_RAW_SIZE:
-            v_cout_2 << "YUYV Frame Length Error - YUYV frame length mismatch.\n";
-            v_cout_2 << "Expected size for YUYV is width * height * 2.\n";
-            break;
-        case ERR_FRAME_SAME_DIFFERENT_PTS:
-            v_cout_2 << "Same Frame Different PTS - Only PTS mismatch detected without other validation errors.\n";
-            v_cout_2 << "PTS mismatch occurs without errors in toggle validation.\n";
-            break;
-        default:
-            v_cout_2 << "Unknown Frame Error - The frame error code is not recognized.\n";
-            break;
+    if (error == ERR_FRAME_NO_ERROR) {
+        v_cout_2 << "No Frame Error \n- No frame errors detected.\n";
+    } else if (error == ERR_FRAME_DROP) {
+        v_cout_2 << "Frame Drop \n- Frame rate is lower than expected.\nIndicates missing frames based on FPS measurement.\n";
+    } else if (error == ERR_FRAME_ERROR) {
+        v_cout_2 << "Frame Error \n- General frame error, often due to missing EOF.\nCaused by payload validation errors.\n";
+    } else if (error == ERR_FRAME_MAX_FRAME_OVERFLOW) {
+        v_cout_2 << "Max Frame Size Overflow \n- Frame size exceeds max frame size setting.\nIndicates potential dummy data or erroneous payload.\n";
+    } else if (error == ERR_FRAME_INVALID_YUYV_RAW_SIZE) {
+        v_cout_2 << "YUYV Frame Length Error \n- YUYV frame length mismatch.\nExpected size for YUYV is width * height * 2.\n";
+    } else if (error == ERR_FRAME_SAME_DIFFERENT_PTS) {
+        v_cout_2 << "Same Frame Different PTS \n- Only PTS mismatch detected without other validation errors.\nPTS mismatch occurs without errors in toggle validation.\n";
+    } else {
+        v_cout_2 << "Unknown Frame Error \n- The frame error code is not recognized.\n";
     }
+  v_cout_2 << " " << std::endl;
+
 #ifdef GUI_SET
     gui_window_number = 5;
 #endif
-
 }
+
