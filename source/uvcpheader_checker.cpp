@@ -53,6 +53,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   }
 
   static uint64_t received_frames_cnt = 0;
+  static uint64_t received_throughput = 0;
   if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>()) {
     temp_received_time = received_time;
   } else if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
@@ -64,6 +65,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   gui_window_number = 9;
 #endif
     v_cout_1 << "FPS: " << frame_count << ":" << received_time_clock << std::endl;
+
+#ifdef GUI_SET
+  gui_window_number = 10;
+#endif
+    v_cout_1 << "Throughput: " << throughput << " Mbps" << received_time_clock <<std::endl;
 
 #ifdef TUI_SET
     window_number = 1;
@@ -81,6 +87,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     frame_count = 0;
     temp_received_time = received_time - std::chrono::milliseconds(1);
+    throughput = 0;
 
 #if defined(TUI_SET) || defined(GUI_SET)
 
@@ -88,7 +95,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 #endif
 
-  } 
+  }
+
+  throughput += uvc_payload.size();
 
   static UVC_Payload_Header previous_previous_payload_header;
   static UVC_Payload_Header previous_payload_header;
@@ -141,10 +150,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           update_frame_error_stat(last_frame->frame_error);
           //save_frames_to_log(last_frame);
           if (last_frame->frame_error) {
-#ifndef GUI_SET
+#ifdef GUI_SET
+            print_received_times(*last_frame);
+            print_frame_data(*last_frame);
+#else
             plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
-            print_received_times(*last_frame);
             print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
 
           }
@@ -186,10 +197,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       // finish the frame
       // save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
-#ifndef GUI_SET
+#ifdef GUI_SET
+        print_received_times(*last_frame);
+        print_frame_data(*last_frame);
+#else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
-        print_received_times(*last_frame);
         print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
 
       }
@@ -687,6 +700,66 @@ void UVCPHeaderChecker::print_stats() const {
     window_number = 1;
 #elif GUI_SET
     print_whole_flag = 0;
+  gui_window_number = 5;
+#endif
+}
+
+void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
+#ifdef GUI_SET
+  gui_window_number = 0;
+#endif
+    v_cout_2 << "Frame Number: " << frame.frame_number << std::endl;
+    v_cout_2 << "Packet Number: " << frame.packet_number << std::endl;
+    v_cout_2 << "Frame PTS: " << frame.frame_pts << std::endl;
+    // Print Frame Error directly with switch statement
+    v_cout_2 << "Frame Error: ";
+    switch (frame.frame_error) {
+        case ERR_FRAME_NO_ERROR:
+            v_cout_2 << "No Error";
+            break;
+        case ERR_FRAME_DROP:
+            v_cout_2 << "Frame Drop";
+            break;
+        case ERR_FRAME_ERROR:
+            v_cout_2 << "Frame Error by Payload Header";
+            break;
+        case ERR_FRAME_MAX_FRAME_OVERFLOW:
+            v_cout_2 << "Max Frame Overflow";
+            break;
+        case ERR_FRAME_INVALID_YUYV_RAW_SIZE:
+            v_cout_2 << "Invalid YUYV Raw Size";
+            break;
+        case ERR_FRAME_SAME_DIFFERENT_PTS:
+            v_cout_2 << "Same Different PTS";
+            break;
+        default:
+            v_cout_2 << "Unknown Error";
+            break;
+    }
+    v_cout_2 << std::endl;
+    v_cout_2 << "EOF Reached: " << (frame.eof_reached ? "Yes" : "No") << std::endl;
+
+    // Calculate time taken from valid start to the last of error or valid times
+    if (!frame.received_chrono_times.empty()) {
+        auto valid_start = frame.received_chrono_times.front();
+        auto valid_end = frame.received_chrono_times.back();
+        auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
+
+        // Choose the later of valid_end and error_end as the end point
+        auto final_end = (error_end > valid_end) ? error_end : valid_end;
+        auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
+
+        v_cout_2 << "Time Taken (Valid Start to Last Event): " << time_taken << " ms" << std::endl;
+    } else {
+        v_cout_2 << "No Valid Times Recorded" << std::endl;
+    }
+
+    // Calculate total payload size
+    size_t total_payload_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
+    v_cout_2 << "Total Payload Size: " << total_payload_size << " bytes" << std::endl;
+
+    v_cout_2 << std::endl;
+#ifdef GUI_SET
   gui_window_number = 5;
 #endif
 }

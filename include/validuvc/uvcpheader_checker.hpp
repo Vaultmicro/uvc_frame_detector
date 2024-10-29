@@ -283,13 +283,15 @@ class UVCPHeaderChecker {
                                         const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_error_times);
 
         void print_received_times(const ValidFrame& frame);
+        void print_frame_data(const ValidFrame& frame);
 
 
     public:
         uint32_t frame_count;
+        uint64_t throughput;
         double average_frame_rate;
 
-        UVCPHeaderChecker()          :  frame_count(0), average_frame_rate(0), current_frame_number(0) {
+        UVCPHeaderChecker()          :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
         }
 
         ~UVCPHeaderChecker() {
