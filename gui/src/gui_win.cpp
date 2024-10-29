@@ -194,7 +194,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[10], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[10], ImGuiCond_Always);
 
-            ImGui::Begin("--");
+            ImGui::Begin("Throughput");
             // ImGui::Text("Counting:");
             ImGui::Text("%s", data.custom_text.c_str());
             ImGui::End();
