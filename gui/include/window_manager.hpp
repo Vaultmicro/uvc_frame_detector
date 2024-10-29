@@ -12,6 +12,22 @@ struct WindowData {
     bool stop_flag;
 };
 
+struct GraphData {
+    std::mutex mutex;
+    std::array<float, 100> throughput_data = {};
+    int index = 0;
+    bool stop_flag;
+
+    GraphData(){
+        throughput_data.fill(0.0f);
+    }
+
+    void addThroughputData(float new_value) {
+        throughput_data[index] = new_value;
+        index = (index + 1) % throughput_data.size();
+    }
+};
+
 class WindowManager {
 public:
     static WindowManager& getInstance() {
@@ -29,6 +45,9 @@ public:
     WindowData& getWindowData(int index) { return windows[index]; }
     size_t getWindowCount() const { return windows.size(); }
 
+    GraphData& getGraphData(int index) { return graphs[index]; }
+    size_t getGraphCount() const { return graphs.size(); }
+
 private:
     WindowManager() {
         for (auto& window : windows) {
@@ -36,9 +55,13 @@ private:
             window.stop_flag = false;
             window.custom_text = "";
         }
+        for (auto& graph : graphs) {
+            graph.stop_flag = false;
+        }
     }
 
-    std::array<WindowData, 11> windows;
+    std::array<WindowData, 13> windows;
+    std::array<GraphData, 1> graphs;
 
     WindowManager(const WindowManager&) = delete;
     WindowManager& operator=(const WindowManager&) = delete;

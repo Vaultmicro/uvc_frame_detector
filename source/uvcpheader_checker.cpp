@@ -74,6 +74,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
     window_number = 1;
 #elif GUI_SET
+  WindowManager& manager = WindowManager::getInstance();
+  GraphData& data = manager.getGraphData(0);
+  data.addThroughputData(static_cast<float>(throughput * 8));
   gui_window_number = 5;
 #endif
 

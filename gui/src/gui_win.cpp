@@ -1,4 +1,5 @@
 #include "gui_win.hpp"
+#include <vector>
 
 int gui_window_number = 5;
 int print_whole_flag = 0;
@@ -16,18 +17,18 @@ void screen(){
 
     WindowManager& manager = WindowManager::getInstance();
 
-    const ImVec2 initial_positions[11] = {
+    const ImVec2 initial_positions[13] = {
         ImVec2(0, 360), ImVec2(480, 360), ImVec2(960, 360),
         ImVec2(0, 720),   ImVec2(480, 720),  ImVec2(960, 720),
         ImVec2(1440, 360), ImVec2(1600, 360), ImVec2(1760, 360),
-        ImVec2(1440, 720), ImVec2(1680, 720)
+        ImVec2(1440, 720), ImVec2(1680, 720), ImVec2(0, 0), ImVec2(1440, 0)
     };
 
-    const ImVec2 window_sizes[11] = {
+    const ImVec2 window_sizes[13] = {
         ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
         ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
         ImVec2(160, 360), ImVec2(160, 360), ImVec2(160, 360),
-        ImVec2(240, 360), ImVec2(240, 360)
+        ImVec2(240, 360), ImVec2(240, 360), ImVec2(1440, 360), ImVec2(480, 360)
     };
 
     while (!glfwWindowShouldClose(window)) {
@@ -199,6 +200,56 @@ void screen(){
             ImGui::Text("%s", data.custom_text.c_str());
             ImGui::End();
         }
+        
+        // **Window 11 - Histogram **
+       {
+            GraphData& data = manager.getGraphData(0);
+            std::lock_guard<std::mutex> lock(data.mutex);
+
+            ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
+            ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
+
+            ImGui::Begin("Histogram");
+
+            std::array<float, 100> display_data;
+            size_t data_size = data.throughput_data.size();
+            for (size_t i = 0; i < data_size; ++i) {
+                display_data[i] = data.throughput_data[(data.index + i) % data_size];
+            }
+
+            static float max_value = 0.0f;
+            float current_max = *std::max_element(display_data.begin(), display_data.end());
+            if (current_max > max_value) {
+                max_value = current_max;
+            }
+
+            ImGui::PlotHistogram(
+                "Throughput Data",
+                display_data.data(),
+                static_cast<int>(display_data.size()),
+                0, nullptr,
+                0.0f, max_value,  
+                window_sizes[11]
+            );
+
+            ImGui::End();
+        }
+
+
+        // **Window 12 - Photo **
+        {
+            WindowData& data = manager.getWindowData(12);
+            std::lock_guard<std::mutex> lock(data.mutex);
+
+            ImGui::SetNextWindowPos(initial_positions[12], ImGuiCond_Always);
+            ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
+
+            ImGui::Begin("Image");
+
+
+            ImGui::End();
+        }
+
 
         ImGui::Render();
         glViewport(0, 0, 1920, 1080);
@@ -214,13 +265,18 @@ void screen(){
 void end_screen(){
     WindowManager& manager = WindowManager::getInstance();
 
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < manager.getWindowCount(); ++i) {
         WindowData& data = manager.getWindowData(i);
-        {
-            std::lock_guard<std::mutex> lock(data.mutex);
-            data.stop_flag = true;
-        }
+        std::lock_guard<std::mutex> lock(data.mutex);
+        data.stop_flag = true;
     }
+
+    for (int i = 0; i < manager.getGraphCount(); ++i) {
+        GraphData& graph_data = manager.getGraphData(i);
+        std::lock_guard<std::mutex> lock(graph_data.mutex);
+        graph_data.stop_flag = true;
+    }
+
 
     finish_imgui();
 
