@@ -295,4 +295,32 @@ add_executable(
 )
 target_compile_definitions(log_test_t PUBLIC TUI_SET)
 
+add_executable(
+    log_test_g
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
+    ${IMGUI_SOURCES}
+)
+
+target_compile_definitions(log_test_g PUBLIC GUI_SET)
+
+
+find_package(OpenGL REQUIRED)
+
+target_link_libraries(log_test_g
+    glfw3        # GLFW 
+    glew32       # GLEW 
+    ${OPENGL_LIBRARIES} # OpenGL 
+)
+
+add_custom_command(TARGET log_test_g POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/gui/lib/glew32.dll" $<TARGET_FILE_DIR:log_test_g>
+)
+
 endif(WIN32)
