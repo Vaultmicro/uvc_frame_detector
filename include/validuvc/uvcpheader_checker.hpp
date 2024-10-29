@@ -284,6 +284,8 @@ class UVCPHeaderChecker {
 
         void print_received_times(const ValidFrame& frame);
         void print_frame_data(const ValidFrame& frame);
+        void printUVCErrorExplanation(UVCError error);
+        void printFrameErrorExplanation(FrameError error);
 
 
     public:
