@@ -46,12 +46,13 @@ include_directories(${googletest_SOURCE_DIR}/googletest/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-if(WIN32)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
 
+
 link_directories(${CMAKE_SOURCE_DIR}/gui/lib)
+
 
 set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
@@ -62,8 +63,6 @@ set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_glfw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_opengl3.cpp
 )
-
-endif(WIN32)
 
 
 
@@ -108,6 +107,7 @@ add_executable(
 
 target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
 
+endif(WIN32)
 
 add_executable(
     oldmanandsea_g
@@ -126,6 +126,7 @@ target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET)
 
 find_package(OpenGL REQUIRED)
 
+if (WIN32)
 target_link_libraries(oldmanandsea_g
     glfw3        # GLFW 
     glew32       # GLEW 
@@ -137,9 +138,11 @@ add_custom_command(TARGET oldmanandsea_g POST_BUILD
     "${CMAKE_SOURCE_DIR}/gui/lib/glew32.dll" $<TARGET_FILE_DIR:oldmanandsea_g>
 )
 
-
-
-endif(WIN32)
+elseif (UNIX)
+    target_link_libraries(oldmanandsea_g PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so)
+    target_link_libraries(oldmanandsea_g PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a)
+    target_link_libraries(oldmanandsea_g PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so)
+endif()
 
 
 add_executable(
