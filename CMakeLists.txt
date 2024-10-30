@@ -24,17 +24,11 @@ FetchContent_MakeAvailable(googletest)
 if (WIN32)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
-
 endif(WIN32)
 
-# find_package(PkgConfig REQUIRED)
-# pkg_check_modules(PCAP REQUIRED libpcap)
 if(UNIX)
-
 set(LIBUSB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/libusb-1.0)
 set(LIBUSB_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/library/libusb-1.0.so.0.4.0)
-
-
 set(PCAP_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so.1.10.4
@@ -46,13 +40,12 @@ include_directories(${googletest_SOURCE_DIR}/googletest/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
 
-
 link_directories(${CMAKE_SOURCE_DIR}/gui/lib)
-
 
 set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
@@ -65,7 +58,6 @@ set(IMGUI_SOURCES
 )
 
   
-
 if(UNIX)
 add_executable(
     uvc_frame_detector
@@ -123,13 +115,13 @@ add_executable(
 
 target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET)
 
-
+if (WIN32)
 find_package(OpenGL REQUIRED)
 
-if (WIN32)
 target_link_libraries(oldmanandsea_g
-    glfw3        # GLFW 
-    glew32       # GLEW 
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32.lib"
+
     ${OPENGL_LIBRARIES} # OpenGL 
 )
 
@@ -194,8 +186,6 @@ target_link_libraries(
         gtest
         gtest_main
 )
-
-
 
 
 add_executable(
