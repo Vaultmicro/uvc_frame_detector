@@ -15,10 +15,10 @@ Shows error data, stats. _t stands for tui, _g stands for gui.
 Can use live stream using camera application
 Or can use pcapng file 
 
-in window using camera application
+in window using camera application  
 cmd /c '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -E separator=; -Y "usb.device_address == 1" -Q | .\debug\oldmanandsea_g.exe'
 
-in window using pcapng
+in window using pcapng  
 cmd /c '"C:\Program Files\Wireshark\tshark.exe" -r "C:\Users\foldername\bravia.pcapng" -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usb.device_address -E separator=; -Y "usb.device_address == 1" -Q | .\debug\oldmanandsea_g.exe'
 
 in linux  
