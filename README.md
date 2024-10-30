@@ -5,6 +5,33 @@ included linux and window verison
 each using usbmon and tshark for stream  
 added tui, gui version respectively  
 
+
+## Executable Files
+
+### Oldmanandsea, Oldmanandsea_t, Oldmanandsea_g  
+This programme uses pipeline with tshark gets parsed data, recombine urb into payloads and frames.  
+Detects invalid datas and payload headers, frames.  
+Shows error data, stats. _t stands for tui, _g stands for gui.  
+
+### Moncapler
+This programme uses usbmon* in linux to get raw data, recombine urb into payloads and frames.  
+Uses same validation with oldmanandsea, however controlconfig data is not yet programmed.  
+
+### Valid_test, Frame_test_iso, Frame_test_bulk, Example  
+Uses captured raw log data to test whether validation for payload and frame is well made.  
+Google test is used to test each unit, and linux urb is used as an example (but can run in window).  
+
+### Log_test, Log_test_t, Log_test_g
+Gets txt file from wireshark, File>Export Packet Dissections>As Plain Text>Details: All expanded  
+Use tests/change_shark/shkwhl_b for bulk shkwhl_i for iso  
+And modify the lost_test code to find designate txt file, run. _t stands for tui, _g stands for gui  
+Auto controlconfig is not programmed.  
+
+### Test_packet_handler
+Can build and run in linux only, tests moncapler whether it has combined urb blocks into valid frames.  
+
+
+
 ## Usage
 
 ### In Window  
@@ -25,7 +52,14 @@ If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wiresha
 2. cd build
 3. cmake ..
 4. cmake --build .
-5. cd Debug
+5. cd Debug  
+
+compiler info  
+-- Building for: Visual Studio 17 2022  
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.19045.  
+-- The CXX compiler identification is MSVC 19.41.34120.0  
+-- The C compiler identification is MSVC 19.41.34120.0  
+
 
 ### Run  
   
