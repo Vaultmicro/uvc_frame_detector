@@ -85,7 +85,7 @@ add_executable(
 )
 
 if(WIN32)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 add_executable(
     oldmanandsea_t
@@ -116,12 +116,17 @@ add_executable(
 target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET)
 
 if (WIN32)
+# target_link_libraries(oldmanandsea_g
+#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32.lib"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib"
+# )
+
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(oldmanandsea_g
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32.lib"
-
+    glfw3        # GLFW 
+    glew32       # GLEW 
     ${OPENGL_LIBRARIES} # OpenGL 
 )
 
