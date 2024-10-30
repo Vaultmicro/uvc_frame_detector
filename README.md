@@ -17,6 +17,10 @@ Shows error data, stats. _t stands for tui, _g stands for gui.
 This programme uses usbmon* in linux to get raw data, recombine urb into payloads and frames.  
 Uses same validation with oldmanandsea, however controlconfig data is not yet programmed.  
 
+### UVCPerf
+This programme uses usbmon* in linux to get raw data live, recombine urb into payloads and frames.  
+Uses same validation with oldmanandsea & Moncapler, however controlconfig data is not yet programmed.  
+
 ### Valid_test, Frame_test_iso, Frame_test_bulk, Example  
 Uses captured raw log data to test whether validation for payload and frame is well made.  
 Google test is used to test each unit, and linux urb is used as an example (but can run in window).  
@@ -24,7 +28,7 @@ Google test is used to test each unit, and linux urb is used as an example (but 
 ### Log_test, Log_test_t, Log_test_g
 Gets txt file from wireshark, File>Export Packet Dissections>As Plain Text>Details: All expanded  
 Use tests/change_shark/shkwhl_b for bulk shkwhl_i for iso  
-And modify the lost_test code to find designate txt file, run. _t stands for tui, _g stands for gui  
+And modify the log_test code to find designate txt file, run. _t stands for tui, _g stands for gui  
 Auto controlconfig is not programmed.  
 
 ### Test_packet_handler
