@@ -64,7 +64,7 @@ set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_opengl3.cpp
 )
 
-
+  
 
 if(UNIX)
 add_executable(
@@ -106,8 +106,8 @@ add_executable(
 )
 
 target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
-
 endif(WIN32)
+
 
 add_executable(
     oldmanandsea_g
