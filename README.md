@@ -12,6 +12,18 @@ added tui, gui version respectively
 This programme uses pipeline with tshark gets parsed data, recombine urb into payloads and frames.  
 Detects invalid datas and payload headers, frames.  
 Shows error data, stats. _t stands for tui, _g stands for gui.  
+Can use live stream using camera application
+Or can use pcapng file 
+
+in window using camera application
+cmd /c '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -E separator=; -Y "usb.device_address == 1" -Q | .\debug\oldmanandsea_g.exe'
+
+in window using pcapng
+cmd /c '"C:\Program Files\Wireshark\tshark.exe" -r "C:\Users\foldername\bravia.pcapng" -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usb.device_address -E separator=; -Y "usb.device_address == 1" -Q | .\debug\oldmanandsea_g.exe'
+
+in linux  
+ sudo tshark -i usbmon1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usb.device_address -E separator=\; -Y "usb.device_address == 3" -Q | ./oldmanandsea_g
+
 
 ### Moncapler
 This programme uses usbmon* in linux to get raw data, recombine urb into payloads and frames.  

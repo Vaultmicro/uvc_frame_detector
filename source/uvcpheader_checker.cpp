@@ -81,7 +81,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
   gui_window_number = 10;
 #endif
+
+#ifndef TUI_SET
     v_cout_1 << "Throughput: " << throughput*8 << " bps" << received_time_clock <<std::endl;
+#endif
 
 #ifdef TUI_SET
     window_number = 1;
