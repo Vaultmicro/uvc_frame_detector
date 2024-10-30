@@ -1,5 +1,6 @@
 #include "gui_win.hpp"
 #include <vector>
+#include <algorithm>
 
 int gui_window_number = 5;
 int print_whole_flag = 0;
