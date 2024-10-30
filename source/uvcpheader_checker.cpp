@@ -94,7 +94,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     int fps_difference = ControlConfig::fps - frame_count;
     if (frame_count != ControlConfig::fps){
-      frame_stats.count_frame_drop += std::abs(fps_difference);
+      frame_stats.count_frame_drop += fps_difference;
     }
 
     average_frame_rate = (average_frame_rate * received_frames_cnt + frame_count)/(received_frames_cnt + 1);
