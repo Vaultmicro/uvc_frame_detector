@@ -55,11 +55,50 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   static uint64_t received_frames_cnt = 0;
   static uint64_t received_throughput = 0;  
+  
+  auto pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
 
   if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>()) {
     temp_received_time = received_time;
-  } else if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>() ||
-      std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count() >= 1) {
+  } else if (pass_time_count >= 1){
+
+    if (pass_time_count >= 2) {
+        for (int i = 1; i < pass_time_count; ++i) {
+            frame_count = 0;
+            throughput = 0;
+
+            int fps_difference = ControlConfig::fps - frame_count;
+            if (frame_count != ControlConfig::fps) {
+                frame_stats.count_frame_drop += fps_difference;
+            }
+            average_frame_rate = (average_frame_rate * received_frames_cnt + frame_count) / (received_frames_cnt + 1);
+            received_frames_cnt++;
+    #ifdef TUI_SET
+            window_number = 2;
+    #elif GUI_SET
+            gui_window_number = 9;
+    #endif
+            v_cout_1 << "FPS: " << frame_count << ":" << received_time_clock << std::endl;
+    #ifdef GUI_SET
+            gui_window_number = 10;
+    #endif
+    #ifndef TUI_SET
+            v_cout_1 << "Throughput: " << throughput * 8 << " bps" << received_time_clock << std::endl;
+    #endif
+    #ifdef TUI_SET
+            window_number = 1;
+    #elif GUI_SET
+            WindowManager& manager = WindowManager::getInstance();
+            GraphData& data = manager.getGraphData(0);
+            data.addThroughputData(0.0f);
+            gui_window_number = 5;
+    #endif
+    #if defined(TUI_SET) || defined(GUI_SET)
+            print_stats();
+    #endif
+            temp_received_time += std::chrono::seconds(1);
+        }
+    }
 
 #ifdef TUI_SET
   window_number = 2;
