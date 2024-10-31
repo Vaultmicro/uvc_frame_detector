@@ -1,9 +1,9 @@
 # Make sure to install wireshark in the default location
 # And make sure to move USBPCapCMD.exe to /extcap/wireshark/USBPcapCMD.exe in wireshark program files folder
 
-param(
-    [int]$devadd
-)
+cmd /c '"C:\Program Files\Wireshark\extcap\wireshark\USBPcapCMD.exe"  --extcap-interface \\.\USBPcap1 --extcap-config'
+
+$devadd = Read-Host "Please select device address"
 
 $command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields ' +
     '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata ' +
@@ -11,6 +11,8 @@ $command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields ' +
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
     '-e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval ' +
     '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize ' +
-    '-E separator=; -Y "usb.device_address == ' + $devadd + '" -Q | .\oldmanandsea_g.exe'
+    '-E separator=; -Y "usb.device_address == ' + $devadd + '" -Q | .\build\debug\oldmanandsea_g.exe'
+
+Write-Output $command
 
 cmd /c $command

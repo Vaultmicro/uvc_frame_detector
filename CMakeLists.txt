@@ -130,6 +130,8 @@ target_link_libraries(oldmanandsea_g
     ${OPENGL_LIBRARIES} # OpenGL 
 )
 
+
+
 add_custom_command(TARGET oldmanandsea_g POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/gui/lib/glew32.dll" $<TARGET_FILE_DIR:oldmanandsea_g>

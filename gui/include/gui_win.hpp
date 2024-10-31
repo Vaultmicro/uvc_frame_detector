@@ -14,6 +14,7 @@
 #include "window_manager.hpp"
 #include "dearimgui.hpp"
 #include "other_file.hpp"
+#include <atomic>
 
 // Global variable declaration
 extern int gui_window_number;

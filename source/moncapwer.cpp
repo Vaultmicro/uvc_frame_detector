@@ -94,9 +94,28 @@ std::vector<u_char> hex_string_to_bytes(const std::string& hex) {
     return bytes;
 }
 
+u_char hex_char_to_value(char c) {
+    if ('0' <= c && c <= '9') return c - '0';
+    else if ('A' <= c && c <= 'F') return c - 'A' + 10;
+    else if ('a' <= c && c <= 'f') return c - 'a' + 10;
+    else return 0;
+}
+
+
+void hex_string_to_bytes_append(const std::string& hex_str, std::vector<u_char>& out_vec) {
+    size_t len = hex_str.length();
+    out_vec.reserve(out_vec.size() + len / 2);
+
+    for (size_t i = 0; i < len; i += 2) {
+        u_char high = hex_char_to_value(hex_str[i]);
+        u_char low = hex_char_to_value(hex_str[i + 1]);
+        out_vec.push_back((high << 4) | low);
+    }
+}
 
 
 void capture_packets() {
+
     // std::string output_path = "C:\\Users\\gyuho\\uvc_frame_detector\\log\\pipe.txt";
     // std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
 
@@ -127,9 +146,10 @@ void capture_packets() {
     v_cout_1 << "Waiting for input...     " << std::endl;
 #endif
     while (std::getline(std::cin, line)) {
+
         // Split the line by semicolon
         std::vector<std::string> tokens = split(line, ';');
-
+        
         // Prepare fields with defaults if they are missing
         // -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata or usb.iso.data
         // MUST BE IN CORRECT ORDER
@@ -168,26 +188,24 @@ void capture_packets() {
 
           // Process based on usb_transfer_type
           if (usb_transfer_type == "0x00") {
-            std::vector<std::string> capdata_tokens = split(usb_isodata, ',');
-            
-            for (const std::string& token : capdata_tokens) {
-                temp_buffer = hex_string_to_bytes(token);
+              std::vector<std::string> capdata_tokens = split(usb_isodata, ',');
 
-                // log_file << "temp_buffer: ";
-                // for (u_char byte : temp_buffer) {
-                //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-                // }
+              for (const std::string& token : capdata_tokens) {
+                  std::vector<u_char> temp_buffer;
+                  temp_buffer.reserve(token.length() / 2);
 
-                {
-                    std::lock_guard<std::mutex> lock(queue_mutex);
-                    packet_queue.push(temp_buffer);
+                  hex_string_to_bytes_append(token, temp_buffer);
 
-                    std::lock_guard<std::mutex> time_lock(time_mutex);
-                    time_records.push(time_point);
-                }
-                temp_buffer.clear();
-                queue_cv.notify_one();
-            }
+                  {
+                      std::lock_guard<std::mutex> lock(queue_mutex);
+                      packet_queue.push(std::move(temp_buffer));
+
+                      std::lock_guard<std::mutex> time_lock(time_mutex);
+                      time_records.push(time_point);
+                  }
+                  queue_cv.notify_one();
+              }
+
           } else if (usb_transfer_type == "0x01") {
               // Skip interrupt transfer
           } else if (usb_transfer_type == "0x02") {
@@ -329,30 +347,29 @@ void capture_packets() {
             }
 
           } else if (usb_transfer_type == "0x03") {
-
 #ifdef __linux__
-
-            if (bulk_maxlengthsize == frame_length && start_flag == 1) {
-              // Continue the transfer
-              std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
-              temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
-              // temp_buffer = hex_string_to_bytes(usb_capdata);
-            } else {
-              if (bulk_maxlengthsize < frame_length) {
-                bulk_maxlengthsize = frame_length;
-              }
-              start_flag = 1;
+    if (bulk_maxlengthsize == frame_length && start_flag == 1) {
+        hex_string_to_bytes_append(usb_capdata, temp_buffer);
+    } else {
+        if (bulk_maxlengthsize < frame_length) {
+            bulk_maxlengthsize = frame_length;
+        }
+        start_flag = 1;
+        temp_buffer.clear();
+        temp_buffer.reserve(frame_length / 2);
+        hex_string_to_bytes_append(usb_capdata, temp_buffer);
+    }
+#else
+    temp_buffer.clear();
+    temp_buffer.reserve(frame_length / 2);
+    hex_string_to_bytes_append(usb_capdata, temp_buffer);
 #endif
-              std::vector<u_char> new_data = hex_string_to_bytes(usb_capdata);
-              temp_buffer.insert(temp_buffer.end(), new_data.begin(), new_data.end());
-              
             //   // temp_buffer = hex_string_to_bytes(usb_capdata);
 
             //   // log_file << "temp_buffer: ";
             //   // for (u_char byte : temp_buffer) {
             //   //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
             //   // }
-
               {
                   std::lock_guard<std::mutex> lock(queue_mutex);
                   packet_queue.push(temp_buffer);
@@ -363,9 +380,6 @@ void capture_packets() {
               temp_buffer.clear();
               queue_cv.notify_one();
 
-#ifdef __linux__
-            }
-#endif
 
           } else {
               // Handle unexpected transfer type
@@ -389,6 +403,7 @@ void capture_packets() {
 
     // log_file.close();
     // v_cout_1 << "Log file closed." << std::endl;
+
 }
 
 

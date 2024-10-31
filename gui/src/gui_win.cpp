@@ -33,6 +33,7 @@ void screen(){
     };
 
     while (!glfwWindowShouldClose(window)) {
+
         glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -259,6 +260,8 @@ void screen(){
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 
 }
