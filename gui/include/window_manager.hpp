@@ -60,7 +60,7 @@ private:
         }
     }
 
-    std::array<WindowData, 13> windows;
+    std::array<WindowData, 14> windows;
     std::array<GraphData, 1> graphs;
 
     WindowManager(const WindowManager&) = delete;

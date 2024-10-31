@@ -174,13 +174,57 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       payload_header_valid(payload_header, previous_payload_header,
                            previous_previous_payload_header);
 
+  static uint32_t previous_frame_pts = 0;
+
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF) {
+
+    //Process the last frame when EOF is missing
+    if (payload_header_valid_return == ERR_MISSING_EOF) {
+      v_cerr_3 << "Invalid UVC payload header: Missing EOF." << std::endl;
+      if (!frames.empty()) {
+        auto& last_frame = frames.back();
+        last_frame->frame_error = ERR_FRAME_ERROR;
+        last_frame->eof_reached = false;
+        //finish the last frame
+        update_frame_error_stat(last_frame->frame_error);
+        //save_frames_to_log(last_frame);
+        if (last_frame->frame_error) {
+#ifdef GUI_SET
+          print_received_times(*last_frame);
+          print_frame_data(*last_frame);
+          printFrameErrorExplanation(last_frame->frame_error);
+#else
+          plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+#endif
+          print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+
+        }
+        processed_frames.push_back(std::move(frames.back()));
+        frames.pop_back();
+        frame_count++;
+
+        if (processed_frames.size() > 3) {
+          processed_frames.erase(processed_frames.begin());
+        }
+
+      }
+    }
 
     bool frame_found = false;
 
     for (auto& frame : frames) {
-      if (payload_header.PTS && frame->frame_pts == payload_header.PTS) {
+      if (previous_payload_header.bmBFH.BFH_FID == payload_header.bmBFH.BFH_FID) {
         frame_found = true;
+
+        if (payload_header.PTS){          
+          if (!previous_frame_pts) {
+            previous_frame_pts = payload_header.PTS;
+          } else if (payload_header.PTS == previous_frame_pts){
+            
+          } else if (payload_header.PTS != previous_frame_pts) {
+            frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
+          }
+        }
 
         frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
         frame->add_received_chrono_time(received_time);
@@ -201,43 +245,19 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     // create new frame if not found
     if (!frame_found || previous_payload_header.bmBFH.BFH_EOF) {
 
-      //Process the last frame when EOF is missing
-      if (payload_header_valid_return == ERR_MISSING_EOF) {
-        v_cerr_3 << "Invalid UVC payload header: Missing EOF." << std::endl;
-
-        if (!frames.empty()) {
-          auto& last_frame = frames.back();
-          last_frame->frame_error = ERR_FRAME_ERROR;
-          last_frame->eof_reached = false;
-          //finish the last frame
-          update_frame_error_stat(last_frame->frame_error);
-          //save_frames_to_log(last_frame);
-          if (last_frame->frame_error) {
-#ifdef GUI_SET
-            print_received_times(*last_frame);
-            print_frame_data(*last_frame);
-            printFrameErrorExplanation(last_frame->frame_error);
-#else
-            plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
-#endif
-            print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
-
-          }
-          processed_frames.push_back(std::move(frames.back()));
-          frames.pop_back();
-          frame_count++;
-
-          if (processed_frames.size() > 3) {
-            processed_frames.erase(processed_frames.begin());
-          }
-
-        }
-      }
-
       ++current_frame_number;
       frames.push_back(std::make_unique<ValidFrame>(current_frame_number));
       auto& new_frame = frames.back();
-      new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
+
+      if (payload_header.PTS){
+        if (!previous_frame_pts) {
+          previous_frame_pts = payload_header.PTS;
+        } else if (payload_header.PTS == previous_frame_pts){
+          
+        } else if (payload_header.PTS != previous_frame_pts) {
+          new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
+        }
+      }
 
       new_frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
       new_frame->add_received_chrono_time(received_time);
@@ -250,6 +270,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF) {
         new_frame->set_frame_error();
       }
+#ifdef GUI_SET
+      // print_frame_data(*new_frame);
+#endif
     }
 
   
@@ -270,6 +293,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
         print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
 
+      } else{
+#ifdef GUI_SET
+        print_frame_data(*last_frame);
+#endif      
       }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
@@ -320,6 +347,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->add_received_error_time(received_time);
       last_frame->payload_sizes.push_back(uvc_payload.size());
 
+      // print_frame_data(*last_frame);
 #ifndef GUI_SET
       plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
@@ -775,7 +803,11 @@ void UVCPHeaderChecker::print_stats() const {
 
 void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 #ifdef GUI_SET
-  gui_window_number = 0;
+  if (frame.frame_error) {
+    gui_window_number = 0;
+  } else {
+    gui_window_number = 13;
+  }
 #endif
     v_cout_2 << "Frame Number: " << frame.frame_number << std::endl;
     v_cout_2 << "Packet Number: " << frame.packet_number << std::endl;

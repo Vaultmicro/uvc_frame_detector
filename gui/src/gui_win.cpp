@@ -18,18 +18,20 @@ void screen(){
 
     WindowManager& manager = WindowManager::getInstance();
 
-    const ImVec2 initial_positions[13] = {
+    const ImVec2 initial_positions[14] = {
         ImVec2(0, 360), ImVec2(480, 360), ImVec2(960, 360),
-        ImVec2(0, 720),   ImVec2(480, 720),  ImVec2(960, 720),
+        ImVec2(480, 720), ImVec2(800, 720), ImVec2(1120, 720),
         ImVec2(1440, 360), ImVec2(1600, 360), ImVec2(1760, 360),
-        ImVec2(1440, 720), ImVec2(1680, 720), ImVec2(0, 0), ImVec2(1440, 0)
+        ImVec2(1440, 720), ImVec2(1680, 720), ImVec2(0, 0),
+        ImVec2(1440, 0), ImVec2(0, 720)
     };
 
-    const ImVec2 window_sizes[13] = {
+    const ImVec2 window_sizes[14] = {
         ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
-        ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
+        ImVec2(320, 360), ImVec2(320, 360), ImVec2(320, 360),
         ImVec2(160, 360), ImVec2(160, 360), ImVec2(160, 360),
-        ImVec2(240, 360), ImVec2(240, 360), ImVec2(1440, 360), ImVec2(480, 360)
+        ImVec2(240, 360), ImVec2(240, 360), ImVec2(1440, 360), 
+        ImVec2(480, 360), ImVec2(480, 360)
     };
 
     while (!glfwWindowShouldClose(window)) {
@@ -48,7 +50,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[0], ImGuiCond_Always);
 
-            ImGui::Begin("Frame Data");
+            ImGui::Begin("Error Frame Data");
             // ImGui::Text("Current Defined Configs:");
             ImGui::Text("%s", data.custom_text.c_str());
             ImGui::End();
@@ -203,7 +205,7 @@ void screen(){
             ImGui::End();
         }
         
-        // **Window 11 - Histogram **
+        // **Graph 0 - Histogram **
        {
             GraphData& data = manager.getGraphData(0);
             std::lock_guard<std::mutex> lock(data.mutex);
@@ -252,6 +254,18 @@ void screen(){
             ImGui::End();
         }
 
+        // **Window 13  **
+        {
+            WindowData& data = manager.getWindowData(13);
+            std::lock_guard<std::mutex> lock(data.mutex);
+
+            ImGui::SetNextWindowPos(initial_positions[13], ImGuiCond_Always);
+            ImGui::SetNextWindowSize(window_sizes[13], ImGuiCond_Always);
+
+            ImGui::Begin("Valid Frame Data");
+            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::End();
+        }
 
         ImGui::Render();
         glViewport(0, 0, 1920, 1080);
