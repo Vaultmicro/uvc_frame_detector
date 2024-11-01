@@ -14,17 +14,26 @@ struct WindowData {
 
 struct GraphData {
     std::mutex mutex;
-    std::array<float, 100> throughput_data = {};
+    std::array<float, 150> graph_data = {};
     int index = 0;
+    std::string custom_text;
     bool stop_flag;
 
     GraphData(){
-        throughput_data.fill(0.0f);
+        graph_data.fill(0.0f);
     }
 
-    void addThroughputData(float new_value) {
-        throughput_data[index] = new_value;
-        index = (index + 1) % throughput_data.size();
+    void addGraphData(float new_value) {
+        graph_data[index] = new_value;
+        index++;
+        if (index >= graph_data.size()) {
+            graph_reset();
+        }
+    }
+
+    void graph_reset() {
+        graph_data.fill(0.0f);
+        index = 0;
     }
 };
 

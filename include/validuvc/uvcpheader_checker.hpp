@@ -224,8 +224,10 @@ class UVCPHeaderChecker {
             std::chrono::time_point<std::chrono::steady_clock> received_time);
 
         std::chrono::milliseconds::rep received_time_clock; 
-        std::chrono::milliseconds::rep p_received_time_clock;
-        std::chrono::milliseconds::rep pp_received_time_clock;
+
+        std::string formatted_time;
+        std::string p_formatted_time;
+        std::string e_formatted_time;
 
         // UVC_Payload_Header payload_header = {};
         // UVC_Payload_Header previous_payload_header = {};
@@ -286,6 +288,7 @@ class UVCPHeaderChecker {
         void print_frame_data(const ValidFrame& frame);
         void printUVCErrorExplanation(UVCError error);
         void printFrameErrorExplanation(FrameError error);
+        std::string formatTime(std::chrono::milliseconds ms);
 
 
     public:

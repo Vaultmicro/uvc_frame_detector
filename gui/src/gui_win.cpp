@@ -22,16 +22,24 @@ void screen(){
         ImVec2(0, 360), ImVec2(480, 360), ImVec2(960, 360),
         ImVec2(480, 720), ImVec2(800, 720), ImVec2(1120, 720),
         ImVec2(1440, 360), ImVec2(1600, 360), ImVec2(1760, 360),
-        ImVec2(1440, 720), ImVec2(1680, 720), ImVec2(0, 0),
-        ImVec2(1440, 0), ImVec2(0, 720)
+        ImVec2(1440, 720), ImVec2(1680, 720), ImVec2(1440, 0),
+        ImVec2(0, 0), ImVec2(0, 720)
     };
 
     const ImVec2 window_sizes[14] = {
         ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
         ImVec2(320, 360), ImVec2(320, 360), ImVec2(320, 360),
         ImVec2(160, 360), ImVec2(160, 360), ImVec2(160, 360),
-        ImVec2(240, 360), ImVec2(240, 360), ImVec2(1440, 360), 
+        ImVec2(240, 360), ImVec2(240, 360), ImVec2(480, 360), 
         ImVec2(480, 360), ImVec2(480, 360)
+    };
+
+    const ImVec2 initial_positions_graph[1] = {
+        ImVec2(480, 0)
+    };
+
+    const ImVec2 window_sizes_graph[1] = {
+        ImVec2(960, 360)
     };
 
     while (!glfwWindowShouldClose(window)) {
@@ -53,6 +61,13 @@ void screen(){
             ImGui::Begin("Error Frame Data");
             // ImGui::Text("Current Defined Configs:");
             ImGui::Text("%s", data.custom_text.c_str());
+
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
+
             ImGui::End();
         }
 
@@ -64,14 +79,20 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[1], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[1], ImGuiCond_Always);
 
-            ImGui::Begin("Time & Payload Size Data");
+            ImGui::Begin("Error Frame: Time & Payload Size Data");
             // ImGui::Text("Custom Text:");
             ImGui::Text("%s", data.custom_text.c_str());
+            
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
 
             ImGui::End();
         }
 
-        // **Window 2 - Error type**
+        // **Window 2 - Summary**
         {
             WindowData& data = manager.getWindowData(2);
             std::lock_guard<std::mutex> lock(data.mutex);
@@ -79,16 +100,19 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[2], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[2], ImGuiCond_Always);
 
-            ImGui::Begin("Error type");
-            // ImGui::Text("Custom Text:");
-            // ImGui::BeginChild("ScrollingRegion", ImVec2(0, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
-            // ImGui::TextWrapped("%s", data.custom_text.c_str());
+            ImGui::Begin("Summary");
             ImGui::Text("%s", data.custom_text.c_str());
-            // ImGui::EndChild();
+            
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
+
             ImGui::End();
         }
 
-        // **Window 3 - Counter Print**
+        // **Window 3 - Control**
         {
             WindowData& data = manager.getWindowData(3);
             std::lock_guard<std::mutex> lock(data.mutex);
@@ -99,11 +123,17 @@ void screen(){
             ImGui::Begin("Control Config");
             ImGui::Text("Current Defined Configs:");
             ImGui::Text("%s", data.custom_text.c_str());
-            ImGui::SetScrollHereY(1.0f);
+
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
+
             ImGui::End();
         }
 
-        // **Window 4 - Counter Print**
+        // **Window 4 - Statistics**
         {
             WindowData& data = manager.getWindowData(4);
             std::lock_guard<std::mutex> lock(data.mutex);
@@ -117,7 +147,7 @@ void screen(){
             ImGui::End();
         }
 
-        // **Window 5 - Counter Print**
+        // **Window 5 - Debug**
         {
             WindowData& data = manager.getWindowData(5);
             std::lock_guard<std::mutex> lock(data.mutex);
@@ -126,10 +156,13 @@ void screen(){
             ImGui::SetNextWindowSize(window_sizes[5], ImGuiCond_Always);
 
             ImGui::Begin("Debug");
-            // ImGui::Text("Counting:");
-            // ImGui::BeginChild("ScrollingRegion", ImVec2(0, 150), true, ImGuiWindowFlags_HorizontalScrollbar);
             ImGui::Text("%s", data.custom_text.c_str());
-            // ImGui::EndChild();
+            
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
 
             ImGui::End();
         }
@@ -187,7 +220,13 @@ void screen(){
             ImGui::Begin("FPS & Lost Frames");
             // ImGui::Text("Counting:");
             ImGui::Text("%s", data.custom_text.c_str());
-            // ImGui::SetScrollHereY(1.0f);
+            
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
+
             ImGui::End();
         }
 
@@ -202,43 +241,57 @@ void screen(){
             ImGui::Begin("Throughput");
             // ImGui::Text("Counting:");
             ImGui::Text("%s", data.custom_text.c_str());
+            
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
+
             ImGui::End();
         }
         
         // **Graph 0 - Histogram **
-       {
+        {
             GraphData& data = manager.getGraphData(0);
             std::lock_guard<std::mutex> lock(data.mutex);
 
-            ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
+            ImGui::SetNextWindowPos(initial_positions_graph[0], ImGuiCond_Always);
+            ImGui::SetNextWindowSize(window_sizes_graph[0], ImGuiCond_Always);
 
             ImGui::Begin("Histogram");
 
-            std::array<float, 100> display_data;
-            size_t data_size = data.throughput_data.size();
-            for (size_t i = 0; i < data_size; ++i) {
-                display_data[i] = data.throughput_data[(data.index + i) % data_size];
-            }
+            ImGui::Text("%s", data.custom_text.c_str());
 
             static float max_value = 0.0f;
-            float current_max = *std::max_element(display_data.begin(), display_data.end());
+            float current_max = *std::max_element(data.graph_data.begin(), data.graph_data.end());
             if (current_max > max_value) {
                 max_value = current_max;
             }
 
             ImGui::PlotHistogram(
                 "Throughput Data",
-                display_data.data(),
-                static_cast<int>(display_data.size()),
+                data.graph_data.data(),
+                static_cast<int>(data.graph_data.size()),
                 0, nullptr,
                 0.0f, max_value,  
-                window_sizes[11]
+                ImVec2(960, 300)
             );
 
             ImGui::End();
         }
 
+        // **Window 11  **
+        {
+            WindowData& data = manager.getWindowData(11);
+            std::lock_guard<std::mutex> lock(data.mutex);
+
+            ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
+            ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
+
+            ImGui::Begin("Error log buttons");
+            ImGui::End();
+        }
 
         // **Window 12 - Photo **
         {
@@ -264,6 +317,13 @@ void screen(){
 
             ImGui::Begin("Valid Frame Data");
             ImGui::Text("%s", data.custom_text.c_str());
+            
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
+
             ImGui::End();
         }
 

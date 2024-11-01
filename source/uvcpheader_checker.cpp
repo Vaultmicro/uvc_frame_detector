@@ -24,15 +24,17 @@
   typedef unsigned char u_char;
 #endif
 
+
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
-  // Make graph file
   // Make picture file having mjpeg, yuyv, h264
 
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time_graph;
+
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
+  formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
 
 #ifdef TUI_SET
   window_number = 1;
@@ -78,20 +80,20 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     #elif GUI_SET
             gui_window_number = 9;
     #endif
-            v_cout_1 << "FPS: " << frame_count << ":" << received_time_clock << std::endl;
+            v_cout_1 << "FPS: " << frame_count << " : " << formatted_time << std::endl;
     #ifdef GUI_SET
             gui_window_number = 10;
     #endif
     #ifndef TUI_SET
-            v_cout_1 << "Throughput: " << throughput * 8 << " bps" << received_time_clock << std::endl;
+            v_cout_1 << "Throughput: " << throughput * 8 / 1000000 << " mbps  " << formatted_time << std::endl;
     #endif
     #ifdef TUI_SET
             window_number = 1;
-    #elif GUI_SET
-            WindowManager& manager = WindowManager::getInstance();
-            GraphData& data = manager.getGraphData(0);
-            data.addThroughputData(0.0f);
-            gui_window_number = 5;
+    // #elif GUI_SET
+    //         WindowManager& manager = WindowManager::getInstance();
+    //         GraphData& data = manager.getGraphData(0);
+    //         data.addGraphData(0.0f);
+    //         gui_window_number = 5;
     #endif
     #if defined(TUI_SET) || defined(GUI_SET)
             print_stats();
@@ -105,23 +107,23 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #elif GUI_SET
   gui_window_number = 9;
 #endif
-    v_cout_1 << "FPS: " << frame_count << ":" << received_time_clock << std::endl;
+    v_cout_1 << "FPS: " << frame_count << " : " << formatted_time << std::endl;
 
 #ifdef GUI_SET
   gui_window_number = 10;
 #endif
 
 #ifndef TUI_SET
-    v_cout_1 << "Throughput: " << throughput*8 << " bps" << received_time_clock <<std::endl;
+    v_cout_1 << "Throughput: " << throughput * 8 / 1000000 << " mbps  " << formatted_time <<std::endl;
 #endif
 
 #ifdef TUI_SET
     window_number = 1;
-#elif GUI_SET
-  WindowManager& manager = WindowManager::getInstance();
-  GraphData& data = manager.getGraphData(0);
-  data.addThroughputData(static_cast<float>(throughput * 8));
-  gui_window_number = 5;
+// #elif GUI_SET
+//   WindowManager& manager = WindowManager::getInstance();
+//   GraphData& data = manager.getGraphData(0);
+//   data.addGraphData(static_cast<float>(throughput * 8));
+//   gui_window_number = 5;
 #endif
 
     int fps_difference = ControlConfig::fps - frame_count;
@@ -143,23 +145,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   graph_throughput += uvc_payload.size();
   throughput += uvc_payload.size();
-
-#ifdef GUI_SET
-  // if (temp_received_time_graph == std::chrono::time_point<std::chrono::steady_clock>()) {
-  //   temp_received_time_graph = received_time;
-  // } else if (temp_received_time_graph == std::chrono::time_point<std::chrono::steady_clock>() ||
-  //   std::chrono::duration_cast<std::chrono::milliseconds>(received_time - temp_received_time_graph).count() >= 100) {
-  //   std::cout << temp_received_time_graph.time_since_epoch().count() << std::endl;
-  //   std::cout << graph_throughput << std::endl;
-  //   WindowManager& manager = WindowManager::getInstance();
-  //   GraphData& data = manager.getGraphData(0);
-  //   uint64_t graph_throughput_tmp = graph_throughput;
-  //   data.addThroughputData(static_cast<float>(graph_throughput_tmp * 8));
-
-  //   temp_received_time_graph = received_time - std::chrono::milliseconds(1);
-  //   graph_throughput = 0;
-  // }
-#endif
 
 
   static UVC_Payload_Header previous_previous_payload_header;
@@ -197,7 +182,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
           print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
-
         }
         processed_frames.push_back(std::move(frames.back()));
         frames.pop_back();
@@ -228,6 +212,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
         frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
         frame->add_received_chrono_time(received_time);
+
+#ifdef GUI_SET
+        WindowManager& manager = WindowManager::getInstance();
+        GraphData& data = manager.getGraphData(0);
+        data.addGraphData(static_cast<float>(uvc_payload.size()));
+#endif
 
         size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
         if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
@@ -261,6 +251,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
       new_frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
       new_frame->add_received_chrono_time(received_time);
+      
+#ifdef GUI_SET
+        WindowManager& manager = WindowManager::getInstance();
+        GraphData& data = manager.getGraphData(0);
+        data.custom_text = "Frame Number: " + std::to_string(current_frame_number);
+        data.graph_reset();
+        data.addGraphData(static_cast<float>(uvc_payload.size()));
+#endif
 
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
       if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
@@ -335,6 +333,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     previous_payload_header = payload_header;
     previous_previous_payload_header = previous_payload_header;
     temp_error_payload_header = {};
+    p_formatted_time = formatted_time;
+    e_formatted_time = "";
 
     update_payload_error_stat(payload_header_valid_return);
     return payload_header_valid_return;
@@ -355,6 +355,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     }
     temp_error_payload_header = payload_header;
+    e_formatted_time = formatted_time;
+
     update_payload_error_stat(payload_header_valid_return);
 #ifdef GUI_SET
     printUVCErrorExplanation(payload_header_valid_return);
@@ -430,7 +432,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   // Checks if the Error bit is set
   if (payload_header.bmBFH.BFH_ERR) {
-    v_cerr_2 << "Invalid UVC payload header: Error bit is set." << received_time_clock<< std::endl;
+    v_cerr_2 << "Invalid UVC payload header: Error bit is set." << formatted_time << std::endl;
     return ERR_ERR_BIT_SET;
   }
 
@@ -438,7 +440,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.HLE < 0x02 || payload_header.HLE > 0x0C) {
     v_cerr_2 << "Invalid UVC payload header: Unexpected start byte 0x"
              << std::hex << std::setw(2) << std::setfill('0')
-             << static_cast<int>(payload_header.HLE) << "." << received_time_clock << std::endl;
+             << static_cast<int>(payload_header.HLE) << "." << formatted_time << std::endl;
     return ERR_LENGTH_OUT_OF_RANGE; 
   }
 
@@ -447,26 +449,26 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
       payload_header.HLE != 0x0C) {
     v_cerr_2 << "Invalid UVC payload header: Both Presentation Time Stamp and "
-                "Source Clock Reference bits are set." << received_time_clock
+                "Source Clock Reference bits are set." << formatted_time
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x06) {
     v_cerr_2 << "Invalid UVC payload header: Presentation Time Stamp bit is "
-                "set but header length is less than 6." << received_time_clock
+                "set but header length is less than 6." << formatted_time
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x08) {
     v_cerr_2 << "Invalid UVC payload header: Source Clock Reference bit is "
-                "set but header length is less than 12." << received_time_clock
+                "set but header length is less than 12." << formatted_time
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x02) {
     v_cerr_2
         << "Invalid UVC payload header: Neither Presentation Time Stamp nor "
-           "Source Clock Reference bits are set but header length is not 2." << received_time_clock
+           "Source Clock Reference bits are set but header length is not 2." << formatted_time
         << std::endl;
     return ERR_LENGTH_INVALID;
   }
@@ -476,7 +478,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_EOF) {
   } else {
     if (payload_header.bmBFH.BFH_RES) {
-      v_cerr_2 << "Invalid UVC payload header: Reserved bit is set." << received_time_clock
+      v_cerr_2 << "Invalid UVC payload header: Reserved bit is set." << formatted_time
                << std::endl;
       return ERR_RESERVED_BIT_SET;
     }
@@ -488,7 +490,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
             previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
       v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
-                  "as the previous frame and EOF is set." << received_time_clock << std::endl;
+                  "as the previous frame and EOF is set." << formatted_time << std::endl;
       return ERR_FID_MISMATCH;
       
   } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
@@ -496,13 +498,13 @@ UVCError UVCPHeaderChecker::payload_header_valid(
       (payload_header.PTS == previous_payload_header.PTS) && 
       payload_header.PTS != 0) {
       v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
-                  "as the previous frame and PTS matches." << received_time_clock << std::endl;
+                  "as the previous frame and PTS matches." << formatted_time << std::endl;
       return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
             !previous_payload_header.bmBFH.BFH_EOF && 
             previous_payload_header.HLE != 0) {
-      v_cerr_2 << "Invalid UVC payload header: Missing EOF.       " << received_time_clock << std::endl;
+      v_cerr_2 << "Invalid UVC payload header: Missing EOF.   " << formatted_time << std::endl;
       return ERR_MISSING_EOF;
   }
 
@@ -627,21 +629,21 @@ void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Head
   print_whole_flag = 1;
 #endif
     v_cout_2 << "Previous Payload Header: " << std::endl
-     << previous_payload_header << std::endl;
+     << previous_payload_header << "\n" << p_formatted_time << std::endl;
 #ifdef TUI_SET
   window_number = 5;
 #elif GUI_SET
   gui_window_number = 7;
 #endif
     v_cout_2 << "Lost Inbetween Header: " << std::endl
-     << temp_error_payload_header << std::endl;
+     << temp_error_payload_header << "\n" << e_formatted_time << std::endl;
 #ifdef TUI_SET
   window_number = 6;
 #elif GUI_SET
   gui_window_number = 8;
 #endif
     v_cout_2 << "Current Payload Header: " << std::endl
-     << payload_header << std::endl;
+     << payload_header << "\n" << formatted_time << std::endl;
 #ifdef TUI_SET
   window_number = 1;
   print_whole_flag = 0;
@@ -717,7 +719,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
     
 
     // v_cout_2 << "Graph Data (Payload Reception Times): " << std::endl;
-    v_cout_2 << graph << received_time_clock << std::endl;
+    v_cout_2 << graph << formatted_time << std::endl;
 
 #ifdef TUI_SET
   window_number = 1;
@@ -747,10 +749,10 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
     // Print sorted times with labels and matching payload sizes
     v_cout_2 << "Received Times and Payload Sizes in Order:" << frame.frame_number << std::endl;
     for (size_t i = 0; i < all_times.size(); ++i) {
-        auto duration = all_times[i].first.time_since_epoch();
-        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-        
-        v_cout_2 << all_times[i].second << ": " << millis << " ms";
+
+        auto formatted_time = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(all_times[i].first.time_since_epoch()));
+
+        v_cout_2 << all_times[i].second << ": " << formatted_time;
 
         // Match with payload size if available
         if (i < frame.payload_sizes.size()) {
@@ -928,3 +930,18 @@ void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
 #endif
 }
 
+std::string UVCPHeaderChecker::formatTime(std::chrono::milliseconds ms) {
+    auto time_point = std::chrono::system_clock::time_point(ms);
+    auto time_t_format = std::chrono::system_clock::to_time_t(time_point);
+
+    struct tm time_info;
+    if (localtime_s(&time_info, &time_t_format) != 0 || time_info.tm_hour < 0 || time_info.tm_hour > 23) {
+        return "00:00:00.000"; 
+    }
+    
+    auto milliseconds = ms.count() % 1000;
+
+    std::ostringstream oss;
+    oss << std::put_time(&time_info, "%H:%M:%S") << "." << std::setw(3) << std::setfill('0') << milliseconds;
+    return oss.str();
+}
