@@ -228,7 +228,7 @@ void capture_packets() {
               for (const auto& value : frame_formats) {
                   int num_value = std::stoi(value);
                   // Exclude 1, 4, 6, 12, 16
-                  if (num_value != 1 && num_value != 4 && num_value != 6 && num_value != 12 && num_value != 16) {
+                  if (num_value != 1 && num_value != 4 && num_value != 6 && num_value != 12 && num_value != 13 &&  num_value != 16) {
                       filtered_subtype_frame_format.push_back(value);
                   }
               }
@@ -334,6 +334,7 @@ void capture_packets() {
               v_cout_1 << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
               v_cout_1 << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
               v_cout_1 << std::endl;
+              gui_window_number = 5;
 #else
               std::cout << "width: " << ControlConfig::get_width() << "   ";
               std::cout << "height: " << ControlConfig::get_height() << "   ";

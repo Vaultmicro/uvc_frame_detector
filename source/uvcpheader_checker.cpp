@@ -168,7 +168,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       v_cerr_3 << "Invalid UVC payload header: Missing EOF." << std::endl;
       if (!frames.empty()) {
         auto& last_frame = frames.back();
-        last_frame->frame_error = ERR_FRAME_ERROR;
+        last_frame->frame_error = ERR_FRAME_MISSING_EOF;
         last_frame->eof_reached = false;
         //finish the last frame
         update_frame_error_stat(last_frame->frame_error);
@@ -177,7 +177,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
           print_received_times(*last_frame);
           print_frame_data(*last_frame);
-          printFrameErrorExplanation(last_frame->frame_error);
+          // printFrameErrorExplanation(last_frame->frame_error);
+          print_summary(*last_frame);
 #else
           plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
@@ -239,6 +240,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       frames.push_back(std::make_unique<ValidFrame>(current_frame_number));
       auto& new_frame = frames.back();
 
+      new_frame->toggle_bit = payload_header.bmBFH.BFH_FID;
+
       if (payload_header.PTS){
         if (!previous_frame_pts) {
           previous_frame_pts = payload_header.PTS;
@@ -276,8 +279,36 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   
 
     if (payload_header.bmBFH.BFH_EOF) {
+
       auto& last_frame = frames.back();
       last_frame->eof_reached = true;
+
+      // // Check the Frame width x height in here
+      // // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
+      // // the headerlength If not then there is a problem with the frame
+      // if (ControlConfig::frame_format == "yuyv") {
+      //   // Calculate the expected size for the YUYV frame
+      //   size_t expected_frame_size =
+      //       ControlConfig::get_width() * ControlConfig::get_height() * 2;
+
+      //   // Calculate the actual size by summing up all payload sizes and
+      //   // subtracting the total header lengths
+      //   size_t actual_frame_size = 0;
+      //   for (size_t i = 0; i < last_frame->payload_sizes.size(); ++i) {
+      //     actual_frame_size +=
+      //         last_frame->payload_sizes[i] - last_frame->payload_headers[i].HLE;
+      //   }
+
+      //   if (actual_frame_size != expected_frame_size) {
+      //     v_cerr_2 << "Frame size mismatch for YUYV: expected "
+      //             << std::dec
+      //             << expected_frame_size << " but got " << actual_frame_size
+      //             << std::endl;
+      //     last_frame->frame_error = ERR_FRAME_INVALID_YUYV_RAW_SIZE;
+      //   }
+
+      // }
+
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
       // save_frames_to_log(frames.back());
@@ -285,7 +316,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
-        printFrameErrorExplanation(last_frame->frame_error);
+        // printFrameErrorExplanation(last_frame->frame_error);
+        print_summary(*last_frame);
 #else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
@@ -304,30 +336,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         processed_frames.erase(processed_frames.begin());
       }
 
-      // Check the Frame width x height in here
-      // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
-      // the headerlength If not then there is a problem with the frame
-      if (ControlConfig::frame_format == "yuyv") {
-        // Calculate the expected size for the YUYV frame
-        size_t expected_frame_size =
-            ControlConfig::get_width() * ControlConfig::get_height() * 2;
-
-        // Calculate the actual size by summing up all payload sizes and
-        // subtracting the total header lengths
-        size_t actual_frame_size = 0;
-        for (const auto& frame : frames) {
-          for (size_t i = 0; i < frame->payload_sizes.size(); ++i) {
-            actual_frame_size +=
-                frame->payload_sizes[i] - frame->payload_headers[i].HLE;
-          }
-        }
-
-        if (actual_frame_size != expected_frame_size) {
-          v_cerr_2 << "Frame size mismatch for YUYV: expected "
-                  << expected_frame_size << " but got " << actual_frame_size
-                  << std::endl;
-        }
-      }
     }
 
     previous_payload_header = payload_header;
@@ -346,6 +354,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->frame_error = ERR_FRAME_ERROR;
       last_frame->add_received_error_time(received_time);
       last_frame->payload_sizes.push_back(uvc_payload.size());
+      last_frame->payload_errors.push_back(payload_header_valid_return);
+      last_frame->lost_data_sizes.push_back(sizeof(uvc_payload)-payload_header.HLE);
 
       // print_frame_data(*last_frame);
 #ifndef GUI_SET
@@ -358,9 +368,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     e_formatted_time = formatted_time;
 
     update_payload_error_stat(payload_header_valid_return);
-#ifdef GUI_SET
-    printUVCErrorExplanation(payload_header_valid_return);
-#endif
+// #ifdef GUI_SET
+//     printUVCErrorExplanation(payload_header_valid_return);
+// #endif
     return payload_header_valid_return;
   }
 
@@ -536,6 +546,7 @@ void UVCPHeaderChecker::save_frames_to_log(
 
   std::stringstream frame_info;
   frame_info << "Frame Number: " << current_frame->frame_number << "\n"
+             << "Toggle Bit (FID): " << static_cast<int>(current_frame->toggle_bit) << "\n"
              << "Packet Number: " << current_frame->packet_number << "\n"
              << "Frame PTS: " << current_frame->frame_pts << "\n"
              << "Frame Error: " << static_cast<int>(current_frame->frame_error)
@@ -812,6 +823,7 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
   }
 #endif
     v_cout_2 << "Frame Number: " << frame.frame_number << std::endl;
+    v_cout_2 << "Toggle Bit (FID): " << static_cast<int>(frame.toggle_bit) << std::endl;
     v_cout_2 << "Packet Number: " << frame.packet_number << std::endl;
     v_cout_2 << "Frame PTS: " << frame.frame_pts << std::endl;
     // Print Frame Error directly with switch statement
@@ -867,67 +879,129 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 #endif
 }
 
-void UVCPHeaderChecker::printUVCErrorExplanation(UVCError error) {
+
+void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
 #ifdef GUI_SET
+    print_whole_flag = 1;
     gui_window_number = 2;
 #endif
-    if (error == ERR_NO_ERROR) {
-        v_cout_2 << "No Error, \n Valid - No errors detected.\n";
-    } else if (error == ERR_EMPTY_PAYLOAD) {
-        v_cout_2 << "No Payload \n- UVC payload is empty.\nOccurs when there is no payload header.\n";
-    } else if (error == ERR_MAX_PAYLAOD_OVERFLOW) {
-        v_cout_2 << "Payload Overflow \n- UVC payload size exceeds max transfer size.\nOccurs if payload size is larger than the max payload set in the interface descriptor.\n";
-    } else if (error == ERR_ERR_BIT_SET) {
-        v_cout_2 << "BFH Error Bit Set \n- The Error bit in the UVC payload header is set.\n";
-    } else if (error == ERR_LENGTH_OUT_OF_RANGE) {
-        v_cout_2 << "Payload Header Length Out of Range \n- HLE is outside of expected range (2 to 12).\n";
-    } else if (error == ERR_LENGTH_INVALID) {
-        v_cout_2 << "Payload Header Length Incorrect with BFH \n- Header length does not match BFH flags.\nExpected values: PTS=0, SCR=0, HLE=2; PTS=1, SCR=1, HLE=6; PTS=0, SCR=1, HLE=8; PTS=1, SCR=1, HLE=12.\n";
-    } else if (error == ERR_RESERVED_BIT_SET) {
-        v_cout_2 << "BFH Reserved Bit Set \n- Reserved bit is set, only checked when EOF=0.\n";
-    } else if (error == ERR_EOH_BIT) {
-        v_cout_2 << "EOH Bit Error \n- EOH is not properly set.\n";
-    } else if (error == ERR_TOGGLE_BIT_OVERLAPPED) {
-        v_cout_2 << "Toggle Bit Frame Overlapped \n- Toggle Bit in BFH has overlapping error.\n";
-    } else if (error == ERR_FID_MISMATCH) {
-        v_cout_2 << "FID Mismatch \n- Frame Identifier mismatch with previous frame.\n";
-    } else if (error == ERR_SWAP) {
-        v_cout_2 << "BFH Toggle Bit Error with PTS Difference \n- PTS matches but Toggle Bit mismatch detected.\n";
-    } else if (error == ERR_MISSING_EOF) {
-        v_cout_2 << "Missing EOF \n- EOF expected but not found in payload header.\n";
+
+    v_cout_2 << "Frame Number: " << frame.frame_number << "\n";
+
+    v_cout_2 << "\nFrame Errors:" << "\n";
+
+      v_cout_2 << " - Frame Error: " << frame.frame_error << "\n";
+      printFrameErrorExplanation(frame.frame_error);
+
+    v_cout_2 << "\nPayload Errors:" << "\n";
+
+    if (frame.payload_errors.empty()) {
+        v_cout_2 << "NO ERROR, NO DATA LOSS \n";
     } else {
-        v_cout_2 << "Unknown Error \n- The error code is not recognized.\n";
+        size_t temp_lost_data_size = 0;
+        for (size_t i = 0; i < frame.payload_errors.size(); ++i) {
+            v_cout_2 << " - Payload Error: " << frame.payload_errors[i] 
+                    << ", Lost Data Size: " << frame.lost_data_sizes[i] << " bytes\n";
+
+            printUVCErrorExplanation(frame.payload_errors[i]);
+
+            temp_lost_data_size += frame.lost_data_sizes[i];
+        }
+        
+        if (temp_lost_data_size > 0) {
+            v_cout_2 << "Likely There is Data Loss in the Frame\n";
+            v_cout_2 << "Total Lost Data Size: " << temp_lost_data_size << " bytes\n";
+        }
     }
-  v_cout_2 << " " << std::endl;
+
+    // Calculate time taken from valid start to the last of error or valid times
+    if (!frame.received_chrono_times.empty()) {
+        auto valid_start = frame.received_chrono_times.front();
+        auto valid_end = frame.received_chrono_times.back();
+        auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
+
+        // Choose the later of valid_end and error_end as the end point
+        auto final_end = (error_end > valid_end) ? error_end : valid_end;
+        auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
+
+        if (time_taken > (1000.0 / (ControlConfig::fps))){
+          v_cout_2 << "Frame Drop May Cause because of Time Taken (Valid Start to Last Event): \n"
+          << "Should be " << (1000.0 / (ControlConfig::fps)) << " ms, but " << time_taken << " ms \n"
+          << "Or two frames could be overlapped \n";
+        }
+    }
+    v_cout_2 << "\n ---- \n";
+
+// if current frame is out of boundary, likely data loss
+// if error bit is set and data is present likely data loss
+// if none of the case above, likely no data loss, valid
+// if fid is same but pts is different, likely massive frame loss
+
+// average frame size within boundary of 5% error 
+  v_cout_2 << std::flush;
+
 #ifdef GUI_SET
+    print_whole_flag = 0;
     gui_window_number = 5;
 #endif
 }
 
-void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
-#ifdef GUI_SET
-    gui_window_number = 2;
-#endif
-    if (error == ERR_FRAME_NO_ERROR) {
-        v_cout_2 << "No Frame Error \n- No frame errors detected.\n";
-    } else if (error == ERR_FRAME_DROP) {
-        v_cout_2 << "Frame Drop \n- Frame rate is lower than expected.\nIndicates missing frames based on FPS measurement.\n";
-    } else if (error == ERR_FRAME_ERROR) {
-        v_cout_2 << "Frame Error \n- General frame error, often due to missing EOF.\nCaused by payload validation errors.\n";
-    } else if (error == ERR_FRAME_MAX_FRAME_OVERFLOW) {
-        v_cout_2 << "Max Frame Size Overflow \n- Frame size exceeds max frame size setting.\nIndicates potential dummy data or erroneous payload.\n";
-    } else if (error == ERR_FRAME_INVALID_YUYV_RAW_SIZE) {
-        v_cout_2 << "YUYV Frame Length Error \n- YUYV frame length mismatch.\nExpected size for YUYV is width * height * 2.\n";
-    } else if (error == ERR_FRAME_SAME_DIFFERENT_PTS) {
-        v_cout_2 << "Same Frame Different PTS \n- Only PTS mismatch detected without other validation errors.\nPTS mismatch occurs without errors in toggle validation.\n";
-    } else {
-        v_cout_2 << "Unknown Frame Error \n- The frame error code is not recognized.\n";
-    }
-  v_cout_2 << " " << std::endl;
+void UVCPHeaderChecker::printUVCErrorExplanation(UVCError error) {
 
-#ifdef GUI_SET
-    gui_window_number = 5;
-#endif
+    if (error == ERR_NO_ERROR) {
+        v_cout_2 << "No Error, Valid - No errors detected.\n";
+    } else if (error == ERR_EMPTY_PAYLOAD) {
+        v_cout_2 << "No Payload- UVC payload is empty.\nOccurs when there is no payload header.\n";
+    } else if (error == ERR_MAX_PAYLAOD_OVERFLOW) {
+        v_cout_2 << "Payload Overflow - UVC payload size exceeds max transfer size.\nOccurs if payload size is larger than the max payload set in the interface descriptor.\n";
+    } else if (error == ERR_ERR_BIT_SET) {
+        v_cout_2 << "BFH Error Bit Set - The Error bit in the UVC payload header is set.\n";
+    } else if (error == ERR_LENGTH_OUT_OF_RANGE) {
+        v_cout_2 << "Payload Header Length Out of Range - HLE is outside of expected range (2 to 12).\n";
+    } else if (error == ERR_LENGTH_INVALID) {
+        v_cout_2 << "Payload Header Length Incorrect with BFH - Header length does not match BFH flags.\nExpected values: PTS=0, SCR=0, HLE=2; PTS=1, SCR=1, HLE=6; PTS=0, SCR=1, HLE=8; PTS=1, SCR=1, HLE=12.\n";
+    } else if (error == ERR_RESERVED_BIT_SET) {
+        v_cout_2 << "BFH Reserved Bit Set - Reserved bit is set, only checked when EOF=0.\n";
+    } else if (error == ERR_EOH_BIT) {
+        v_cout_2 << "EOH Bit Error - EOH is not properly set.\n";
+    } else if (error == ERR_TOGGLE_BIT_OVERLAPPED) {
+        v_cout_2 << "Toggle Bit Frame Overlapped - Toggle Bit in BFH has overlapping error.\n";
+    } else if (error == ERR_FID_MISMATCH) {
+        v_cout_2 << "FID Mismatch - Frame Identifier mismatch with previous frame.\n";
+    } else if (error == ERR_SWAP) {
+        v_cout_2 << "BFH Toggle Bit Error with PTS Difference - PTS matches but Toggle Bit mismatch detected.\n";
+    } else if (error == ERR_MISSING_EOF) {
+        v_cout_2 << "Missing EOF - EOF expected but not found in payload header.\n";
+    } else {
+        v_cout_2 << "Unknown Error - The error code is not recognized.\n";
+    }
+  v_cout_2 << " \n";
+
+}
+
+
+
+void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
+
+    if (error == ERR_FRAME_NO_ERROR) {
+        v_cout_2 << "No Frame Error - No frame errors detected.\n";
+    } else if (error == ERR_FRAME_DROP) {
+        v_cout_2 << "Frame Drop - Frame rate is lower than expected.\nIndicates missing frames based on FPS measurement.\n";
+    } else if (error == ERR_FRAME_ERROR) {
+        v_cout_2 << "Frame Error - General frame error \nCaused by payload validation errors.\n";
+    } else if (error == ERR_FRAME_MAX_FRAME_OVERFLOW) {
+        v_cout_2 << "Max Frame Size Overflow - Frame size exceeds max frame size setting.\nIndicates potential dummy data or erroneous payload.\n";
+    } else if (error == ERR_FRAME_INVALID_YUYV_RAW_SIZE) {
+        v_cout_2 << "YUYV Frame Length Error - YUYV frame length mismatch.\nExpected size for YUYV is width * height * 2.\n";
+    } else if (error == ERR_FRAME_SAME_DIFFERENT_PTS) {
+        v_cout_2 << "Same Frame Different PTS - Only PTS mismatch detected without other validation errors.\nPTS mismatch occurs without errors in toggle validation.\n";
+    } else if (error == ERR_FRAME_MISSING_EOF) {
+        v_cout_2 << "Missing EOF - EOF is not found in the frame.\n";
+    } else {
+        v_cout_2 << "Unknown Frame Error - The frame error code is not recognized.\n";
+    }
+  v_cout_2 << " \n";
+
 }
 
 std::string UVCPHeaderChecker::formatTime(std::chrono::milliseconds ms) {
@@ -938,7 +1012,7 @@ std::string UVCPHeaderChecker::formatTime(std::chrono::milliseconds ms) {
     if (localtime_s(&time_info, &time_t_format) != 0 || time_info.tm_hour < 0 || time_info.tm_hour > 23) {
         return "00:00:00.000"; 
     }
-    
+
     auto milliseconds = ms.count() % 1000;
 
     std::ostringstream oss;

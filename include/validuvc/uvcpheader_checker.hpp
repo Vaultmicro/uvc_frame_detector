@@ -124,10 +124,11 @@ struct FrameErrorStats {
     int count_max_frame_overflow = 0;
     int count_invalid_yuyv_raw_size = 0;
     int count_same_different_pts = 0;
+    int count_missing_eof = 0;
 
     int total() const {
         return count_no_error + count_frame_drop + count_frame_error +
-               count_max_frame_overflow + count_invalid_yuyv_raw_size + count_same_different_pts;
+               count_max_frame_overflow + count_invalid_yuyv_raw_size + count_same_different_pts + count_missing_eof;
     }
 
     void print_stats() const {
@@ -139,6 +140,7 @@ struct FrameErrorStats {
         v_cout_1 << "Max Frame Overflow: " << count_max_frame_overflow << " (" << percentage(count_max_frame_overflow, total_count) << "%)\n";
         v_cout_1 << "Invalid YUYV Raw Size: " << count_invalid_yuyv_raw_size << " (" << percentage(count_invalid_yuyv_raw_size, total_count) << "%)\n";
         v_cout_1 << "Same Different PTS: " << count_same_different_pts << " (" << percentage(count_same_different_pts, total_count) << "%)\n";
+        v_cout_1 << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
     }
 
     double percentage(int count, int total_count) const {
@@ -171,7 +173,7 @@ enum FrameError {
   ERR_FRAME_MAX_FRAME_OVERFLOW = 3,
   ERR_FRAME_INVALID_YUYV_RAW_SIZE = 4,
   ERR_FRAME_SAME_DIFFERENT_PTS = 5,
-
+  ERR_FRAME_MISSING_EOF = 6,
 };
 
 class ValidFrame{
@@ -181,14 +183,19 @@ class ValidFrame{
         uint32_t frame_pts;
         FrameError frame_error;
         uint8_t eof_reached;
+        uint8_t toggle_bit;
 
         std::vector<UVC_Payload_Header> payload_headers;  // To store UVC_Payload_Header
         std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
         
         std::vector<std::vector<u_char>> payloads;  // To store the uvc_payloads
+        std::vector<std::vector<u_char>> error_payloads;
         
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_error_times;  // Packet reception times
+
+        std::vector<UVCError> payload_errors;
+        std::vector<uint32_t> lost_data_sizes;
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
@@ -245,6 +252,8 @@ class UVCPHeaderChecker {
         PayloadErrorStats payload_stats;
         FrameErrorStats frame_stats;
 
+        uint32_t frame_average_size;
+
         void update_payload_error_stat(UVCError error) {
             switch (error) {
                 case ERR_NO_ERROR: payload_stats.count_no_error++; break;
@@ -272,6 +281,7 @@ class UVCPHeaderChecker {
                 case ERR_FRAME_MAX_FRAME_OVERFLOW: frame_stats.count_max_frame_overflow++; break;
                 case ERR_FRAME_INVALID_YUYV_RAW_SIZE: frame_stats.count_invalid_yuyv_raw_size++; break;
                 case ERR_FRAME_SAME_DIFFERENT_PTS: frame_stats.count_same_different_pts++; break;
+                case ERR_FRAME_MISSING_EOF: frame_stats.count_missing_eof++; break;
                 default: break;
             }
         }
@@ -289,6 +299,7 @@ class UVCPHeaderChecker {
         void printUVCErrorExplanation(UVCError error);
         void printFrameErrorExplanation(FrameError error);
         std::string formatTime(std::chrono::milliseconds ms);
+        void print_summary(const ValidFrame& frame);
 
 
     public:
