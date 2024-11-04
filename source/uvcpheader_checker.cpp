@@ -168,7 +168,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     //Process the last frame when EOF is missing
     if (payload_header_valid_return == ERR_MISSING_EOF) {
-      v_cerr_3 << "Invalid UVC payload header: Missing EOF." << std::endl;
+      v_cerr_3 << " : Missing EOF." << std::endl;
       if (!frames.empty()) {
         auto& last_frame = frames.back();
         last_frame->frame_error = ERR_FRAME_MISSING_EOF;
@@ -303,7 +303,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         }
 
         if (actual_frame_size != expected_frame_size) {
-          v_cerr_2 << "Frame size mismatch for YUYV: expected "
+          v_cerr_2 << "Frame size mismatch for YUYV: \n expected "
                   << std::dec
                   << expected_frame_size << " but got " << actual_frame_size
                   << std::endl;
@@ -448,13 +448,13 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   // Checks if the Error bit is set
   if (payload_header.bmBFH.BFH_ERR) {
-    v_cerr_2 << "Invalid UVC payload header: Error bit is set." << formatted_time << std::endl;
+    v_cerr_2 << " : Error bit is set." << formatted_time << std::endl;
     return ERR_ERR_BIT_SET;
   }
 
   // Checks if the header length is valid
   if (payload_header.HLE < 0x02 || payload_header.HLE > 0x0C) {
-    v_cerr_2 << "Invalid UVC payload header: Unexpected start byte 0x"
+    v_cerr_2 << " : Unexpected start byte 0x"
              << std::hex << std::setw(2) << std::setfill('0')
              << static_cast<int>(payload_header.HLE) << "." << formatted_time << std::endl;
     return ERR_LENGTH_OUT_OF_RANGE; 
@@ -464,26 +464,26 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   // Checks if the Source Clock Reference bit is set
   if (payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
       payload_header.HLE != 0x0C) {
-    v_cerr_2 << "Invalid UVC payload header: Both Presentation Time Stamp and "
+    v_cerr_2 << " : Both Presentation Time Stamp and "
                 "Source Clock Reference bits are set." << formatted_time
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x06) {
-    v_cerr_2 << "Invalid UVC payload header: Presentation Time Stamp bit is "
+    v_cerr_2 << " : Presentation Time Stamp bit is "
                 "set but header length is less than 6." << formatted_time
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x08) {
-    v_cerr_2 << "Invalid UVC payload header: Source Clock Reference bit is "
+    v_cerr_2 << " : Source Clock Reference bit is "
                 "set but header length is less than 12." << formatted_time
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x02) {
     v_cerr_2
-        << "Invalid UVC payload header: Neither Presentation Time Stamp nor "
+        << " : Neither Presentation Time Stamp nor "
            "Source Clock Reference bits are set but header length is not 2." << formatted_time
         << std::endl;
     return ERR_LENGTH_INVALID;
@@ -494,7 +494,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_EOF) {
   } else {
     if (payload_header.bmBFH.BFH_RES) {
-      v_cerr_2 << "Invalid UVC payload header: Reserved bit is set." << formatted_time
+      v_cerr_2 << " : Reserved bit is set." << formatted_time
                << std::endl;
       return ERR_RESERVED_BIT_SET;
     }
@@ -505,7 +505,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
             previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
-      v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
+      v_cerr_2 << " : Frame Identifier bit is same "
                   "as the previous frame and EOF is set." << formatted_time << std::endl;
       return ERR_FID_MISMATCH;
       
@@ -513,14 +513,14 @@ UVCError UVCPHeaderChecker::payload_header_valid(
       previous_payload_header.bmBFH.BFH_EOF && 
       (payload_header.PTS == previous_payload_header.PTS) && 
       payload_header.PTS != 0) {
-      v_cerr_2 << "Invalid UVC payload header: Frame Identifier bit is same "
+      v_cerr_2 << " : Frame Identifier bit is same "
                   "as the previous frame and PTS matches." << formatted_time << std::endl;
       return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
             !previous_payload_header.bmBFH.BFH_EOF && 
             previous_payload_header.HLE != 0) {
-      v_cerr_2 << "Invalid UVC payload header: Missing EOF.   " << formatted_time << std::endl;
+      v_cerr_2 << " : Missing EOF.   " << formatted_time << std::endl;
       return ERR_MISSING_EOF;
   }
 
@@ -528,7 +528,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   // //Checks if the End of Header bit is set 0 for iso and 1 for bulk
   // if (!payload_header.bmBFH.BFH_EOH) {
-  //     v_cerr_2 << "Invalid UVC payload header: End of Header (EOH) bit is
+  //     v_cerr_2 << " : End of Header (EOH) bit is
   //     not set." << std::endl; return 1;
   // }
 
@@ -641,26 +641,26 @@ void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Head
 #ifdef TUI_SET
   window_number = 4;
   print_whole_flag = 1;
-    v_cout_2 << "Previous Payload Header: " << std::endl;
+    v_cout_2 << "Previous Payload Header: " <<  "\n";
 #elif GUI_SET
   gui_window_number = 6;
   print_whole_flag = 1;
 #endif
-    v_cout_2 << previous_payload_header << "\n" << p_formatted_time << std::endl;
+    v_cout_2 << previous_payload_header << "\n" << p_formatted_time <<  std::endl;
 #ifdef TUI_SET
   window_number = 5;
-    v_cout_2 << "Lost Inbetween Header: " << std::endl;
+    v_cout_2 << "Lost Inbetween Header: " <<  "\n";
 #elif GUI_SET
   gui_window_number = 7;
 #endif
-    v_cout_2 << temp_error_payload_header << "\n" << e_formatted_time << std::endl;
+    v_cout_2 << temp_error_payload_header << "\n" << e_formatted_time <<  std::endl;
 #ifdef TUI_SET
   window_number = 6;
-    v_cout_2 << "Current Payload Header: " << std::endl;
+    v_cout_2 << "Current Payload Header: " <<  "\n";
 #elif GUI_SET
   gui_window_number = 8;
 #endif
-    v_cout_2 << payload_header << "\n" << formatted_time << std::endl;
+    v_cout_2 << payload_header << "\n" << formatted_time <<  std::endl;
 #ifdef TUI_SET
   window_number = 1;
   print_whole_flag = 0;
@@ -668,7 +668,7 @@ void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Head
   gui_window_number = 5;
   print_whole_flag = 0;
 #else
-    v_cout_2 << std::endl;
+    v_cout_2 <<  std::endl;
 #endif
 }
 
@@ -898,6 +898,11 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
 
       v_cout_2 << " - Frame Error: " << frame.frame_error << "\n";
       printFrameErrorExplanation(frame.frame_error);
+      if (ControlConfig::get_frame_format() == "yuyv") {
+        v_cout_2 << " - Frame Format: YUYV\n";
+        v_cout_2 << "expected frame size: " << (ControlConfig::get_width() * ControlConfig::get_height() * 2) << " bytes excluding the header length.\n";
+      }
+      v_cout_2 << "actual frame size:   " << std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0)) << "\n";
 
     v_cout_2 << "\nPayload Errors:" << "\n";
 
@@ -1000,7 +1005,6 @@ void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
         v_cout_2 << "Max Frame Size is " << ControlConfig::get_dwMaxVideoFrameSize << " bytes.\n";
     } else if (error == ERR_FRAME_INVALID_YUYV_RAW_SIZE) {
         v_cout_2 << "YUYV Frame Length Error - YUYV frame length mismatch.\nExpected size for YUYV is width * height * 2.\n";
-        v_cout_2 << "Frame width x height should be " << ControlConfig::get_width() << " x " << ControlConfig::get_height() << " x 2 excluding the header length.\n";
     } else if (error == ERR_FRAME_SAME_DIFFERENT_PTS) {
         v_cout_2 << "Same Frame Different PTS - Only PTS mismatch detected without other validation errors.\nPTS mismatch occurs without errors in toggle validation.\n";
     } else if (error == ERR_FRAME_MISSING_EOF) {

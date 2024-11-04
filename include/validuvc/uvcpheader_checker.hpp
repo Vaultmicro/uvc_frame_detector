@@ -246,6 +246,8 @@ class UVCPHeaderChecker {
         
         void payload_frame_develope();
         void print_error_bits(int frame_error, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
+        void print_error_bits_non_eof(int frame_error, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
+
 
         uint32_t current_frame_number;
 

@@ -416,6 +416,7 @@ void screen(){
 }
 
 void end_screen(){
+    std::cout << "end_screen()" << std::endl;
     WindowManager& manager = WindowManager::getInstance();
 
     for (int i = 0; i < manager.getWindowCount(); ++i) {
@@ -432,5 +433,15 @@ void end_screen(){
 
 
     finish_imgui();
+
+    if (window) { 
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
 
 }
