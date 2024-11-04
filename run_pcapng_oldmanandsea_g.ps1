@@ -3,7 +3,7 @@
 
 $filepath = Read-Host "Please enter the path to the pcapng file"
 
-$find_dev_num = '"C:\Program Files\Wireshark\tshark.exe" -r "'+ $filepath +'" -T fields ' +
+$find_dev_num = '"C:\Program Files\Wireshark\tshark.exe" -r "'+ $filepath +'" -s 0 -T fields ' +
 '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index '+
 '-e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType ' +
 '-e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize ' +
@@ -14,7 +14,7 @@ cmd /c $find_dev_num
 
 $devadd = Read-Host "Please select device address"
 
-$command = '"C:\Program Files\Wireshark\tshark.exe" -r "'+ $filepath +'" -T fields ' +
+$command = '"C:\Program Files\Wireshark\tshark.exe" -r "'+ $filepath +'" -s 0 -T fields ' +
     '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata ' +
     '-e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index ' +
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
