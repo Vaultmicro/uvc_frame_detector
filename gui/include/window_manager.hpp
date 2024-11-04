@@ -4,12 +4,14 @@
 #include <mutex>
 #include <string>
 #include <array>
+#include <vector>
 
 struct WindowData {
     int counter;
     std::string custom_text;
     std::mutex mutex;
     bool stop_flag;
+    std::vector<std::string> error_log_text;
 };
 
 struct GraphData {

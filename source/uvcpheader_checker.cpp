@@ -178,14 +178,18 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         //save_frames_to_log(last_frame);
         if (last_frame->frame_error) {
 #ifdef GUI_SET
+          addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
+          // error_frame_log_button.push_back("Frame " + std::to_string(last_frame->frame_number));
+          frame_error_flag = 1;
           print_received_times(*last_frame);
           print_frame_data(*last_frame);
-          // printFrameErrorExplanation(last_frame->frame_error);
           print_summary(*last_frame);
+          print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+          frame_error_flag = 0;
 #else
           plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
-#endif
           print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+#endif
         }
         processed_frames.push_back(std::move(frames.back()));
         frames.pop_back();
@@ -274,9 +278,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF) {
         new_frame->set_frame_error();
       }
-#ifdef GUI_SET
-      // print_frame_data(*new_frame);
-#endif
     }
 
   
@@ -316,15 +317,18 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       // save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
 #ifdef GUI_SET
+        addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
+        // error_frame_log_button.push_back("Frame " + std::to_string(last_frame->frame_number));
+        frame_error_flag = 1;
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
-        // printFrameErrorExplanation(last_frame->frame_error);
         print_summary(*last_frame);
+        print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+        frame_error_flag = 0;
 #else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
-#endif
         print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
-
+#endif
       } else{
 #ifdef GUI_SET
         print_frame_data(*last_frame);
@@ -637,26 +641,26 @@ void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Head
 #ifdef TUI_SET
   window_number = 4;
   print_whole_flag = 1;
+    v_cout_2 << "Previous Payload Header: " << std::endl;
 #elif GUI_SET
   gui_window_number = 6;
   print_whole_flag = 1;
 #endif
-    v_cout_2 << "Previous Payload Header: " << std::endl
-     << previous_payload_header << "\n" << p_formatted_time << std::endl;
+    v_cout_2 << previous_payload_header << "\n" << p_formatted_time << std::endl;
 #ifdef TUI_SET
   window_number = 5;
+    v_cout_2 << "Lost Inbetween Header: " << std::endl;
 #elif GUI_SET
   gui_window_number = 7;
 #endif
-    v_cout_2 << "Lost Inbetween Header: " << std::endl
-     << temp_error_payload_header << "\n" << e_formatted_time << std::endl;
+    v_cout_2 << temp_error_payload_header << "\n" << e_formatted_time << std::endl;
 #ifdef TUI_SET
   window_number = 6;
+    v_cout_2 << "Current Payload Header: " << std::endl;
 #elif GUI_SET
   gui_window_number = 8;
 #endif
-    v_cout_2 << "Current Payload Header: " << std::endl
-     << payload_header << "\n" << formatted_time << std::endl;
+    v_cout_2 << payload_header << "\n" << formatted_time << std::endl;
 #ifdef TUI_SET
   window_number = 1;
   print_whole_flag = 0;
@@ -760,7 +764,7 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
     });
 
     // Print sorted times with labels and matching payload sizes
-    v_cout_2 << "Received Times and Payload Sizes in Order:" << frame.frame_number << std::endl;
+    v_cout_2 << "Received Times and Payload Sizes in Order:" << frame.frame_number << "\n";
     for (size_t i = 0; i < all_times.size(); ++i) {
 
         auto formatted_time = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(all_times[i].first.time_since_epoch()));
@@ -772,21 +776,21 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
             v_cout_2 << ", Payload Size: " << frame.payload_sizes[i];
         }
 
-        v_cout_2 << std::endl;
+        v_cout_2 << "\n";
     }
-    v_cout_2 << std::endl;
+    v_cout_2 << "\n";
 
     if (!all_times.empty()) {
         auto first_time = all_times.front().first;
         auto last_time = all_times.back().first;
         auto time_diff = std::chrono::duration_cast<std::chrono::milliseconds>(last_time - first_time).count();
-        v_cout_2 << "Time Taken: " << time_diff << " ms" << std::endl;
+        v_cout_2 << "Time Taken: " << time_diff << " ms" << "\n";
     }
 
     // Calculate total payload size
     size_t total_payload_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
-    v_cout_2 << "Total Size: " << total_payload_size << " bytes" << std::endl;
-    v_cout_2 << std::endl << std::endl;
+    v_cout_2 << "Total Size: " << total_payload_size << " bytes" << "\n";
+    v_cout_2 << "\n" << std::endl;
 
 #ifdef GUI_SET
     gui_window_number = 5;
@@ -824,10 +828,10 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     gui_window_number = 13;
   }
 #endif
-    v_cout_2 << "Frame Number: " << frame.frame_number << std::endl;
-    v_cout_2 << "Toggle Bit (FID): " << static_cast<int>(frame.toggle_bit) << std::endl;
-    v_cout_2 << "Packet Number: " << frame.packet_number << std::endl;
-    v_cout_2 << "Frame PTS: " << frame.frame_pts << std::endl;
+    v_cout_2 << "Frame Number: " << frame.frame_number << "\n";
+    v_cout_2 << "Toggle Bit (FID): " << static_cast<int>(frame.toggle_bit) << "\n";
+    v_cout_2 << "Packet Number: " << frame.packet_number << "\n";
+    v_cout_2 << "Frame PTS: " << frame.frame_pts << "\n";
     // Print Frame Error directly with switch statement
     v_cout_2 << "Frame Error: ";
     switch (frame.frame_error) {
@@ -853,8 +857,8 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
             v_cout_2 << "Unknown Error";
             break;
     }
-    v_cout_2 << std::endl;
-    v_cout_2 << "EOF Reached: " << (frame.eof_reached ? "Yes" : "No") << std::endl;
+    v_cout_2 << "\n";
+    v_cout_2 << "EOF Reached: " << (frame.eof_reached ? "Yes" : "No") << "\n";
 
     // Calculate time taken from valid start to the last of error or valid times
     if (!frame.received_chrono_times.empty()) {
@@ -866,14 +870,14 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         auto final_end = (error_end > valid_end) ? error_end : valid_end;
         auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
 
-        v_cout_2 << "Time Taken (Valid Start to Last Event): " << time_taken << " ms" << std::endl;
+        v_cout_2 << "Time Taken (Valid Start to Last Event): " << time_taken << " ms" << "\n";
     } else {
-        v_cout_2 << "No Valid Times Recorded" << std::endl;
+        v_cout_2 << "No Valid Times Recorded" << "\n";
     }
 
     // Calculate total payload size
     size_t total_payload_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
-    v_cout_2 << "Total Payload Size: " << total_payload_size << " bytes" << std::endl;
+    v_cout_2 << "Total Payload Size: " << total_payload_size << " bytes" << "\n";
 
     v_cout_2 << std::endl;
 #ifdef GUI_SET
@@ -993,8 +997,10 @@ void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
         v_cout_2 << "Frame Error - General frame error \nCaused by payload validation errors.\n";
     } else if (error == ERR_FRAME_MAX_FRAME_OVERFLOW) {
         v_cout_2 << "Max Frame Size Overflow - Frame size exceeds max frame size setting.\nIndicates potential dummy data or erroneous payload.\n";
+        v_cout_2 << "Max Frame Size is " << ControlConfig::get_dwMaxVideoFrameSize << " bytes.\n";
     } else if (error == ERR_FRAME_INVALID_YUYV_RAW_SIZE) {
         v_cout_2 << "YUYV Frame Length Error - YUYV frame length mismatch.\nExpected size for YUYV is width * height * 2.\n";
+        v_cout_2 << "Frame width x height should be " << ControlConfig::get_width() << " x " << ControlConfig::get_height() << " x 2 excluding the header length.\n";
     } else if (error == ERR_FRAME_SAME_DIFFERENT_PTS) {
         v_cout_2 << "Same Frame Different PTS - Only PTS mismatch detected without other validation errors.\nPTS mismatch occurs without errors in toggle validation.\n";
     } else if (error == ERR_FRAME_MISSING_EOF) {
