@@ -201,7 +201,7 @@ class ValidFrame{
 
         void add_payload(const UVC_Payload_Header& header, size_t payload_size, const std::vector<u_char>& payload) {
             payload_headers.push_back(header);  // Add header to the vector
-            payload_sizes.push_back(payload_size);  // Add payload size to the vector
+            payload_sizes.push_back(payload_size - header.HLE);  // Add payload size to the vector
             packet_number++;
             payloads.push_back(payload);
         }

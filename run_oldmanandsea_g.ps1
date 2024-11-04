@@ -5,7 +5,7 @@ cmd /c '"C:\Program Files\Wireshark\extcap\wireshark\USBPcapCMD.exe"  --extcap-i
 
 $devadd = Read-Host "Please select device address"
 
-$command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields ' +
+$command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -s 0 -T fields ' +
     '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata ' +
     '-e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index ' +
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +

@@ -39,6 +39,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
   window_number = 1;
 #elif GUI_SET
+  temp_window_number = gui_window_number;
   gui_window_number = 5;
 #endif
 
@@ -78,6 +79,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     #ifdef TUI_SET
             window_number = 2;
     #elif GUI_SET
+            temp_window_number = gui_window_number;
             gui_window_number = 9;
     #endif
             v_cout_1 << "FPS: " << frame_count << " : " << formatted_time << std::endl;
@@ -105,6 +107,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
   window_number = 2;
 #elif GUI_SET
+  temp_window_number = gui_window_number;
   gui_window_number = 9;
 #endif
     v_cout_1 << "FPS: " << frame_count << " : " << formatted_time << std::endl;
@@ -119,11 +122,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 #ifdef TUI_SET
     window_number = 1;
-// #elif GUI_SET
+#elif GUI_SET
 //   WindowManager& manager = WindowManager::getInstance();
 //   GraphData& data = manager.getGraphData(0);
 //   data.addGraphData(static_cast<float>(throughput * 8));
-//   gui_window_number = 5;
+  gui_window_number = 5;
 #endif
 
     int fps_difference = ControlConfig::fps - frame_count;
@@ -283,31 +286,30 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       auto& last_frame = frames.back();
       last_frame->eof_reached = true;
 
-      // // Check the Frame width x height in here
-      // // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
-      // // the headerlength If not then there is a problem with the frame
-      // if (ControlConfig::frame_format == "yuyv") {
-      //   // Calculate the expected size for the YUYV frame
-      //   size_t expected_frame_size =
-      //       ControlConfig::get_width() * ControlConfig::get_height() * 2;
+      // Check the Frame width x height in here
+      // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
+      // the headerlength If not then there is a problem with the frame
+      if (ControlConfig::frame_format == "yuyv") {
+        // Calculate the expected size for the YUYV frame
+        size_t expected_frame_size =
+            ControlConfig::get_width() * ControlConfig::get_height() * 2;
 
-      //   // Calculate the actual size by summing up all payload sizes and
-      //   // subtracting the total header lengths
-      //   size_t actual_frame_size = 0;
-      //   for (size_t i = 0; i < last_frame->payload_sizes.size(); ++i) {
-      //     actual_frame_size +=
-      //         last_frame->payload_sizes[i] - last_frame->payload_headers[i].HLE;
-      //   }
+        // Calculate the actual size by summing up all payload sizes and
+        // subtracting the total header lengths
+        size_t actual_frame_size = 0;
+        for (size_t i = 0; i < last_frame->payload_sizes.size(); ++i) {
+          actual_frame_size += last_frame->payload_sizes[i];
+        }
 
-      //   if (actual_frame_size != expected_frame_size) {
-      //     v_cerr_2 << "Frame size mismatch for YUYV: expected "
-      //             << std::dec
-      //             << expected_frame_size << " but got " << actual_frame_size
-      //             << std::endl;
-      //     last_frame->frame_error = ERR_FRAME_INVALID_YUYV_RAW_SIZE;
-      //   }
+        if (actual_frame_size != expected_frame_size) {
+          v_cerr_2 << "Frame size mismatch for YUYV: expected "
+                  << std::dec
+                  << expected_frame_size << " but got " << actual_frame_size
+                  << std::endl;
+          last_frame->frame_error = ERR_FRAME_INVALID_YUYV_RAW_SIZE;
+        }
 
-      // }
+      }
 
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
@@ -924,7 +926,7 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
         auto final_end = (error_end > valid_end) ? error_end : valid_end;
         auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
 
-        if (time_taken > (1000.0 / (ControlConfig::fps))){
+        if (time_taken > (1000.0 / (ControlConfig::fps)) + 20){
           v_cout_2 << "Frame Drop May Cause because of Time Taken (Valid Start to Last Event): \n"
           << "Should be " << (1000.0 / (ControlConfig::fps)) << " ms, but " << time_taken << " ms \n"
           << "Or two frames could be overlapped \n";

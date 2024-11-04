@@ -11,6 +11,7 @@
 #include <queue>
 #include <csignal>
 #include <map>
+#include <string_view>
 #ifdef __linux__
 #include <condition_variable>
 #include <cstring>
@@ -60,15 +61,18 @@ void clean_exit(int signum) {
   //exit(signum);
 }
 
-
 // Helper function to split the input line by a delimiter
 std::vector<std::string> split(const std::string& s, char delimiter) {
     std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter)) {
-        tokens.push_back(token);
+    size_t start = 0;
+    size_t end = s.find(delimiter);
+
+    while (end != std::string::npos) {
+        tokens.emplace_back(s.substr(start, end - start));
+        start = end + 1;
+        end = s.find(delimiter, start);
     }
+    tokens.emplace_back(s.substr(start));
     return tokens;
 }
 
@@ -78,21 +82,6 @@ std::chrono::time_point<std::chrono::steady_clock> convert_epoch_to_time_point(d
     return time_point;
 }
 
-std::vector<u_char> hex_string_to_bytes(const std::string& hex) {
-    std::vector<u_char> bytes;
-    try {
-        for (size_t i = 0; i < hex.length(); i += 2) {
-            std::string byte_string = hex.substr(i, 2); 
-            u_char byte = static_cast<u_char>(std::stoul(byte_string, nullptr, 16));
-            bytes.push_back(byte);
-        }
-    } catch (const std::invalid_argument&) {
-        std::cerr << "Invalid argument error." << std::endl;
-    } catch (const std::out_of_range&) {
-        std::cerr << "Out of range error." << std::endl;
-    }
-    return bytes;
-}
 
 u_char hex_char_to_value(char c) {
     if ('0' <= c && c <= '9') return c - '0';
@@ -101,17 +90,18 @@ u_char hex_char_to_value(char c) {
     else return 0;
 }
 
-
 void hex_string_to_bytes_append(const std::string& hex_str, std::vector<u_char>& out_vec) {
     size_t len = hex_str.length();
-    out_vec.reserve(out_vec.size() + len / 2);
+    size_t initial_size = out_vec.size();
+    out_vec.resize(initial_size + len / 2); 
 
-    for (size_t i = 0; i < len; i += 2) {
+    for (size_t i = 0, j = initial_size; i < len; i += 2, ++j) {
         u_char high = hex_char_to_value(hex_str[i]);
         u_char low = hex_char_to_value(hex_str[i + 1]);
-        out_vec.push_back((high << 4) | low);
+        out_vec[j] = (high << 4) | low; 
     }
 }
+
 
 
 void capture_packets() {
@@ -125,6 +115,8 @@ void capture_packets() {
     // } else {
     //     v_cout_1 << "Log file opened successfully: " << output_path << std::endl;
     // }
+
+
 
     static std::vector<u_char> temp_buffer;
     static uint32_t bulk_maxlengthsize = 0;
@@ -147,9 +139,17 @@ void capture_packets() {
 #endif
     while (std::getline(std::cin, line)) {
 
+// auto start0 = std::chrono::high_resolution_clock::now();
+
         // Split the line by semicolon
         std::vector<std::string> tokens = split(line, ';');
-        
+
+
+// auto end0 = std::chrono::high_resolution_clock::now();   
+// std::chrono::duration<double> elapsed0 = end0 - start0;     
+// std::cout << "Execution time 0 : " << elapsed0.count() << " seconds" << std::endl;
+// auto start2 = std::chrono::high_resolution_clock::now();
+
         // Prepare fields with defaults if they are missing
         // -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata or usb.iso.data
         // MUST BE IN CORRECT ORDER
@@ -176,6 +176,10 @@ void capture_packets() {
         // std::vector<uint32_t> frame_width_list;
         // std::vector<uint32_t> frame_height_list;
 
+// auto end2 = std::chrono::high_resolution_clock::now();   
+// std::chrono::duration<double> elapsed2 = end2 - start2;     
+// std::cout << "Execution time 2 : " << elapsed2.count() << " seconds" << std::endl;
+
 
 #ifdef __linux__
         // This for linux urb
@@ -189,12 +193,14 @@ void capture_packets() {
           // Process based on usb_transfer_type
           if (usb_transfer_type == "0x00") {
               std::vector<std::string> capdata_tokens = split(usb_isodata, ',');
+// auto start1 = std::chrono::high_resolution_clock::now();
 
               for (const std::string& token : capdata_tokens) {
                   std::vector<u_char> temp_buffer;
                   temp_buffer.reserve(token.length() / 2);
 
                   hex_string_to_bytes_append(token, temp_buffer);
+                //   std::cout << frame_length << ", " << temp_buffer.size() << std::endl;
 
                   {
                       std::lock_guard<std::mutex> lock(queue_mutex);
@@ -203,8 +209,13 @@ void capture_packets() {
                       std::lock_guard<std::mutex> time_lock(time_mutex);
                       time_records.push(time_point);
                   }
+
                   queue_cv.notify_one();
               }
+
+// auto end1 = std::chrono::high_resolution_clock::now();   
+// std::chrono::duration<double> elapsed1 = end1 - start1;     
+// std::cout << "Execution time 1 : " << elapsed1.count() << " seconds" << std::endl;
 
           } else if (usb_transfer_type == "0x01") {
               // Skip interrupt transfer
@@ -326,7 +337,8 @@ void capture_packets() {
                     << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
                     << std::endl;
 #elif GUI_SET
-              gui_window_number = 3;
+            temp_window_number = gui_window_number;
+            gui_window_number = 3;
               v_cout_1 << "width: " << ControlConfig::get_width() << "\n";
               v_cout_1 << "height: " << ControlConfig::get_height() << "\n";
               v_cout_1 << "frame_format: " << ControlConfig::get_frame_format() << "\n";
@@ -334,7 +346,7 @@ void capture_packets() {
               v_cout_1 << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
               v_cout_1 << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
               v_cout_1 << std::endl;
-              gui_window_number = 5;
+            gui_window_number = temp_window_number;
 #else
               std::cout << "width: " << ControlConfig::get_width() << "   ";
               std::cout << "height: " << ControlConfig::get_height() << "   ";
@@ -365,12 +377,6 @@ void capture_packets() {
     temp_buffer.reserve(frame_length / 2);
     hex_string_to_bytes_append(usb_capdata, temp_buffer);
 #endif
-            //   // temp_buffer = hex_string_to_bytes(usb_capdata);
-
-            //   // log_file << "temp_buffer: ";
-            //   // for (u_char byte : temp_buffer) {
-            //   //     log_file << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-            //   // }
               {
                   std::lock_guard<std::mutex> lock(queue_mutex);
                   packet_queue.push(temp_buffer);
@@ -489,6 +495,7 @@ int main(int argc, char* argv[]) {
         }
     }
 #ifdef GUI_SET
+  temp_window_number = gui_window_number;
   gui_window_number = 3;
 #endif
     if (!fw_set || !fh_set || !fps_set || !ff_set) {
@@ -516,7 +523,7 @@ int main(int argc, char* argv[]) {
     v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
             << std::endl;
 #elif GUI_SET
-    gui_window_number = 5;
+    gui_window_number = temp_window_number;
 #endif
 
     std::signal(SIGINT, clean_exit);

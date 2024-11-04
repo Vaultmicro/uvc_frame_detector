@@ -4,6 +4,7 @@
 
 int gui_window_number = 5;
 int print_whole_flag = 0;
+int temp_window_number = 5;
 
 int start_screen(){
     if (!init_imgui()) {
