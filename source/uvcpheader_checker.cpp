@@ -898,11 +898,16 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
 
       v_cout_2 << " - Frame Error: " << frame.frame_error << "\n";
       printFrameErrorExplanation(frame.frame_error);
+      size_t actual_frame_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
       if (ControlConfig::get_frame_format() == "yuyv") {
+        size_t expected_frame_size = ControlConfig::get_width() * ControlConfig::get_height() * 2;
         v_cout_2 << " - Frame Format: YUYV\n";
-        v_cout_2 << "expected frame size: " << (ControlConfig::get_width() * ControlConfig::get_height() * 2) << " bytes excluding the header length.\n";
+        v_cout_2 << "expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
+        if (expected_frame_size != actual_frame_size) {
+            v_cout_2 << "Data Loss :          " << (expected_frame_size - actual_frame_size) << " bytes\n";
+        }
       }
-      v_cout_2 << "actual frame size:   " << std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0)) << "\n";
+      v_cout_2 << "actual frame size:   " << actual_frame_size << "\n";
 
     v_cout_2 << "\nPayload Errors:" << "\n";
 

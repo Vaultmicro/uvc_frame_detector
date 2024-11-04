@@ -116,20 +116,19 @@ add_executable(
 target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET)
 
 if (WIN32)
-# target_link_libraries(oldmanandsea_g
-#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
-#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32.lib"
-#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib"
-# )
+target_link_libraries(oldmanandsea_g
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib"
+)
 
-find_package(OpenGL REQUIRED)
+# find_package(OpenGL REQUIRED)
 
 target_link_libraries(oldmanandsea_g
     glfw3        # GLFW 
     glew32       # GLEW 
     ${OPENGL_LIBRARIES} # OpenGL 
 )
-
 
 
 add_custom_command(TARGET oldmanandsea_g POST_BUILD

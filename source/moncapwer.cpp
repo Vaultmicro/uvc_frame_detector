@@ -12,6 +12,7 @@
 #include <csignal>
 #include <map>
 #include <string_view>
+#include <array>
 #ifdef __linux__
 #include <condition_variable>
 #include <cstring>
@@ -83,25 +84,31 @@ std::chrono::time_point<std::chrono::steady_clock> convert_epoch_to_time_point(d
 }
 
 
-u_char hex_char_to_value(char c) {
-    if ('0' <= c && c <= '9') return c - '0';
-    else if ('A' <= c && c <= 'F') return c - 'A' + 10;
-    else if ('a' <= c && c <= 'f') return c - 'a' + 10;
-    else return 0;
-}
+const std::array<u_char, 256> hex_lut = []() {
+    std::array<u_char, 256> table = {};
+    for (int i = 0; i < 256; ++i) table[i] = 0xFF;
+    for (char c = '0'; c <= '9'; ++c) table[static_cast<unsigned char>(c)] = c - '0';
+    for (char c = 'A'; c <= 'F'; ++c) table[static_cast<unsigned char>(c)] = c - 'A' + 10;
+    for (char c = 'a'; c <= 'f'; ++c) table[static_cast<unsigned char>(c)] = c - 'a' + 10;
+    return table;
+}();
+
 
 void hex_string_to_bytes_append(const std::string& hex_str, std::vector<u_char>& out_vec) {
     size_t len = hex_str.length();
+    size_t num_bytes = len / 2;
     size_t initial_size = out_vec.size();
-    out_vec.resize(initial_size + len / 2); 
+    out_vec.resize(initial_size + num_bytes);
 
-    for (size_t i = 0, j = initial_size; i < len; i += 2, ++j) {
-        u_char high = hex_char_to_value(hex_str[i]);
-        u_char low = hex_char_to_value(hex_str[i + 1]);
-        out_vec[j] = (high << 4) | low; 
+    const char* src = hex_str.data();
+    u_char* dst = out_vec.data() + initial_size;
+
+    for (size_t i = 0; i < num_bytes; ++i) {
+        u_char high = hex_lut[static_cast<unsigned char>(src[i * 2])];
+        u_char low = hex_lut[static_cast<unsigned char>(src[i * 2 + 1])];
+        dst[i] = (high << 4) | low;
     }
 }
-
 
 
 void capture_packets() {
