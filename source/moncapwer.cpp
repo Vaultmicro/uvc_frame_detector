@@ -216,7 +216,7 @@ void capture_packets() {
                       packet_queue.push(std::move(temp_buffer));
 
                       std::lock_guard<std::mutex> time_lock(time_mutex);
-                      time_records.push(time_point);
+                      time_records.push(std::move(time_point));
                   }
 
                   queue_cv.notify_one();
@@ -388,10 +388,10 @@ void capture_packets() {
 #endif
               {
                   std::lock_guard<std::mutex> lock(queue_mutex);
-                  packet_queue.push(temp_buffer);
+                  packet_queue.push(std::move(temp_buffer));
 
                   std::lock_guard<std::mutex> time_lock(time_mutex);
-                  time_records.push(time_point);
+                  time_records.push(std::move(time_point));
               }
               temp_buffer.clear();
               queue_cv.notify_one();

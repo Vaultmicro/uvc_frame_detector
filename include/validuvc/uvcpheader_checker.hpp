@@ -190,7 +190,7 @@ class ValidFrame{
         std::vector<UVC_Payload_Header> payload_headers;  // To store UVC_Payload_Header
         std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
         
-        std::vector<std::vector<u_char>> payloads;  // To store the uvc_payloads
+        std::vector<std::vector<u_char>> payload_datas;  // To store the uvc_payloads
         std::vector<std::vector<u_char>> error_payloads;
         
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
@@ -205,7 +205,10 @@ class ValidFrame{
             payload_headers.push_back(header);  // Add header to the vector
             payload_sizes.push_back(payload_size - header.HLE);  // Add payload size to the vector
             packet_number++;
-            // payloads.push_back(payload);
+        }
+
+        void add_image_data(const std::vector<u_char>& payload) {
+            payload_datas.push_back(std::move(payload));
         }
 
         void set_frame_error() {
