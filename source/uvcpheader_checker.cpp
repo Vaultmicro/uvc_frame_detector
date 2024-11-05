@@ -283,7 +283,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
     }
 
-  
+    //add image data here
+    auto& last_frame = frames.back();
+    last_frame->add_image_data(payload_header, payload);
 
     if (payload_header.bmBFH.BFH_EOF) {
 
@@ -331,6 +333,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         print_summary(*last_frame);
         print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
         frame_error_flag = 0;
+
+        // develope frame image here
+
 #else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
         print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
@@ -349,6 +354,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
 
     }
+    
 
     previous_payload_header = payload_header;
     previous_previous_payload_header = previous_payload_header;
@@ -357,6 +363,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     e_formatted_time = "";
 
     update_payload_error_stat(payload_header_valid_return);
+
     return payload_header_valid_return;
 
   } else {
@@ -368,6 +375,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->payload_sizes.push_back(uvc_payload.size());
       last_frame->payload_errors.push_back(payload_header_valid_return);
       last_frame->lost_data_sizes.push_back(sizeof(uvc_payload)-payload_header.HLE);
+      last_frame->packet_number++;
 
       // print_frame_data(*last_frame);
 #ifndef GUI_SET
