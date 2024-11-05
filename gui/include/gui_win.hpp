@@ -26,6 +26,9 @@ extern std::vector<std::string> error_frame_log_button;
 void addErrorFrameLog(const std::string& efn);
 const std::vector<std::string>& getErrorFrameLog();
 
+GLuint LoadTextureFromFile(const char* filename);
+
+
 // Function declarations
 int start_screen();
 void screen();
