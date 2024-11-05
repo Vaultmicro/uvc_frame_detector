@@ -29,6 +29,7 @@ int start_screen(){
 void screen(){
     static bool show_error_log = false;
     static int selected_error_frame = 0;
+    static bool show_image = false;
 
     WindowManager& manager = WindowManager::getInstance();
 
@@ -97,8 +98,14 @@ void screen(){
                 ImGui::SetCursorPos(ImVec2(180, 55));
                 if (ImGui::Button("Back to Stream", ImVec2(120, 50))) {  
                     show_error_log = false;
+                    show_image = false;
                     data.custom_text = "Streaming is shown";
                 }
+                ImGui::SetCursorPos(ImVec2(330, 55));
+                if (ImGui::Button("Show Image", ImVec2(120, 50))) {  
+                    show_image = true;
+                }
+
 
                 ImGui::SetCursorPos(ImVec2(30, 110));
                 ImGui::Text("%s", data.custom_text.c_str());

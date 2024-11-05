@@ -59,7 +59,7 @@ void clean_exit(int signum) {
 //   }
 
   v_cout_2 << "Exiting safely..." << std::endl;
-  std::cout << "End the process" << std::endl;
+  std::cout << "End of the process: wait for other pipes to be closed" << std::endl;
 
   //exit(signum);
 }

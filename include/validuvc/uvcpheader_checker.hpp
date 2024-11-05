@@ -205,7 +205,7 @@ class ValidFrame{
             payload_headers.push_back(header);  // Add header to the vector
             payload_sizes.push_back(payload_size - header.HLE);  // Add payload size to the vector
             packet_number++;
-            payloads.push_back(payload);
+            // payloads.push_back(payload);
         }
 
         void set_frame_error() {
