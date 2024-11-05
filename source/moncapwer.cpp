@@ -57,7 +57,9 @@ void clean_exit(int signum) {
 //   if (log_file.is_open()) {
 //     log_file.close();
 //   }
+
   v_cout_2 << "Exiting safely..." << std::endl;
+  std::cout << "End the process" << std::endl;
 
   //exit(signum);
 }
@@ -557,7 +559,6 @@ int main(int argc, char* argv[]) {
     process_thread.join();
 
     clean_exit(0);
-
 #ifdef GUI_SET
   end_screen();
 #else

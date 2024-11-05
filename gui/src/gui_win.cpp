@@ -97,15 +97,11 @@ void screen(){
                 ImGui::SetCursorPos(ImVec2(180, 55));
                 if (ImGui::Button("Back to Stream", ImVec2(120, 50))) {  
                     show_error_log = false;
-                    data.custom_text = "Back to Stream";
+                    data.custom_text = "Streaming is shown";
                 }
 
                 ImGui::SetCursorPos(ImVec2(30, 110));
-                if (show_error_log) {
-                    ImGui::Text("Error Log is shown");
-                } else {
-                    ImGui::Text("Streaming is shown");
-                }
+                ImGui::Text("%s", data.custom_text.c_str());
             } else {
                 ImGui::Text("No Error Log Available");
             }
@@ -348,7 +344,6 @@ void screen(){
 
             ImGui::Begin("Histogram");
 
-            ImGui::Text("%s", data.custom_text.c_str());
 
             static float max_value = 0.0f;
             float current_max = *std::max_element(data.graph_data.begin(), data.graph_data.end());
@@ -356,14 +351,28 @@ void screen(){
                 max_value = current_max;
             }
 
-            ImGui::PlotHistogram(
-                "Throughput Data",
-                data.graph_data.data(),
-                static_cast<int>(data.graph_data.size()),
-                0, nullptr,
-                0.0f, max_value,  
-                ImVec2(960, 300)
-            );
+            if (show_error_log && selected_error_frame < data.error_log_graph_data.size()) {
+                data.custom_text = "Selected Log: " + error_frame_log_button[selected_error_frame];
+                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::PlotHistogram(
+                    "Throughput Data",
+                    data.error_log_graph_data[selected_error_frame].data(),
+                    static_cast<int>(data.error_log_graph_data[selected_error_frame].size()),
+                    0, nullptr,
+                    0.0f, max_value,  
+                    ImVec2(960, 300)
+                );
+            } else {
+                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::PlotHistogram(
+                    "Throughput Data",
+                    data.graph_data.data(),
+                    static_cast<int>(data.graph_data.size()),
+                    0, nullptr,
+                    0.0f, max_value,  
+                    ImVec2(960, 300)
+                );
+            }
 
             ImGui::End();
         }

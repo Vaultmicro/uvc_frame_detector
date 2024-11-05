@@ -23,7 +23,7 @@ FetchContent_MakeAvailable(googletest)
 
 if (WIN32)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MDd")
 endif(WIN32)
 
 if(UNIX)

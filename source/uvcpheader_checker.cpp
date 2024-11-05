@@ -179,6 +179,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         if (last_frame->frame_error) {
 #ifdef GUI_SET
           addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
+          WindowManager& manager = WindowManager::getInstance();
+          GraphData& data = manager.getGraphData(0);
+          data.addErrorGraphData();
           // error_frame_log_button.push_back("Frame " + std::to_string(last_frame->frame_number));
           frame_error_flag = 1;
           print_received_times(*last_frame);
@@ -318,6 +321,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       if (last_frame->frame_error) {
 #ifdef GUI_SET
         addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
+        WindowManager& manager = WindowManager::getInstance();
+        GraphData& data = manager.getGraphData(0);
+        data.addErrorGraphData();
         // error_frame_log_button.push_back("Frame " + std::to_string(last_frame->frame_number));
         frame_error_flag = 1;
         print_received_times(*last_frame);
@@ -853,6 +859,9 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         case ERR_FRAME_SAME_DIFFERENT_PTS:
             v_cout_2 << "Same Different PTS";
             break;
+        case ERR_FRAME_MISSING_EOF:
+            v_cout_2 << "Missing EOF";
+            break;
         default:
             v_cout_2 << "Unknown Error";
             break;
@@ -904,7 +913,8 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
         v_cout_2 << " - Frame Format: YUYV\n";
         v_cout_2 << "expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
         if (expected_frame_size != actual_frame_size) {
-            v_cout_2 << "Data Loss :          " << (expected_frame_size - actual_frame_size) << " bytes\n";
+            std::ptrdiff_t diff = static_cast<std::ptrdiff_t>(actual_frame_size) - static_cast<std::ptrdiff_t>(expected_frame_size);
+            v_cout_2 << "Data Loss :          " << diff << " bytes\n";
         }
       }
       v_cout_2 << "actual frame size:   " << actual_frame_size << "\n";

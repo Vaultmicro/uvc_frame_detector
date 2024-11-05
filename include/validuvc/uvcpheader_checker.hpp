@@ -125,6 +125,7 @@ struct FrameErrorStats {
     int count_invalid_yuyv_raw_size = 0;
     int count_same_different_pts = 0;
     int count_missing_eof = 0;
+    int count_unknown_frame_error = 0;
 
     int total() const {
         return count_no_error + count_frame_drop + count_frame_error +
@@ -174,6 +175,7 @@ enum FrameError {
   ERR_FRAME_INVALID_YUYV_RAW_SIZE = 4,
   ERR_FRAME_SAME_DIFFERENT_PTS = 5,
   ERR_FRAME_MISSING_EOF = 6,
+  ERR_FRAME_UNKNOWN = 99
 };
 
 class ValidFrame{
@@ -284,6 +286,7 @@ class UVCPHeaderChecker {
                 case ERR_FRAME_INVALID_YUYV_RAW_SIZE: frame_stats.count_invalid_yuyv_raw_size++; break;
                 case ERR_FRAME_SAME_DIFFERENT_PTS: frame_stats.count_same_different_pts++; break;
                 case ERR_FRAME_MISSING_EOF: frame_stats.count_missing_eof++; break;
+                case ERR_UNKNOWN: frame_stats.count_unknown_frame_error++; break;
                 default: break;
             }
         }

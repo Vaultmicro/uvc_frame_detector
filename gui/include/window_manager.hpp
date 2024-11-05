@@ -16,10 +16,11 @@ struct WindowData {
 
 struct GraphData {
     std::mutex mutex;
-    std::array<float, 150> graph_data = {};
+    std::array<float, 300> graph_data = {};
     int index = 0;
     std::string custom_text;
     bool stop_flag;
+    std::vector<std::array<float, 300>> error_log_graph_data;
 
     GraphData(){
         graph_data.fill(0.0f);
@@ -31,6 +32,10 @@ struct GraphData {
         if (index >= graph_data.size()) {
             graph_reset();
         }
+    }
+
+    void addErrorGraphData(){
+        error_log_graph_data.push_back(graph_data);
     }
 
     void graph_reset() {
