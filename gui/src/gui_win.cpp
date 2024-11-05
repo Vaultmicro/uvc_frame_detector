@@ -106,6 +106,7 @@ void screen(){
                         bool is_selected = (selected_error_frame == n);
                         if (ImGui::Selectable(error_frame_log_button[n].c_str(), is_selected)) {
                             selected_error_frame = n; 
+                            show_image = false;
                         }
                         if (is_selected) {
                             ImGui::SetItemDefaultFocus(); 

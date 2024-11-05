@@ -1,8 +1,8 @@
 
-
-#include <iostream>
 #include "validuvc/uvcpheader_checker.hpp"
 #include "validuvc/control_config.hpp"
+#include "develope_photo.hpp"
+#include "moncapwer.hpp"
 
 void u_char_to_jpg(const std::vector<u_char>& binary_data, const std::string& output_jpg_path) {
     std::ofstream output_file(output_jpg_path, std::ios::binary);
@@ -14,7 +14,8 @@ void u_char_to_jpg(const std::vector<u_char>& binary_data, const std::string& ou
 }
 
 
-void develope_photo(){
+
+void develope_photo(const std::vector<u_char>& frame_data){
 // #ifdef GUI_SET
 // gui_window_number = 12;
 
@@ -33,7 +34,6 @@ void develope_photo(){
     } else {
         v_cerr_2 << "Unsupported frame format: " << develope_frame_format << std::endl;
     }
-
 
 
 // #endif

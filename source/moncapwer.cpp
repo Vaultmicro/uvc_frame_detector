@@ -1,32 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <chrono>
-#include <iomanip>
-#include <sstream>
-#include <vector>
-#include <cstdint>
-#include <thread>
-#include <mutex>
-#include <queue>
-#include <csignal>
-#include <map>
-#include <string_view>
-#include <array>
-#ifdef __linux__
-#include <condition_variable>
-#include <cstring>
-#endif
-
-#include "validuvc/control_config.hpp"
-#include "validuvc/uvcpheader_checker.hpp"
-#include "utils/verbose.hpp"
-
-#ifdef TUI_SET
-#include "utils/tui_win.hpp"
-#elif GUI_SET
-#include "gui_win.hpp"
-#endif
+#include "moncapwer.hpp"
 
 std::queue<std::chrono::time_point<std::chrono::steady_clock>> time_records;
 std::mutex time_mutex;
@@ -35,6 +7,9 @@ std::mutex queue_mutex;
 std::condition_variable queue_cv;
 bool stop_processing = false;
 
+std::mutex dev_f_image_mutex;
+std::condition_variable dev_f_image_cv;
+std::queue<std::vector<u_char>> dev_f_image_queue;
 
 struct FrameInfo{
   int frame_width;
@@ -463,10 +438,25 @@ void process_packets() {
     } else {
       lock.unlock();
     }
-    // header_checker.print_packet(packet);
   }
   v_cout_1 << "Process packet() end" << std::endl;
 }
+
+
+void develope_frame_image() {
+    while (true){
+        std::unique_lock<std::mutex> lock(dev_f_image_mutex);
+        dev_f_image_cv.wait(lock, [] { return !dev_f_image_queue.empty(); });
+        
+        auto frame_data = dev_f_image_queue.front();
+        dev_f_image_queue.pop();
+
+        lock.unlock();
+
+        develope_photo(frame_data);
+    }
+}
+
 
 int main(int argc, char* argv[]) {
 
