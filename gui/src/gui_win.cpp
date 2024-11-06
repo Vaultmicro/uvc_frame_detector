@@ -418,7 +418,6 @@ void screen(){
             ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
 
             ImGui::Begin("Image");
-            
 
             if (show_image){
                 ImGui::Text("Image:");
@@ -439,7 +438,7 @@ void screen(){
                 if (texture_id) {
                     ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(480, 271));
                 } else {
-                    ImGui::Text("Failed to load image.");
+                    ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
                 }
             }
 
