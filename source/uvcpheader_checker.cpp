@@ -380,7 +380,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->add_received_error_time(received_time);
       last_frame->payload_sizes.push_back(uvc_payload.size());
       last_frame->payload_errors.push_back(payload_header_valid_return);
-      last_frame->lost_data_sizes.push_back(sizeof(uvc_payload));
+      last_frame->lost_data_sizes.push_back(uvc_payload.size());
       last_frame->packet_number++;
 
       // print_frame_data(*last_frame);
