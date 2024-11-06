@@ -1034,7 +1034,7 @@ void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
         v_cout_2 << "Frame Error - General frame error \nCaused by payload validation errors.\n";
     } else if (error == ERR_FRAME_MAX_FRAME_OVERFLOW) {
         v_cout_2 << "Max Frame Size Overflow - Frame size exceeds max frame size setting.\nIndicates potential dummy data or erroneous payload.\n";
-        v_cout_2 << "Max Frame Size is " << ControlConfig::get_dwMaxVideoFrameSize << " bytes.\n";
+        v_cout_2 << "Max Frame Size is " << ControlConfig::get_dwMaxVideoFrameSize() << " bytes.\n";
     } else if (error == ERR_FRAME_INVALID_YUYV_RAW_SIZE) {
         v_cout_2 << "YUYV Frame Length Error - YUYV frame length mismatch.\nExpected size for YUYV is width * height * 2.\n";
     } else if (error == ERR_FRAME_SAME_DIFFERENT_PTS) {

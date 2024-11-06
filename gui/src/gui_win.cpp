@@ -18,6 +18,9 @@ const std::vector<std::string>& getErrorFrameLog() {
     return error_frame_log_button;
 }
 
+std::string image_file_path = "images\\smpte.jpg";
+GLuint texture_id = 0;
+
 GLuint LoadTextureFromFile(const char* filename) {
     int width, height, channels;
     unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
@@ -40,6 +43,15 @@ GLuint LoadTextureFromFile(const char* filename) {
     stbi_image_free(data);
     return texture_id;
 }
+
+void UpdateImageTexture(const std::string& path) {
+    if (texture_id) {
+        glDeleteTextures(1, &texture_id);
+        texture_id = 0;
+    }
+    texture_id = LoadTextureFromFile(path.c_str());
+}
+
 
 int start_screen(){
     if (!init_imgui()) {
@@ -129,6 +141,16 @@ void screen(){
                 ImGui::SetCursorPos(ImVec2(330, 55));
                 if (ImGui::Button("Show Image", ImVec2(120, 50))) {  
                     show_image = true;
+                    
+                    std::string selected_log_name = error_frame_log_button[selected_error_frame];
+                    size_t pos = selected_log_name.find("Frame ");
+                    if (pos != std::string::npos) {
+                        std::string frame_number = selected_log_name.substr(pos + 6);
+                        image_file_path = "images\\frame_" + frame_number + ".jpg";
+                    } else {
+                        image_file_path = "images\\smpte.jpg";
+                    }
+                    UpdateImageTexture(image_file_path);
                 }
 
 
@@ -419,21 +441,8 @@ void screen(){
 
             ImGui::Begin("Image");
 
-            if (show_image){
+            if (show_image) {
                 ImGui::Text("Image:");
-
-                std::string selected_log_name = error_frame_log_button[selected_error_frame];
-                std::string image_file_path;
-
-                size_t pos = selected_log_name.find("Frame ");
-                if (pos != std::string::npos) {
-                    std::string frame_number = selected_log_name.substr(pos + 6);
-                    image_file_path = "images\\frame_" + frame_number + ".jpg";
-                } else {
-                    image_file_path = "images\\smpte.jpg"; 
-                }
-
-                static GLuint texture_id = LoadTextureFromFile(image_file_path.c_str());
 
                 if (texture_id) {
                     ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(480, 271));
@@ -441,6 +450,7 @@ void screen(){
                     ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
                 }
             }
+
 
             ImGui::End();
         }
