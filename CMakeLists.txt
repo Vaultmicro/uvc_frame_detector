@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project(
     uvc_frame_detector
     DESCRIPTION "Packet Capture And Analysis Tool for UVC Frame"
-    VERSION 0.0.0
+    VERSION 0.3.2
     LANGUAGES CXX C
 )
 
