@@ -887,7 +887,7 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         auto final_end = (error_end > valid_end) ? error_end : valid_end;
         auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
 
-        v_cout_2 << "Time Taken (Valid Start to Last Event): " << time_taken << " ms" << "\n";
+        v_cout_2 << "Time Taken: " << valid_start << "~" << final_end << " : " << time_taken << " ms" << "\n";
     } else {
         v_cout_2 << "No Valid Times Recorded" << "\n";
     }
