@@ -887,7 +887,10 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         auto final_end = (error_end > valid_end) ? error_end : valid_end;
         auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
 
-        v_cout_2 << "Time Taken: " << valid_start << "~" << final_end << " : " << time_taken << " ms" << "\n";
+        auto valid_start_ms = std::chrono::duration_cast<std::chrono::milliseconds>(valid_start.time_since_epoch()).count();
+        auto final_end_ms = std::chrono::duration_cast<std::chrono::milliseconds>(final_end.time_since_epoch()).count();
+
+        v_cout_2 << "Time Taken: " << valid_start_ms << " ms ~ " << final_end_ms << " ms : " << time_taken << " ms" << "\n";
     } else {
         v_cout_2 << "No Valid Times Recorded" << "\n";
     }
@@ -935,7 +938,7 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
         size_t temp_lost_data_size = 0;
         for (size_t i = 0; i < frame.payload_errors.size(); ++i) {
             v_cout_2 << " - Payload Error: " << frame.payload_errors[i] 
-                    << ", Lost Data Size: " << frame.lost_data_sizes[i] << " bytes\n";
+                    << ", Lost Data Size: " << frame.lost_data_sizes[i] << " bytes (includeing header) \n";
 
             printUVCErrorExplanation(frame.payload_errors[i]);
 
