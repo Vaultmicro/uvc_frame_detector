@@ -208,10 +208,12 @@ class ValidFrame{
         }
 
         void add_image_data(const UVC_Payload_Header& header, const std::vector<u_char>& payload) {
-            payload_datas.emplace_back(
-                std::make_move_iterator(payload.begin() + header.HLE),
-                std::make_move_iterator(payload.end())
-            );
+            if (header.HLE < payload.size()) {
+                payload_datas.emplace_back(
+                    std::make_move_iterator(payload.begin() + header.HLE),
+                    std::make_move_iterator(payload.end())
+                );
+            }
         }
 
         void set_frame_error() {
