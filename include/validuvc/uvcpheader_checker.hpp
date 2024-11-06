@@ -202,7 +202,7 @@ class ValidFrame{
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_error_times;  // Packet reception times
 
         std::vector<UVCError> payload_errors;
-        std::vector<uint32_t> lost_data_sizes;
+        std::vector<size_t> lost_data_sizes;
 
         ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
 
