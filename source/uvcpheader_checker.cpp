@@ -893,8 +893,8 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         auto final_end = (error_end > valid_end) ? error_end : valid_end;
         auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
 
-        auto valid_start_ms = std::chrono::duration_cast<std::chrono::milliseconds>(valid_start.time_since_epoch()).count();
-        auto final_end_ms = std::chrono::duration_cast<std::chrono::milliseconds>(final_end.time_since_epoch()).count();
+        auto valid_start_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(valid_start.time_since_epoch()));
+        auto final_end_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(final_end.time_since_epoch()));
 
         v_cout_2 << "Time Taken: " << valid_start_ms << " ms ~ " << final_end_ms << " ms : " << time_taken << " ms" << "\n";
     } else {
@@ -919,6 +919,12 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
 #endif
 
     v_cout_2 << "Frame Number: " << frame.frame_number << "\n";
+
+    if (!frame.received_chrono_times.empty()) {
+      auto first_valid_time = frame.received_chrono_times.front();
+      auto formatted_first_valid_time = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(first_valid_time.time_since_epoch()));
+      v_cout_2 << "First Valid Time: " << formatted_first_valid_time << "\n";
+    }
 
     v_cout_2 << "\nFrame Errors:" << "\n";
 
