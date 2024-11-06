@@ -7,10 +7,6 @@ std::mutex queue_mutex;
 std::condition_variable queue_cv;
 bool stop_processing = false;
 
-std::mutex dev_f_image_mutex;
-std::condition_variable dev_f_image_cv;
-std::queue<std::vector<u_char>> dev_f_image_queue;
-
 struct FrameInfo{
   int frame_width;
   int frame_height;
@@ -413,7 +409,7 @@ void process_packets() {
     
     if (!packet_queue.empty()) {
 
-      auto packet = packet_queue.front();
+      auto packet = std::move(packet_queue.front());
       packet_queue.pop();
       lock.unlock();
 
@@ -448,12 +444,14 @@ void develope_frame_image() {
         std::unique_lock<std::mutex> lock(dev_f_image_mutex);
         dev_f_image_cv.wait(lock, [] { return !dev_f_image_queue.empty(); });
         
-        auto frame_data = dev_f_image_queue.front();
+        auto frame_format = std::move(dev_f_image_format_queue.front());
+        dev_f_image_format_queue.pop();
+        auto frame_data = std::move(dev_f_image_queue.front());
         dev_f_image_queue.pop();
 
         lock.unlock();
 
-        develope_photo(frame_data);
+        develope_photo(frame_format, frame_data);
     }
 }
 
@@ -537,7 +535,7 @@ int main(int argc, char* argv[]) {
 
     std::thread process_thread(process_packets);
 
-    // std::thread develope_frame_image();
+    std::thread fdevelope_thread(develope_frame_image);
 
 #ifdef GUI_SET
     if (start_screen() == -1) {
@@ -549,7 +547,8 @@ int main(int argc, char* argv[]) {
     // Wait for the threads to finish
     capture_thread.join();
     process_thread.join();
-
+    fdevelope_thread.join();
+    
     clean_exit(0);
 #ifdef GUI_SET
   end_screen();

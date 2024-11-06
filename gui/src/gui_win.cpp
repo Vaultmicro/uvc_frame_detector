@@ -422,7 +422,19 @@ void screen(){
 
             if (show_image){
                 ImGui::Text("Image:");
-                static GLuint texture_id = LoadTextureFromFile("images\\smpte.jpg");
+
+                std::string selected_log_name = error_frame_log_button[selected_error_frame];
+                std::string image_file_path;
+
+                size_t pos = selected_log_name.find("Frame ");
+                if (pos != std::string::npos) {
+                    std::string frame_number = selected_log_name.substr(pos + 6);
+                    image_file_path = "images\\frame_" + frame_number + ".jpg";
+                } else {
+                    image_file_path = "images\\smpte.jpg"; 
+                }
+
+                static GLuint texture_id = LoadTextureFromFile(image_file_path.c_str());
 
                 if (texture_id) {
                     ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(480, 271));

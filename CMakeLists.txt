@@ -66,6 +66,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 target_link_libraries(
@@ -153,6 +154,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 
@@ -170,6 +172,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 target_link_libraries(
@@ -187,6 +190,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 target_link_libraries(
@@ -204,6 +208,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 
@@ -221,6 +226,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 target_link_libraries(
@@ -241,6 +247,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 target_compile_definitions(test_packet_handler PRIVATE UNIT_TEST)
@@ -262,6 +269,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
@@ -282,6 +290,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
 )
 
 if(WIN32)
@@ -294,6 +303,8 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+
 )
 target_compile_definitions(log_test_t PUBLIC TUI_SET)
 
@@ -307,6 +318,8 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
     ${IMGUI_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+
 )
 
 target_compile_definitions(log_test_g PUBLIC GUI_SET)

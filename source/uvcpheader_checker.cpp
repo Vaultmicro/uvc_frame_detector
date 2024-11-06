@@ -187,13 +187,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           print_received_times(*last_frame);
           print_frame_data(*last_frame);
           print_summary(*last_frame);
-          print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+          print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
           frame_error_flag = 0;
 #else
           plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
-          print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+          print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
         }
+        last_frame->push_queue();
         processed_frames.push_back(std::move(frames.back()));
         frames.pop_back();
         frame_count++;
@@ -264,7 +265,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
       new_frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
       new_frame->add_received_chrono_time(received_time);
-      
+      new_frame->set_frame_format(ControlConfig::get_width(), ControlConfig::get_height(), ControlConfig::get_frame_format());
+
 #ifdef GUI_SET
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
@@ -283,9 +285,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
     }
 
+
     //add image data here
     auto& last_frame = frames.back();
-    last_frame->add_image_data(payload_header, payload);
+    last_frame->add_image_data(payload_header, uvc_payload);
+
+
 
     if (payload_header.bmBFH.BFH_EOF) {
 
@@ -331,15 +336,16 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
-        print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+        print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
         frame_error_flag = 0;
 
         // develope frame image here
 
 #else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
-        print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
+        print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
+        last_frame->push_queue();
       } else{
 #ifdef GUI_SET
         print_frame_data(*last_frame);
@@ -374,16 +380,16 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->add_received_error_time(received_time);
       last_frame->payload_sizes.push_back(uvc_payload.size());
       last_frame->payload_errors.push_back(payload_header_valid_return);
-      last_frame->lost_data_sizes.push_back(sizeof(uvc_payload)-payload_header.HLE);
+      last_frame->lost_data_sizes.push_back(sizeof(uvc_payload));
       last_frame->packet_number++;
 
       // print_frame_data(*last_frame);
 #ifndef GUI_SET
       plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
-      print_error_bits(last_frame->frame_error, previous_payload_header, temp_error_payload_header ,payload_header);
-
     }
+    print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
+
     temp_error_payload_header = payload_header;
     e_formatted_time = formatted_time;
 
@@ -444,11 +450,11 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
     payload_header.SCR = 0;
   }
 
-  if (current_offset < uvc_payload.size()) {
-    payload.assign(uvc_payload.begin() + current_offset, uvc_payload.end());
-  } else {
-    payload.clear();
-  }
+  // if (current_offset < uvc_payload.size()) {
+  //   payload.assign(uvc_payload.begin() + current_offset, uvc_payload.end());
+  // } else {
+  //   payload.clear();
+  // }
 
   //save_payload_header_to_log(payload_header, received_time);
 
@@ -519,16 +525,16 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
             previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
-      v_cerr_2 << " : Frame Identifier bit is same "
-                  "as the previous frame and EOF is set." << formatted_time << std::endl;
+      v_cerr_2 << " : Same FID "
+                  "and prev frame EOF is set." << formatted_time << std::endl;
       return ERR_FID_MISMATCH;
       
   } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
       previous_payload_header.bmBFH.BFH_EOF && 
       (payload_header.PTS == previous_payload_header.PTS) && 
       payload_header.PTS != 0) {
-      v_cerr_2 << " : Frame Identifier bit is same "
-                  "as the previous frame and PTS matches." << formatted_time << std::endl;
+      v_cerr_2 << " : Same FID "
+                  "and prev frame and PTS matches." << formatted_time << std::endl;
       return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
@@ -649,7 +655,7 @@ void UVCPHeaderChecker::save_payload_header_to_log(
   log_file.close();
 }
 
-void UVCPHeaderChecker::print_error_bits(int frame_error, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header) {
+void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header) {
     // v_cout_2 << "Frame Error Type__: " << frame_error << std::endl;
 
 #ifdef TUI_SET

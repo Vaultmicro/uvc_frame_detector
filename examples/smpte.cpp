@@ -88,6 +88,22 @@ std::vector<u_char> create_packet(int frame_count,
   return packet;
 }
 
+void develope_frame_image() {
+    while (true){
+        std::unique_lock<std::mutex> lock(dev_f_image_mutex);
+        dev_f_image_cv.wait(lock, [] { return !dev_f_image_queue.empty(); });
+        
+        auto frame_format = std::move(dev_f_image_format_queue.front());
+        dev_f_image_format_queue.pop();
+        auto frame_data = std::move(dev_f_image_queue.front());
+        dev_f_image_queue.pop();
+
+        lock.unlock();
+
+        develope_photo(frame_format, frame_data);
+    }
+}
+
 int main(int argc, char* argv[]) {
   verbose_level = 2;
 
@@ -95,8 +111,10 @@ int main(int argc, char* argv[]) {
 
   ControlConfig::set_width(1080);
   ControlConfig::set_height(720);
-  ControlConfig::set_fps(60);
+  ControlConfig::set_fps(30);
   ControlConfig::set_frame_format("MJPEG");
+  ControlConfig::set_dwMaxVideoFrameSize(387200);
+  ControlConfig::set_dwMaxPayloadTransferSize(387200);
 
   static uint8_t designed_fps = 30;
   std::chrono::milliseconds frame_interval(1000 / designed_fps);  // 33ms
@@ -105,7 +123,7 @@ int main(int argc, char* argv[]) {
 
   // smpte from txt
 #ifdef _WIN32
-  std::string filename = "..\\..\\examples\\smpte.txt";
+  std::string filename = "..\\examples\\smpte.txt";
 #elif __linux__
   std::string filename = "../examples/smpte.txt";
 #endif

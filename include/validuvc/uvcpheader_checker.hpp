@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "utils/verbose.hpp"
+#include "develope_photo.hpp"
 
 #ifdef _WIN32
     typedef unsigned char u_char;
@@ -187,6 +188,10 @@ class ValidFrame{
         uint8_t eof_reached;
         uint8_t toggle_bit;
 
+        int frame_width;
+        int frame_height;
+        std::string frame_format;
+
         std::vector<UVC_Payload_Header> payload_headers;  // To store UVC_Payload_Header
         std::vector<size_t> payload_sizes;  // To store the size of each uvc_payload
         
@@ -205,6 +210,12 @@ class ValidFrame{
             payload_headers.push_back(header);  // Add header to the vector
             payload_sizes.push_back(payload_size - header.HLE);  // Add payload size to the vector
             packet_number++;
+        }
+
+        void set_frame_format(int width, int height, const std::string& format) {
+            frame_width = width;
+            frame_height = height;
+            frame_format = format;
         }
 
         void add_image_data(const UVC_Payload_Header& header, const std::vector<u_char>& payload) {
@@ -231,6 +242,22 @@ class ValidFrame{
         void add_received_error_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
             received_error_times.push_back(time_point);
         }
+
+        void push_queue() {
+            DevFImageFormat frame_format_struct;
+            frame_format_struct.frame_number = static_cast<int>(frame_number);
+            frame_format_struct.width = frame_width;
+            frame_format_struct.height = frame_height;
+            frame_format_struct.format = frame_format;
+            {
+                std::lock_guard<std::mutex> lock(dev_f_image_mutex);
+                
+                dev_f_image_queue.push(std::move(payload_datas));
+                dev_f_image_format_queue.push(frame_format_struct);
+            }
+
+            dev_f_image_cv.notify_one();
+        }
 };
 
 class UVCPHeaderChecker {
@@ -255,9 +282,7 @@ class UVCPHeaderChecker {
         UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
         void payload_frame_develope();
-        void print_error_bits(int frame_error, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
-        void print_error_bits_non_eof(int frame_error, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
-
+        void print_error_bits(const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
 
         uint32_t current_frame_number;
 
