@@ -18,7 +18,12 @@ const std::vector<std::string>& getErrorFrameLog() {
     return error_frame_log_button;
 }
 
+#ifdef _WIN32
 std::string image_file_path = "images\\smpte.jpg";
+#elif __linux__
+std::string image_file_path = "images/smpte.jpg";
+#endif
+
 GLuint texture_id = 0;
 
 GLuint LoadTextureFromFile(const char* filename) {
@@ -146,9 +151,17 @@ void screen(){
                     size_t pos = selected_log_name.find("Frame ");
                     if (pos != std::string::npos) {
                         std::string frame_number = selected_log_name.substr(pos + 6);
+#ifdef _WIN32
                         image_file_path = "images\\frame_" + frame_number + ".jpg";
+#elif __linux__
+                        image_file_path = "images/frame_" + frame_number + ".jpg";
+#endif
                     } else {
+#ifdef _WIN32
                         image_file_path = "images\\smpte.jpg";
+#elif __linux__
+                        image_file_path = "images/smpte.jpg";
+#endif
                     }
                     UpdateImageTexture(image_file_path);
                 }

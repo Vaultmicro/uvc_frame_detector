@@ -21,7 +21,6 @@ extern int gui_window_number;
 extern int print_whole_flag;
 extern int temp_window_number;
 extern int frame_error_flag;
-extern std::vector<std::string> error_frame_log_button;
 
 void addErrorFrameLog(const std::string& efn);
 const std::vector<std::string>& getErrorFrameLog();

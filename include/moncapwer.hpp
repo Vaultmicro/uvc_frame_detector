@@ -14,6 +14,9 @@
 #include <thread>
 #include <vector>
 #include <array>
+#ifdef __linux__
+#include <cstring>
+#endif
 
 #include "validuvc/control_config.hpp"
 #include "validuvc/uvcpheader_checker.hpp"

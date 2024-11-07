@@ -47,7 +47,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
 
 link_directories(${CMAKE_SOURCE_DIR}/gui/lib)
+
 link_directories(${CMAKE_SOURCE_DIR}/library/libjpeg-turbo64/lib)
+link_directories(${CMAKE_SOURCE_DIR}/library/libjpeg-turbo-3.0.4-gcc64/lib)
 
 set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
@@ -150,19 +152,20 @@ target_link_libraries(oldmanandsea_g
     ${OPENGL_LIBRARIES} # OpenGL 
     turbojpeg
 )
-
-
 add_custom_command(TARGET oldmanandsea_g POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_SOURCE_DIR}/gui/lib/glew32.dll" $<TARGET_FILE_DIR:oldmanandsea_g>
 )
 
 elseif (UNIX)
-    target_link_libraries(oldmanandsea_g PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so)
-    target_link_libraries(oldmanandsea_g PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a)
-    target_link_libraries(oldmanandsea_g PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so)
+    target_link_libraries(oldmanandsea_g
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
+            ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so
+            turbojpeg
+    )
 endif()
-
 
 add_executable(
     example

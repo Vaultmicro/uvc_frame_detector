@@ -8,6 +8,9 @@
 #include <iostream>
 #include <mutex>
 #include <queue>
+#ifdef __linux__
+#include <condition_variable>
+#endif
 
 #ifdef _WIN32
   typedef unsigned char u_char;

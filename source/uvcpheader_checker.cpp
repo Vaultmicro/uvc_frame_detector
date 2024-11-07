@@ -1059,10 +1059,15 @@ std::string UVCPHeaderChecker::formatTime(std::chrono::milliseconds ms) {
     auto time_t_format = std::chrono::system_clock::to_time_t(time_point);
 
     struct tm time_info;
+#ifdef _WIN32
     if (localtime_s(&time_info, &time_t_format) != 0 || time_info.tm_hour < 0 || time_info.tm_hour > 23) {
         return "00:00:00.000"; 
     }
-
+#elif __linux__
+    if (localtime_r(&time_t_format, &time_info) == nullptr || time_info.tm_hour < 0 || time_info.tm_hour > 23) {
+        return "00:00:00.000"; 
+    }
+#endif
     auto milliseconds = ms.count() % 1000;
 
     std::ostringstream oss;
