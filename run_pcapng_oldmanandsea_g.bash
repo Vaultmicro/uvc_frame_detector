@@ -8,7 +8,7 @@ find_dev_num="tshark -r \"$filepath\" -s 0 -T fields \
     -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval \
     -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize \
     -e usb.device_address -e usbvideo.format.numFrameDescriptors -e usb.idVendor -e usb.idProduct \
-    -E separator=';' -Y \"usb.transfer_type == 2\""
+    -E separator=\; -Y \"usb.transfer_type == 2\""
 
 echo "$find_dev_num"
 eval "$find_dev_num"
@@ -21,7 +21,7 @@ command="tshark -r \"$filepath\" -s 0 -T fields \
     -e usbvideo.frame.width -e usbvideo.frame.height \
     -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval \
     -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors \
-    -E separator=';' -Y \"usb.device_address == $devadd\" -Q | ./build/oldmanandsea_g"
+    -E separator=\; -Y \"usb.device_address == $devadd\" -Q | ./build/oldmanandsea_g"
 
 echo "$command"
 eval "$command"
