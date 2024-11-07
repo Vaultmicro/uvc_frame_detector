@@ -1,6 +1,6 @@
 # uvc_frame_detector
 
-version 0.3.2
+version 0.3.3
 included linux and window verison  
 each using usbmon and tshark for stream  
 added tui, gui version respectively  
@@ -24,7 +24,7 @@ in window using pcapng
 .\run_pcapng_oldmanandsea_g.ps1  
 
 in linux  
- sudo tshark -i usbmon1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usb.device_address -E separator=\; -Y "usb.device_address == 3" -Q | ./oldmanandsea_g
+ sudo tshark -i usbmon1 -s 0 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usb.device_address -e usbvideo.format.numFrameDescriptors -E separator=\; -Y "usb.device_address == 3" -Q | ./oldmanandsea_g
 
 
 ### Moncapler

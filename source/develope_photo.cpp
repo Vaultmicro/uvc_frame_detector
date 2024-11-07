@@ -66,7 +66,6 @@ void develope_yuyv_to_jpg(const DevFImageFormat& frame_format, std::vector<std::
     saveJPEG(rgb_data, frame_format.width, frame_format.height, output_jpg_path);
 }
 
-
 void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data){
 // #ifdef GUI_SET
 // gui_window_number = 12;
@@ -87,7 +86,8 @@ void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector
         develope_yuyv_to_jpg(frame_format, frame_data, output_jpg_path);
         save_success = true;
     } else if (frame_format.format == "h264"){
-
+        std::cout << "No support for H264 format." << std::endl;
+        return;
     } else if (frame_format.format == "rgb"){
         develope_rgb_to_jpg(frame_format, frame_data, output_jpg_path);
         save_success = true;
@@ -101,7 +101,5 @@ void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector
     } else {
         std::cerr << "Failed to save frame " << frame_format.frame_number << " in " << output_jpg_path << std::endl;
     }
-
-
 // #endif
 };
