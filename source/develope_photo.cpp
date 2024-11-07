@@ -60,6 +60,9 @@ void develope_yuyv_to_jpg(const DevFImageFormat& frame_format, std::vector<std::
     }
 
     std::vector<u_char> rgb_data = convertYUYVtoRGB(yuyv_data, frame_format.width, frame_format.height);
+
+    std::cerr << "RGB Convertion Success" << std::endl;
+    
     saveJPEG(rgb_data, frame_format.width, frame_format.height, output_jpg_path);
 }
 

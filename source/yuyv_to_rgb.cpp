@@ -10,7 +10,9 @@ typedef unsigned char u_char;
 
 std::vector<u_char> convertYUYVtoRGB(const std::vector<u_char>& yuyvData, int width, int height) {
     std::vector<u_char> rgbData(width * height * 3);
-    for (int i = 0; i < width * height; ++i) {
+    int pixelPairs = (width * height) / 2;
+    
+    for (int i = 0; i < pixelPairs; ++i) {
         int y0 = yuyvData[i * 4 + 0] - 16;
         int u  = yuyvData[i * 4 + 1] - 128;
         int y1 = yuyvData[i * 4 + 2] - 16;
@@ -23,13 +25,14 @@ std::vector<u_char> convertYUYVtoRGB(const std::vector<u_char>& yuyvData, int wi
         int f  = -208 * v + 128;
         int g  = 516 * u + 128;
 
-        rgbData[i * 6 + 0] = std::clamp((c0 + d) >> 8, 0, 255);
-        rgbData[i * 6 + 1] = std::clamp((c0 + e + f) >> 8, 0, 255);
-        rgbData[i * 6 + 2] = std::clamp((c0 + g) >> 8, 0, 255);
+        int rgbIndex = i * 6;
+        rgbData[rgbIndex + 0] = std::clamp((c0 + d) >> 8, 0, 255);
+        rgbData[rgbIndex + 1] = std::clamp((c0 + e + f) >> 8, 0, 255);
+        rgbData[rgbIndex + 2] = std::clamp((c0 + g) >> 8, 0, 255);
 
-        rgbData[i * 6 + 3] = std::clamp((c1 + d) >> 8, 0, 255);
-        rgbData[i * 6 + 4] = std::clamp((c1 + e + f) >> 8, 0, 255);
-        rgbData[i * 6 + 5] = std::clamp((c1 + g) >> 8, 0, 255);
+        rgbData[rgbIndex + 3] = std::clamp((c1 + d) >> 8, 0, 255);
+        rgbData[rgbIndex + 4] = std::clamp((c1 + e + f) >> 8, 0, 255);
+        rgbData[rgbIndex + 5] = std::clamp((c1 + g) >> 8, 0, 255);
     }
     return rgbData;
 }

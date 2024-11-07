@@ -221,7 +221,7 @@ void capture_packets() {
               std::vector<std::string> filtered_subtype_frame_format;
               for (const auto& value : frame_formats) {
                   int num_value = std::stoi(value);
-                  // Exclude 1, 4, 6, 12, 16
+                  // Exclude 1, 4, 6, 12, 13, 16
                   if (num_value != 1 && num_value != 4 && num_value != 6 && num_value != 12 && num_value != 13 &&  num_value != 16) {
                       filtered_subtype_frame_format.push_back(value);
                   }
@@ -291,10 +291,10 @@ void capture_packets() {
                       //mjpeg
                           frame_format = "mjpeg";
                           break;
-                      case 13:
-                      //color format
-                          frame_format = "rgb";
-                          break;
+                    //   case 13:
+                    //   //color format
+                    //       frame_format = "rgb";
+                    //       break;
                       case 17:
                       //frame based
                           frame_format = "h264";
