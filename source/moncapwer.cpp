@@ -146,6 +146,7 @@ void capture_packets() {
         std::string frame_interval_fps = (tokens.size() > 10 && !tokens[10].empty()) ? tokens[10] : "N/A";
         std::string max_frame_size = (tokens.size() > 11 && !tokens[11].empty()) ? tokens[11] : "N/A";
         std::string max_payload_size = (tokens.size() > 12 && !tokens[12].empty()) ? tokens[12] : "N/A";
+        std::string num_frame_descriptor = (tokens.size() > 13 && !tokens[13].empty()) ? tokens[13] : "N/A";
 
         auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
@@ -206,6 +207,7 @@ void capture_packets() {
             std::vector<std::string> frame_widths_list = split(frame_widths, ',');
             std::vector<std::string> frame_heights_list = split(frame_heights, ',');
             std::vector<std::string> frame_formats = split(subtype_frame_format, ',');
+            std::vector<std::string> num_frame_descriptor_list = split(num_frame_descriptor, ',');
              
             static std::map<int, std::map<int, FrameInfo>> format_map;
 
@@ -214,6 +216,7 @@ void capture_packets() {
               // std::cout << "in" << std::endl;
 
               size_t format_index_counter = 0;
+              int count = 0;
 
               std::vector<std::string> filtered_subtype_frame_format;
               for (const auto& value : frame_formats) {
@@ -225,9 +228,13 @@ void capture_packets() {
               }
 
               for (size_t i = 0; i < frame_indices.size(); ++i) {
-                // Check for new format group when encountering "1" in frame_index
-                if (frame_indices[i] == "1" && i != 0) {
+                // // Check for new format group when encountering "1" in frame_index
+                // if (frame_indices[i] == "1" && i != 0) {
+                //     ++format_index_counter;
+                // }
+                if (count >= std::stoi(num_frame_descriptor_list[format_index_counter])) {
                     ++format_index_counter;
+                    count = 0;
                 }
 
                 FrameInfo frame_info;
@@ -240,6 +247,8 @@ void capture_packets() {
                 int frame_key = std::stoi(frame_indices[i]);
 
                 format_map[format_key][frame_key] = frame_info;
+
+                count ++;
               }
 
               // for (const auto& format_pair : format_map) {

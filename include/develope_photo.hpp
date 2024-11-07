@@ -27,6 +27,6 @@ extern std::queue<DevFImageFormat> dev_f_image_format_queue;
 
 
 void u_char_to_jpg(const std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path);
-void develope_photo(const DevFImageFormat& frame_format, const std::vector<std::vector<u_char>>& frame_data);
+void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data);
 
 #endif // DEVELOP_PHOTO_HPP

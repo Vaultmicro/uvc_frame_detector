@@ -44,8 +44,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
 
 link_directories(${CMAKE_SOURCE_DIR}/gui/lib)
+link_directories(${CMAKE_SOURCE_DIR}/library/libjpeg-turbo64/lib)
 
 set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
@@ -57,6 +59,12 @@ set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_opengl3.cpp
 )
 
+set(DEVELOPE_PHOTO_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/rgb_to_jpeg.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/yuyv_to_rgb.cpp
+)
+
   
 if(UNIX)
 add_executable(
@@ -66,13 +74,14 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 target_link_libraries(
         uvc_frame_detector
         PRIVATE
             ${PCAP_LIBRARIES}
+            turbojpeg
     )
 endif(UNIX)
 
@@ -83,7 +92,11 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
+)
+
+target_link_libraries(oldmanandsea
+    turbojpeg
 )
 
 if(WIN32)
@@ -97,9 +110,12 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
+target_link_libraries(oldmanandsea_t
+    turbojpeg
+)
 target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
 endif(WIN32)
 
@@ -113,7 +129,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
     ${IMGUI_SOURCES}
 )
 
@@ -132,6 +148,7 @@ target_link_libraries(oldmanandsea_g
     glfw3        # GLFW 
     glew32       # GLEW 
     ${OPENGL_LIBRARIES} # OpenGL 
+    turbojpeg
 )
 
 
@@ -154,9 +171,11 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
-
+target_link_libraries(example
+    turbojpeg
+)
 
 if (UNIX)
 
@@ -172,13 +191,14 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 target_link_libraries(
     uvcperf
     PRIVATE
         ${LIBUSB_LIBRARIES}
+        turbojpeg
 )
 
 endif(UNIX)
@@ -190,7 +210,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 target_link_libraries(
@@ -198,6 +218,7 @@ target_link_libraries(
     PRIVATE
         gtest
         gtest_main
+        turbojpeg
 )
 
 
@@ -208,7 +229,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 
@@ -216,7 +237,8 @@ target_link_libraries(
     frame_test_bulk
     PRIVATE
         gtest
-        gtest_main 
+        gtest_main
+        turbojpeg
 )
 
 add_executable(
@@ -226,7 +248,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 target_link_libraries(
@@ -234,6 +256,7 @@ target_link_libraries(
     PRIVATE
         gtest
         gtest_main
+        turbojpeg
 )
 
 
@@ -247,7 +270,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 target_compile_definitions(test_packet_handler PRIVATE UNIT_TEST)
@@ -258,6 +281,7 @@ target_link_libraries(
         gtest
         gtest_main
         ${PCAP_LIBRARIES}
+        turbojpeg
 )
 
 
@@ -269,7 +293,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
@@ -278,6 +302,7 @@ target_link_libraries(
     show_urb_header
     PRIVATE
         ${PCAP_LIBRARIES}
+        turbojpeg
 )
 
 endif(UNIX)
@@ -290,7 +315,10 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
+)
+target_link_libraries(log_test
+    turbojpeg
 )
 
 if(WIN32)
@@ -303,10 +331,12 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
-
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 target_compile_definitions(log_test_t PUBLIC TUI_SET)
+target_link_libraries(log_test_t
+    turbojpeg
+)
 
 add_executable(
     log_test_g
@@ -318,8 +348,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
     ${IMGUI_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
-
+    ${DEVELOPE_PHOTO_SOURCES}
 )
 
 target_compile_definitions(log_test_g PUBLIC GUI_SET)
@@ -331,6 +360,7 @@ target_link_libraries(log_test_g
     glfw3        # GLFW 
     glew32       # GLEW 
     ${OPENGL_LIBRARIES} # OpenGL 
+    turbojpeg
 )
 
 add_custom_command(TARGET log_test_g POST_BUILD
