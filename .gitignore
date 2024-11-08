@@ -8,5 +8,5 @@ tests/change_shark/whole_brio_iso.txt
 tests/change_shark/whole_logi_iso.txt
 imgui.ini
 images/*
-!.gitkeep
-!.images/smpte.jpg
+!images/smpte.jpg
+# !.gitkeep
