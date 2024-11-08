@@ -38,22 +38,24 @@ set(PCAP_LIBRARIES
 )
 endif(UNIX)
 
+set(GUI_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib
+)
+
+set(LIBJPEGTURBO64_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg.lib
+)
 
 include_directories(${googletest_SOURCE_DIR}/googlemock/include)
 include_directories(${googletest_SOURCE_DIR}/googletest/include)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
-
-link_directories(${CMAKE_SOURCE_DIR}/gui/lib)
-
-link_directories(${CMAKE_SOURCE_DIR}/library/libjpeg-turbo64/lib)
-link_directories(${CMAKE_SOURCE_DIR}/library/libjpeg-turbo-3.0.4-gcc64/lib)
 
 set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
@@ -83,11 +85,11 @@ add_executable(
 )
 
 target_link_libraries(
-        uvc_frame_detector
-        PRIVATE
-            ${PCAP_LIBRARIES}
-            turbojpeg
-    )
+    uvc_frame_detector
+    PRIVATE
+        ${PCAP_LIBRARIES}
+        ${LIBJPEGTURBO64_LIBRARIES}
+)
 endif(UNIX)
 
 add_executable(
@@ -100,7 +102,7 @@ add_executable(
 )
 
 target_link_libraries(oldmanandsea
-    turbojpeg
+    ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 if(WIN32)
@@ -116,8 +118,10 @@ add_executable(
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
-target_link_libraries(oldmanandsea_t
-    turbojpeg
+target_link_libraries(
+    oldmanandsea_t
+    PRIVATE
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
 target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
 endif(WIN32)
@@ -139,25 +143,18 @@ target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET GLEW_STATIC)
 
 if (WIN32)
 target_link_libraries(oldmanandsea_g
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib"
-)
-
-target_link_libraries(oldmanandsea_g
-    glfw3        # GLFW 
-    glew32       # GLEW 
-    turbojpeg
+    ${GUI_LIBRARIES}
+    ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 elseif (UNIX)
 
 target_link_libraries(oldmanandsea_g
-    PUBLIC
+    PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
         ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a
         ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so
-        turbojpeg
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
 endif()
 
@@ -169,8 +166,10 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
-target_link_libraries(example
-    turbojpeg
+target_link_libraries(
+    example
+    PRIVATE
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 if (UNIX)
@@ -193,7 +192,8 @@ target_link_libraries(
     uvcperf
     PRIVATE
         ${LIBUSB_LIBRARIES}
-        turbojpeg
+        ${LIBJPEGTURBO64_LIBRARIES}
+
 )
 
 endif(UNIX)
@@ -212,7 +212,8 @@ target_link_libraries(
     PRIVATE
         gtest
         gtest_main
-        turbojpeg
+        ${LIBJPEGTURBO64_LIBRARIES}
+
 )
 
 
@@ -231,7 +232,7 @@ target_link_libraries(
     PRIVATE
         gtest
         gtest_main
-        turbojpeg
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 add_executable(
@@ -248,7 +249,7 @@ target_link_libraries(
     PRIVATE
         gtest
         gtest_main
-        turbojpeg
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 
@@ -272,7 +273,7 @@ target_link_libraries(
         gtest
         gtest_main
         ${PCAP_LIBRARIES}
-        turbojpeg
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 
@@ -292,7 +293,7 @@ target_link_libraries(
     show_urb_header
     PRIVATE
         ${PCAP_LIBRARIES}
-        turbojpeg
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 endif(UNIX)
@@ -307,7 +308,7 @@ add_executable(
     ${DEVELOPE_PHOTO_SOURCES}
 )
 target_link_libraries(log_test
-    turbojpeg
+    ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 if(WIN32)
@@ -323,7 +324,7 @@ add_executable(
 )
 target_compile_definitions(log_test_t PUBLIC TUI_SET)
 target_link_libraries(log_test_t
-    turbojpeg
+    ${LIBJPEGTURBO64_LIBRARIES}
 )
 
 add_executable(
@@ -340,16 +341,10 @@ add_executable(
 
 target_compile_definitions(log_test_g PUBLIC GUI_SET GLEW_STATIC)
 
-target_link_libraries(log_test_g
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib"
+target_link_libraries(
+    log_test_g
+    PRIVATE    
+        ${GUI_LIBRARIES}
+        ${LIBJPEGTURBO64_LIBRARIES}
 )
-
-target_link_libraries(log_test_g
-    glfw3        # GLFW 
-    glew32       # GLEW 
-    turbojpeg
-)
-
 endif(WIN32)
