@@ -148,7 +148,6 @@ target_link_libraries(oldmanandsea_g
 )
 
 elseif (UNIX)
-
 target_link_libraries(oldmanandsea_g
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
@@ -173,7 +172,6 @@ target_link_libraries(
 )
 
 if (UNIX)
-
 add_executable(
     uvcperf
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvc_stream.cpp
@@ -195,7 +193,6 @@ target_link_libraries(
         ${LIBJPEGTURBO64_LIBRARIES}
 
 )
-
 endif(UNIX)
 
 add_executable(
@@ -254,7 +251,6 @@ target_link_libraries(
 
 
 if (UNIX)
-
 add_executable(
     test_packet_handler
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_packet_handler.cpp
@@ -276,7 +272,6 @@ target_link_libraries(
         ${LIBJPEGTURBO64_LIBRARIES}
 )
 
-
 add_executable(
     show_urb_header
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/show_urb_header.cpp
@@ -295,7 +290,6 @@ target_link_libraries(
         ${PCAP_LIBRARIES}
         ${LIBJPEGTURBO64_LIBRARIES}
 )
-
 endif(UNIX)
 
 
@@ -312,7 +306,6 @@ target_link_libraries(log_test
 )
 
 if(WIN32)
-
 add_executable(
     log_test_t
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_test.cpp
