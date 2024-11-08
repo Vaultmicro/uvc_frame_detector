@@ -12,7 +12,7 @@ If USBPcapCMD is not there, relocate it.
 If USBPcapCMD is not found, may need to reinstall Wireshark and ensure USBPcap is downloaded.
 
 
-![extcap](./extcap.jpg)
+![extcap](./extcap.JPG)
 
 
 # All frames are invalid
@@ -22,7 +22,7 @@ Please check that there is '-s 0' format when using the tshark.
 Or when using pcapng file, you must set snap len to sufficiently high number so data may not truncated while receiving it.  
 ## Can check this information on Wireshark > Capture > Option > Sanplen
 
-![shark_setting](./snaplen.jpg)
+![shark_setting](./snaplen.JPG)
 
 # Images not shown properly
   
@@ -44,10 +44,10 @@ Or somewhat error may cause from developing frame image.
 If this keep happen this could be programme error.  
 
 
-![load_fail](./load_fail.jpg)
+![load_fail](./load_fail.JPG)
   
 
-![img_dir](./saved_img.jpg)
+![img_dir](./saved_img.JPG)
 
 
 # Unable to Quit
