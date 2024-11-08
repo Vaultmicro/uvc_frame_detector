@@ -38,15 +38,29 @@ set(PCAP_LIBRARIES
 )
 endif(UNIX)
 
+if(WIN32)
 set(GUI_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib
 )
+elseif(UNIX)
+set(GUI_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so
+)
+endif()
 
+if (WIN32)
 set(LIBJPEGTURBO64_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg.lib
 )
+elseif (UNIX)
+set(LIBJPEGTURBO64_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/libturbojpeg.a
+)
+endif()
 
 include_directories(${googletest_SOURCE_DIR}/googlemock/include)
 include_directories(${googletest_SOURCE_DIR}/googletest/include)
@@ -81,6 +95,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -141,21 +156,10 @@ add_executable(
 
 target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET GLEW_STATIC)
 
-if (WIN32)
 target_link_libraries(oldmanandsea_g
     ${GUI_LIBRARIES}
     ${LIBJPEGTURBO64_LIBRARIES}
 )
-
-elseif (UNIX)
-target_link_libraries(oldmanandsea_g
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
-        ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so
-        ${LIBJPEGTURBO64_LIBRARIES}
-)
-endif()
 
 add_executable(
     example
@@ -319,6 +323,7 @@ target_compile_definitions(log_test_t PUBLIC TUI_SET)
 target_link_libraries(log_test_t
     ${LIBJPEGTURBO64_LIBRARIES}
 )
+endif(WIN32)
 
 add_executable(
     log_test_g
@@ -340,4 +345,4 @@ target_link_libraries(
         ${GUI_LIBRARIES}
         ${LIBJPEGTURBO64_LIBRARIES}
 )
-endif(WIN32)
+
