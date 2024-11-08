@@ -38,6 +38,7 @@ set(PCAP_LIBRARIES
 )
 endif(UNIX)
 
+
 include_directories(${googletest_SOURCE_DIR}/googlemock/include)
 include_directories(${googletest_SOURCE_DIR}/googletest/include)
 
@@ -78,7 +79,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -96,7 +96,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -113,7 +112,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
@@ -131,43 +129,36 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
     ${DEVELOPE_PHOTO_SOURCES}
     ${IMGUI_SOURCES}
 )
 
-target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET)
+target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET GLEW_STATIC)
 
 if (WIN32)
 target_link_libraries(oldmanandsea_g
     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib"
     "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib"
 )
-
-# find_package(OpenGL REQUIRED)
 
 target_link_libraries(oldmanandsea_g
     glfw3        # GLFW 
     glew32       # GLEW 
-    ${OPENGL_LIBRARIES} # OpenGL 
     turbojpeg
-)
-add_custom_command(TARGET oldmanandsea_g POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/gui/lib/glew32.dll" $<TARGET_FILE_DIR:oldmanandsea_g>
 )
 
 elseif (UNIX)
-    target_link_libraries(oldmanandsea_g
-        PUBLIC
-            ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
-            ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a
-            ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so
-            turbojpeg
-    )
+
+target_link_libraries(oldmanandsea_g
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
+        ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so
+        turbojpeg
+)
 endif()
 
 add_executable(
@@ -176,7 +167,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 target_link_libraries(example
@@ -196,7 +186,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp 
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -215,7 +204,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -234,7 +222,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -253,7 +240,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -275,7 +261,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -298,7 +283,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -320,7 +304,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp 
     ${DEVELOPE_PHOTO_SOURCES}
 )
 target_link_libraries(log_test
@@ -335,7 +318,6 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
@@ -350,28 +332,24 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
     ${IMGUI_SOURCES}
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
-target_compile_definitions(log_test_g PUBLIC GUI_SET)
+target_compile_definitions(log_test_g PUBLIC GUI_SET GLEW_STATIC)
 
-
-find_package(OpenGL REQUIRED)
+target_link_libraries(log_test_g
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib"
+)
 
 target_link_libraries(log_test_g
     glfw3        # GLFW 
     glew32       # GLEW 
-    ${OPENGL_LIBRARIES} # OpenGL 
     turbojpeg
-)
-
-add_custom_command(TARGET log_test_g POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/gui/lib/glew32.dll" $<TARGET_FILE_DIR:log_test_g>
 )
 
 endif(WIN32)
