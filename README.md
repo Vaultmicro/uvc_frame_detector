@@ -240,11 +240,11 @@ ONLY ON LINUX environment
 ctrl + c to end  
 
 # UML Diagram
-![uml_img](./dark_uvc_frame_detector.drawio.png)
+![uml_img](./documents/dark_uvc_frame_detector.drawio.png)
 
 # Example
-![example_0](./img_yuyv_specific_frame_example.jpg)
-![example_1](./img_mjpeg_streaming_frame_example.jpg)
+![example_0](./documents/img_yuyv_specific_frame_example.jpg)
+![example_1](./documents/img_mjpeg_streaming_frame_example.jpg)
 
 ### TODO
 Test Linux version <br/>
