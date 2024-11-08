@@ -5,7 +5,7 @@ lsusb
 
 read -p "Please select device address: " devadd
 
-command="tshark -i usbmon1 -s 0 -T fields \
+command="sudo tshark -i usbmon1 -s 0 -T fields \
     -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata \
     -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index \
     -e usbvideo.frame.width -e usbvideo.frame.height \
