@@ -11,7 +11,7 @@ $command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -s 0 -T fields '
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
     '-e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval ' +
     '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors ' +
-    '-E separator=; -Y "usb.device_address == ' + $devadd + '" -Q | .\build\debug\oldmanandsea_g.exe'
+    '-E separator=; -Y "usb.device_address == ' + $devadd + '" -Q | .\build\release\oldmanandsea_g.exe'
 
 Write-Output $command
 
