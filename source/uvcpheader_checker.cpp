@@ -541,29 +541,41 @@ UVCError UVCPHeaderChecker::payload_header_valid(
     }
   }
 
+  if (payload_header.bmSCR.SCR_STC != 0 && previous_payload_header.bmSCR.SCR_STC != 0 &&
+      payload_header.bmSCR.SCR_STC < previous_payload_header.bmSCR.SCR_STC &&
+      (previous_payload_header.bmSCR.SCR_STC - payload_header.bmSCR.SCR_STC) < 0x80000000) {
+    v_cerr_2 << " : STC decreased." << formatted_time << std::endl;
+    return ERR_TOGGLE_BIT_OVERLAPPED;
+  }
+
+  // if (payload_header.PTS != 0 && previous_payload_header.PTS != 0 &&
+  //     payload_header.PTS < previous_payload_header.PTS) {
+  //   v_cerr_2 << " : PTS is less than previous PTS." << formatted_time << std::endl;
+  //   return ERR_TOGGLE_BIT_OVERLAPPED;
+  // }
+
   // Checks if the Frame Identifier bit is set
   // bmBFH.BFH_FID is for the start of the stream packet
-
   if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
+        previous_payload_header.bmBFH.BFH_EOF && 
+        (payload_header.PTS == previous_payload_header.PTS) && 
+        payload_header.PTS != 0) {
+        v_cerr_2 << " : Same FID "
+                    "and prev frame and PTS matches0. " << formatted_time << std::endl;
+        return ERR_SWAP;
+
+  } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
             previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
       v_cerr_2 << " : Same FID "
                   "and prev frame EOF is set." << formatted_time << std::endl;
       return ERR_FID_MISMATCH;
-      
-  } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
-      previous_payload_header.bmBFH.BFH_EOF && 
-      (payload_header.PTS == previous_payload_header.PTS) && 
-      payload_header.PTS != 0) {
-      v_cerr_2 << " : Same FID "
-                  "and prev frame and PTS matches." << formatted_time << std::endl;
-      return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
             !previous_payload_header.bmBFH.BFH_EOF && 
             previous_payload_header.HLE != 0) {
       v_cerr_2 << " : Missing EOF.   " << formatted_time << std::endl;
-      return ERR_MISSING_EOF;
-  }
+      return ERR_MISSING_EOF;      
+  } 
 
   // Checks if the Still Image bit is set is not needed
 
@@ -727,12 +739,12 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "  BFH_ERR: " << static_cast<int>(header.bmBFH.BFH_ERR) << "\n";
     os << "  BFH_EOH: " << static_cast<int>(header.bmBFH.BFH_EOH) << "\n";
 
-    os << "PTS: " << header.PTS << "\n";
+    os << "PTS: " << std::hex << header.PTS << std::dec << "\n";
 
     os << "SCR: 0x" << std::hex << header.SCR << std::dec << "\n";
-    os << "  SCR_STC: " << header.bmSCR.SCR_STC << "\n";
-    os << "  SCR_TOK: " << header.bmSCR.SCR_TOK << "\n";
-    os << "  SCR_RES: " << header.bmSCR.SCR_RES << "\n";
+    os << "  SCR_STC: " << std::hex << header.bmSCR.SCR_STC << std::dec << "\n";
+    os << "  SCR_TOK: " << std::bitset<11>(header.bmSCR.SCR_TOK) << "\n";
+    os << "  SCR_RES: " << std::bitset<5>(header.bmSCR.SCR_RES) << "\n";
 
     return os;
 }

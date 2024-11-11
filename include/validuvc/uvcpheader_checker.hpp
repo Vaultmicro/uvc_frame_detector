@@ -339,7 +339,6 @@ class UVCPHeaderChecker {
         std::string formatTime(std::chrono::milliseconds ms);
         void print_summary(const ValidFrame& frame);
 
-
     public:
         uint32_t frame_count;
         uint64_t throughput;

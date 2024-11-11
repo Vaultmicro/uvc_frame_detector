@@ -138,7 +138,7 @@ TEST_F(uvc_header_checker_test, length_out_of_range_invalid_test_big) {
 TEST_F(uvc_header_checker_test, reserved_bit_set_test) {
   std::vector<u_char> reserved_bit_packet = create_packet({
       0x0c, 0b00011100,                    // HLE and BFH with Reserved bit set
-      0x00, 0x00, 0x00, 0x01,              // PTS
+      0x00, 0x00, 0x00, 0x00,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
@@ -148,11 +148,11 @@ TEST_F(uvc_header_checker_test, reserved_bit_set_test) {
   EXPECT_EQ(valid_err, ERR_RESERVED_BIT_SET);  // Expect ERR_RESERVED_BIT_SET
 }
 
-// Test cases for Reserved bit set (ERR_RESERVED_BIT_SET)
+// Test cases for Reserved bit set (VALID_RESERVED_BIT_SET)
 TEST_F(uvc_header_checker_test, valid_reserved_bit_set_test) {
   std::vector<u_char> reserved_bit_packet = create_packet({
       0x0c, 0b00011111,                    // HLE and BFH with Reserved bit set
-      0x00, 0x00, 0x00, 0x01,              // PTS
+      0x00, 0x00, 0x00, 0x00,              // PTS
       0x00, 0x00, 0x00, 0x00, 0x00, 0x01,  // SCR (valid)
   });
 
