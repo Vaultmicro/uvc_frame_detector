@@ -740,12 +740,12 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "  BFH_EOH: " << static_cast<int>(header.bmBFH.BFH_EOH) << "\n";
 
     os << "PTS: 0x" << std::setw(8) << std::setfill('0') << std::hex << header.PTS 
-       << " \n" << std::dec << header.PTS << "\n";
+       << " \n    (" << std::dec << header.PTS << ")\n";
 
     os << "SCR: 0x" << std::hex << header.SCR << std::dec << "\n";
   
     os << "SCR_STC: 0x" << std::setw(8) << std::setfill('0') << std::hex << header.bmSCR.SCR_STC 
-       << " \n" << std::dec << header.bmSCR.SCR_STC << "\n";
+       << " \n        (" << std::dec << header.bmSCR.SCR_STC << ")\n";
     os << "  SCR_TOK: " << std::bitset<11>(header.bmSCR.SCR_TOK) << "\n";
     os << "  SCR_RES: " << std::bitset<5>(header.bmSCR.SCR_RES) << "\n";
 
