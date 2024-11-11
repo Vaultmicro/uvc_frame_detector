@@ -1,4 +1,6 @@
 ### libpcap
+
+** libpcap; -- https://github.com/the-tcpdump-group/libpcap  
 BSD 3-Clause License:
 Copyright (c) 1989, 1991, 1993
 The Regents of the University of California. All rights reserved.
@@ -30,6 +32,8 @@ SUCH DAMAGE.
   
   
 ### libusb
+
+** libusb; -- https://github.com/libusb/libusb
 LGPL 2.1 License:
 This library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published
@@ -47,6 +51,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
   
   
 ### libuvc
+
+** libuvc; -- https://github.com/libuvc/libuvc
 BSD 3-Clause License:
 Copyright (c) 2013, Theodore Watson
 All rights reserved.
@@ -77,6 +83,8 @@ THE POSSIBILITY OF SUCH DAMAGE.
   
   
 ### ImGui
+
+** imgui; -- https://github.com/ocornut/imgui
 MIT License:
 Copyright (c) 2014-2023 Omar Cornut
 
@@ -100,6 +108,8 @@ DEALINGS IN THE SOFTWARE.
   
   
 ### libjpeg-turbo
+
+** libjpeg-turbo; -- https://github.com/libjpeg-turbo/libjpeg-turbo
 BSD-style License:
 Copyright (C) 2009-2022, D. R. Commander.
 All rights reserved.
