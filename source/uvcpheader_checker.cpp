@@ -541,12 +541,12 @@ UVCError UVCPHeaderChecker::payload_header_valid(
     }
   }
 
-  if (payload_header.bmSCR.SCR_STC != 0 && previous_payload_header.bmSCR.SCR_STC != 0 &&
-      payload_header.bmSCR.SCR_STC < previous_payload_header.bmSCR.SCR_STC &&
-      (previous_payload_header.bmSCR.SCR_STC - payload_header.bmSCR.SCR_STC) < 0x80000000) {
-    v_cerr_2 << " : STC decreased." << formatted_time << std::endl;
-    return ERR_TOGGLE_BIT_OVERLAPPED;
-  }
+  // if (payload_header.bmSCR.SCR_STC != 0 && previous_payload_header.bmSCR.SCR_STC != 0 &&
+  //     payload_header.bmSCR.SCR_STC < previous_payload_header.bmSCR.SCR_STC &&
+  //     (previous_payload_header.bmSCR.SCR_STC - payload_header.bmSCR.SCR_STC) < 0x80000000) {
+  //   v_cerr_2 << " : STC decreased." << formatted_time << std::endl;
+  //   return ERR_TOGGLE_BIT_OVERLAPPED;
+  // }
 
   // if (payload_header.PTS != 0 && previous_payload_header.PTS != 0 &&
   //     payload_header.PTS < previous_payload_header.PTS) {
