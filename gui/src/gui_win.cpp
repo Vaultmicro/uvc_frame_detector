@@ -309,12 +309,6 @@ void screen(){
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
-            
-            // float current_scroll_y = ImGui::GetScrollY();
-            // float max_scroll_y = ImGui::GetScrollMaxY();
-            // if (current_scroll_y >= max_scroll_y) {
-            //     ImGui::SetScrollHereY(1.0f);
-            // }
 
             ImGui::End();
         }
