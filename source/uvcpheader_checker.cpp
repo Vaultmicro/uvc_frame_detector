@@ -45,6 +45,7 @@
   typedef unsigned char u_char;
 #endif
 
+int UVCPHeaderChecker::continue_capture = 1;
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
@@ -209,13 +210,27 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           print_frame_data(*last_frame);
           print_summary(*last_frame);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
+          {
+            WindowData& data = manager.getWindowData(6);
+            data.add_button_log_text();
+          }
+          {
+            WindowData& data = manager.getWindowData(7);
+            data.add_button_log_text();
+          }
+          {
+            WindowData& data = manager.getWindowData(8);
+            data.add_button_log_text();
+          }
           frame_error_flag = 0;
 #else
           plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
         }
-        last_frame->push_queue();
+        if (continue_capture){
+          last_frame->push_queue();
+        }
         processed_frames.push_back(std::move(frames.back()));
         frames.pop_back();
         frame_count++;
@@ -358,6 +373,18 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         print_frame_data(*last_frame);
         print_summary(*last_frame);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
+          {
+            WindowData& data = manager.getWindowData(6);
+            data.add_button_log_text();
+          }
+          {
+            WindowData& data = manager.getWindowData(7);
+            data.add_button_log_text();
+          }
+          {
+            WindowData& data = manager.getWindowData(8);
+            data.add_button_log_text();
+          }
         frame_error_flag = 0;
 
         // develope frame image here
@@ -366,7 +393,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
-        last_frame->push_queue();
+        if (continue_capture){
+          last_frame->push_queue();
+        }
       } else{
 #ifdef GUI_SET
         print_frame_data(*last_frame);
@@ -589,11 +618,6 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   return ERR_NO_ERROR;
 }
 
-void UVCPHeaderChecker::payload_frame_develope() {
-  // Call the picture file
-  // DO NOT NEED THIS FOR NOW
-}
-
 void UVCPHeaderChecker::save_frames_to_log(
     std::unique_ptr<ValidFrame>& current_frame) {
   std::ofstream log_file("../log/frames_log.txt", std::ios::app);
@@ -696,6 +720,7 @@ void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payl
   print_whole_flag = 1;
     v_cout_2 << "Previous Payload Header: " <<  "\n";
 #elif GUI_SET
+  frame_error_flag = 1;
   gui_window_number = 6;
   print_whole_flag = 1;
 #endif
@@ -720,6 +745,7 @@ void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payl
 #elif GUI_SET
   gui_window_number = 5;
   print_whole_flag = 0;
+  frame_error_flag = 0;
 #else
     v_cout_2 <<  std::endl;
 #endif
@@ -744,7 +770,7 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
 
     os << "SCR: 0x" << std::hex << header.SCR << std::dec << "\n";
   
-    os << "SCR_STC: 0x" << std::setw(8) << std::setfill('0') << std::hex << header.bmSCR.SCR_STC 
+    os << "  SCR_STC: 0x" << std::setw(8) << std::setfill('0') << std::hex << header.bmSCR.SCR_STC 
        << " \n        (" << std::dec << header.bmSCR.SCR_STC << ")\n";
     os << "  SCR_TOK: " << std::bitset<11>(header.bmSCR.SCR_TOK) << "\n";
     os << "  SCR_RES: " << std::bitset<5>(header.bmSCR.SCR_RES) << "\n";

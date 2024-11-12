@@ -1,7 +1,29 @@
+/*********************************************************************
+ * Copyright (c) 2024 Vaultmicro, Inc
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+*********************************************************************/
 
 #include "gui_win.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
+#include "validuvc/uvcpheader_checker.hpp"
 #include <vector>
 #include <algorithm>
 
@@ -70,6 +92,7 @@ int start_screen(){
 void screen(){
     static bool show_error_log = false;
     static int selected_error_frame = 0;
+    static int selected_error_payload = 0;
     static bool show_image = false;
 
     WindowManager& manager = WindowManager::getInstance();
@@ -106,6 +129,7 @@ void screen(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+
         // **Window 11  **
         {
             WindowData& data = manager.getWindowData(11);
@@ -116,12 +140,28 @@ void screen(){
 
             ImGui::Begin("Error log buttons");
 
+            ImGui::SetCursorPos(ImVec2(30, 30));
+            if (ImGui::Button("Stop Saving", ImVec2(120, 50))){
+                UVCPHeaderChecker::continue_capture = 0;
+            }
+
+            ImGui::SetCursorPos(ImVec2(180, 30));
+            if (ImGui::Button("Capture Image", ImVec2(120, 50))) {  
+                UVCPHeaderChecker::continue_capture = 1;
+            }
+
+            ImGui::SetCursorPos(ImVec2(330, 30));
+            if (ImGui::Button("Quit", ImVec2(120, 50))) {
+            }
+
             if (!error_frame_log_button.empty()) {
 
-                if (ImGui::BeginCombo("<< Select Log", error_frame_log_button[selected_error_frame].c_str())) {
+                ImGui::SetCursorPos(ImVec2(9, 145));
+                if (ImGui::BeginCombo(":: Select Error Frame", error_frame_log_button[selected_error_frame].c_str())) {
                     for (int n = 0; n < error_frame_log_button.size(); n++) {
                         bool is_selected = (selected_error_frame == n);
                         if (ImGui::Selectable(error_frame_log_button[n].c_str(), is_selected)) {
+                            selected_error_payload = 0;
                             selected_error_frame = n; 
                             show_image = false;
                         }
@@ -132,18 +172,47 @@ void screen(){
                     ImGui::EndCombo();
                 }
 
-                ImGui::SetCursorPos(ImVec2(30, 55));
+                {
+                    WindowManager& manager = WindowManager::getInstance();
+                    WindowData& source_data = manager.getWindowData(8);
+
+                    if (!source_data.button_log_text.empty()) {
+                        data.button_log_text = source_data.button_log_text;
+                    }
+                }
+
+                ImGui::SetCursorPos(ImVec2(9, 175));
+                if (selected_error_frame < data.button_log_text.size()) {
+                    std::string current_error_label = "Error " + std::to_string(selected_error_payload);
+                    if (ImGui::BeginCombo(":: Error Payload", current_error_label.c_str())) {
+                        for (size_t j = 0; j < data.button_log_text[selected_error_frame].size(); j++) {
+                            std::string item_label = "Error " + std::to_string(j);
+                            bool is_selected = (j == selected_error_payload);
+
+                            if (ImGui::Selectable(item_label.c_str(), is_selected)) {
+                                selected_error_payload = j;
+                            }
+
+                            if (is_selected) {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+                }
+
+                ImGui::SetCursorPos(ImVec2(30, 85));
                 if (ImGui::Button("Show Error Log", ImVec2(120, 50))){
                     show_error_log = true;
                     data.custom_text = "Selected Log: " + error_frame_log_button[selected_error_frame];
                 }
-                ImGui::SetCursorPos(ImVec2(180, 55));
+                ImGui::SetCursorPos(ImVec2(180, 85));
                 if (ImGui::Button("Back to Stream", ImVec2(120, 50))) {  
                     show_error_log = false;
                     show_image = false;
                     data.custom_text = "Streaming is shown";
                 }
-                ImGui::SetCursorPos(ImVec2(330, 55));
+                ImGui::SetCursorPos(ImVec2(330, 85));
                 if (ImGui::Button("Show Image", ImVec2(120, 50))) {  
                     show_image = true;
                     
@@ -166,8 +235,7 @@ void screen(){
                     UpdateImageTexture(image_file_path);
                 }
 
-
-                ImGui::SetCursorPos(ImVec2(30, 110));
+                ImGui::SetCursorPos(ImVec2(30, 200));
                 ImGui::Text("%s", data.custom_text.c_str());
             } else {
                 ImGui::Text("No Error Log Available");
@@ -315,8 +383,12 @@ void screen(){
 
             ImGui::Begin("Previous Valid Data");
             // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < data.error_log_text.size()) {
-                ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
+            if (show_error_log && selected_error_frame < data.button_log_text.size()) {
+                if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
+                    ImGui::Text("%s", data.button_log_text[selected_error_frame][selected_error_payload].c_str());
+                } else {
+                    ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
+                }
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -333,8 +405,12 @@ void screen(){
 
             ImGui::Begin("Lost Inbetween Error Data");
             // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < data.error_log_text.size()) {
-                ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
+            if (show_error_log && selected_error_frame < data.button_log_text.size()) {
+                if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
+                    ImGui::Text("%s", data.button_log_text[selected_error_frame][selected_error_payload].c_str());
+                } else {
+                    ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
+                }
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -351,8 +427,12 @@ void screen(){
 
             ImGui::Begin("Current Error Data");
             // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < data.error_log_text.size()) {
-                ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
+            if (show_error_log && selected_error_frame < data.button_log_text.size()) {
+                if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
+                    ImGui::Text("%s", data.button_log_text[selected_error_frame][selected_error_payload].c_str());
+                } else {
+                    ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
+                }
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }

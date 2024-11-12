@@ -150,7 +150,6 @@ struct FrameErrorStats {
     }
 };
 
-
 enum UVCError {
   ERR_NO_ERROR = 0,
   ERR_EMPTY_PAYLOAD = 1,
@@ -281,7 +280,6 @@ class UVCPHeaderChecker {
 
         UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
         
-        void payload_frame_develope();
         void print_error_bits(const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
 
         uint32_t current_frame_number;
@@ -344,8 +342,10 @@ class UVCPHeaderChecker {
         uint64_t throughput;
         uint64_t graph_throughput;
         double average_frame_rate;
+        static int continue_capture;
 
-        UVCPHeaderChecker()          :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
+        UVCPHeaderChecker() :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
+            v_cout_1 << "UVCPHeaderChecker Constructor" << std::endl;
         }
 
         ~UVCPHeaderChecker() {
@@ -363,6 +363,5 @@ class UVCPHeaderChecker {
         void frame_valid_ctrl(const std::vector<u_char>& uvc_payload);
 
         void print_stats() const;
-
 };
 #endif // UVCPHEADER_CHECKER_HPP

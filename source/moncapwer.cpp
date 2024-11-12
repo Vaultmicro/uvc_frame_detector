@@ -348,16 +348,18 @@ void capture_packets() {
                     << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
                     << std::endl;
 #elif GUI_SET
-            temp_window_number = gui_window_number;
-            gui_window_number = 3;
-              v_cout_1 << "width: " << ControlConfig::get_width() << "\n";
-              v_cout_1 << "height: " << ControlConfig::get_height() << "\n";
-              v_cout_1 << "frame_format: " << ControlConfig::get_frame_format() << "\n";
-              v_cout_1 << "fps: " << ControlConfig::get_fps() << "\n";
-              v_cout_1 << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
-              v_cout_1 << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
-              v_cout_1 << std::endl;
-            gui_window_number = temp_window_number;
+{
+            WindowManager& manager = WindowManager::getInstance();
+            WindowData& data = manager.getWindowData(3);
+            std::ostringstream logStream;
+            logStream << "width: " << ControlConfig::get_width() << "\n";
+            logStream << "height: " << ControlConfig::get_height() << "\n";
+            logStream << "frame_format: " << ControlConfig::get_frame_format() << "\n";
+            logStream << "fps: " << ControlConfig::get_fps() << "\n";
+            logStream << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
+            logStream << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
+            data.custom_text += logStream.str();
+}
 #else
               std::cout << "width: " << ControlConfig::get_width() << "   ";
               std::cout << "height: " << ControlConfig::get_height() << "   ";

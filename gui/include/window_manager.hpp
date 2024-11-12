@@ -12,6 +12,16 @@ struct WindowData {
     std::mutex mutex;
     bool stop_flag;
     std::vector<std::string> error_log_text;
+    std::vector<std::vector<std::string>> button_log_text;
+
+    void add_error_log_text(std::string text) {
+        error_log_text.push_back(text);
+    }
+
+    void add_button_log_text(){
+        button_log_text.push_back(error_log_text);
+        error_log_text.clear();
+    }
 };
 
 struct GraphData {
