@@ -10,8 +10,6 @@
 #include "validuvc/control_config.hpp"
 #include "validuvc/uvcpheader_checker.hpp"
 
-extern int verbose_level;
-
 // Utility function to convert a string of hex values to a vector of u_char
 std::vector<u_char> hex_string_to_vector(const std::string& hex_string) {
   std::vector<u_char> result;
@@ -105,7 +103,7 @@ void develope_frame_image() {
 }
 
 int main(int argc, char* argv[]) {
-  verbose_level = 2;
+  VerboseStream::verbose_level = 2;
 
   UVCPHeaderChecker header_checker;
 

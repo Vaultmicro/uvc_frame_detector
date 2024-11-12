@@ -24,7 +24,6 @@
 
 #ifdef _WIN32
     typedef unsigned char u_char;
-
 #elif __linux__
   #include "pcap.h"
 #else
@@ -97,20 +96,20 @@ struct PayloadErrorStats {
 
     void print_stats() const {
         int total_count = total();
-        v_cout_1 << "Payload Error Statistics:\n";
-        v_cout_1 << "No Error: " << count_no_error << " (" << percentage(count_no_error, total_count) << "%)\n";
-        v_cout_1 << "Empty Payload: " << count_empty_payload << " (" << percentage(count_empty_payload, total_count) << "%)\n";
-        v_cout_1 << "Max Payload Overflow: " << count_max_payload_overflow << " (" << percentage(count_max_payload_overflow, total_count) << "%)\n";
-        v_cout_1 << "Error Bit Set: " << count_err_bit_set << " (" << percentage(count_err_bit_set, total_count) << "%)\n";
-        v_cout_1 << "Length Out of Range: " << count_length_out_of_range << " (" << percentage(count_length_out_of_range, total_count) << "%)\n";
-        v_cout_1 << "Length Invalid: " << count_length_invalid << " (" << percentage(count_length_invalid, total_count) << "%)\n";
-        v_cout_1 << "Reserved Bit Set: " << count_reserved_bit_set << " (" << percentage(count_reserved_bit_set, total_count) << "%)\n";
-        v_cout_1 << "End of Header Bit: " << count_eoh_bit << " (" << percentage(count_eoh_bit, total_count) << "%)\n";
-        v_cout_1 << "Toggle Bit Overlapped: " << count_toggle_bit_overlapped << " (" << percentage(count_toggle_bit_overlapped, total_count) << "%)\n";
-        v_cout_1 << "Frame Identifier Mismatch: " << count_fid_mismatch << " (" << percentage(count_fid_mismatch, total_count) << "%)\n";
-        v_cout_1 << "Swap: " << count_swap << " (" << percentage(count_swap, total_count) << "%)\n";
-        v_cout_1 << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
-        v_cout_1 << "Unknown Error: " << count_unknown_error << " (" << percentage(count_unknown_error, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Payload Error Statistics:\n";
+        CtrlPrint::v_cout_1 << "No Error: " << count_no_error << " (" << percentage(count_no_error, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Empty Payload: " << count_empty_payload << " (" << percentage(count_empty_payload, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Max Payload Overflow: " << count_max_payload_overflow << " (" << percentage(count_max_payload_overflow, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Error Bit Set: " << count_err_bit_set << " (" << percentage(count_err_bit_set, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Length Out of Range: " << count_length_out_of_range << " (" << percentage(count_length_out_of_range, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Length Invalid: " << count_length_invalid << " (" << percentage(count_length_invalid, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Reserved Bit Set: " << count_reserved_bit_set << " (" << percentage(count_reserved_bit_set, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "End of Header Bit: " << count_eoh_bit << " (" << percentage(count_eoh_bit, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Toggle Bit Overlapped: " << count_toggle_bit_overlapped << " (" << percentage(count_toggle_bit_overlapped, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Frame Identifier Mismatch: " << count_fid_mismatch << " (" << percentage(count_fid_mismatch, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Swap: " << count_swap << " (" << percentage(count_swap, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Unknown Error: " << count_unknown_error << " (" << percentage(count_unknown_error, total_count) << "%)\n";
     }
 
     double percentage(int count, int total_count) const {
@@ -135,14 +134,14 @@ struct FrameErrorStats {
 
     void print_stats() const {
         int total_count = total();
-        v_cout_1 << "\nFrame Error Statistics:\n";
-        v_cout_1 << "No Error: " << count_no_error << " (" << percentage(count_no_error, total_count) << "%)\n";
-        v_cout_1 << "Frame Drop: " << count_frame_drop << " (" << percentage(count_frame_drop, total_count) << "%)\n";
-        v_cout_1 << "Frame Error: " << count_frame_error << " (" << percentage(count_frame_error, total_count) << "%)\n";
-        v_cout_1 << "Max Frame Overflow: " << count_max_frame_overflow << " (" << percentage(count_max_frame_overflow, total_count) << "%)\n";
-        v_cout_1 << "Invalid YUYV Raw Size: " << count_invalid_yuyv_raw_size << " (" << percentage(count_invalid_yuyv_raw_size, total_count) << "%)\n";
-        v_cout_1 << "Same Different PTS: " << count_same_different_pts << " (" << percentage(count_same_different_pts, total_count) << "%)\n";
-        v_cout_1 << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "\nFrame Error Statistics:\n";
+        CtrlPrint::v_cout_1 << "No Error: " << count_no_error << " (" << percentage(count_no_error, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Frame Drop: " << count_frame_drop << " (" << percentage(count_frame_drop, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Frame Error: " << count_frame_error << " (" << percentage(count_frame_error, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Max Frame Overflow: " << count_max_frame_overflow << " (" << percentage(count_max_frame_overflow, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Invalid YUYV Raw Size: " << count_invalid_yuyv_raw_size << " (" << percentage(count_invalid_yuyv_raw_size, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Same Different PTS: " << count_same_different_pts << " (" << percentage(count_same_different_pts, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
     }
 
     double percentage(int count, int total_count) const {
@@ -154,13 +153,13 @@ enum UVCError {
   ERR_NO_ERROR = 0,
   ERR_EMPTY_PAYLOAD = 1,
   ERR_MAX_PAYLAOD_OVERFLOW= 2,
-  ERR_ERR_BIT_SET = 3,    // Error bit is set
-  ERR_LENGTH_OUT_OF_RANGE = 4, // Invalid header length
-  ERR_LENGTH_INVALID = 5, // Invalid length for PTS, Invalid length for SCR
-  ERR_RESERVED_BIT_SET = 6, // Reserved bit is set
+  ERR_ERR_BIT_SET = 3,    
+  ERR_LENGTH_OUT_OF_RANGE = 4, 
+  ERR_LENGTH_INVALID = 5, 
+  ERR_RESERVED_BIT_SET = 6, 
   ERR_EOH_BIT = 7,
   ERR_TOGGLE_BIT_OVERLAPPED = 8,
-  ERR_FID_MISMATCH = 9,    // Frame Identifier mismatch
+  ERR_FID_MISMATCH = 9,   
   ERR_SWAP = 10,
   ERR_MISSING_EOF = 11,
 
@@ -338,6 +337,8 @@ class UVCPHeaderChecker {
         void print_summary(const ValidFrame& frame);
 
     public:
+
+    
         uint32_t frame_count;
         uint64_t throughput;
         uint64_t graph_throughput;
@@ -345,11 +346,11 @@ class UVCPHeaderChecker {
         static int continue_capture;
 
         UVCPHeaderChecker() :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
-            v_cout_1 << "UVCPHeaderChecker Constructor" << std::endl;
+            CtrlPrint::v_cout_1 << "UVCPHeaderChecker Constructor" << std::endl;
         }
 
         ~UVCPHeaderChecker() {
-            v_cout_1 << "UVCPHeaderChecker Destructor" << std::endl;
+            CtrlPrint::v_cout_1 << "UVCPHeaderChecker Destructor" << std::endl;
             print_stats();
         }
 
@@ -364,4 +365,5 @@ class UVCPHeaderChecker {
 
         void print_stats() const;
 };
+
 #endif // UVCPHEADER_CHECKER_HPP

@@ -51,7 +51,6 @@ extern std::mutex queue_mutex;
 extern std::condition_variable queue_cv;
 extern bool stop_processing;
 
-extern int verbose_level;
 extern int log_verbose_level;
 
 extern int target_busnum;

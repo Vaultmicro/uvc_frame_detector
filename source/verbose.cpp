@@ -21,7 +21,6 @@
 *********************************************************************/
 
 #include "utils/verbose.hpp"
-
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
 #elif GUI_SET
@@ -29,19 +28,21 @@
 #endif
 
 // Initialize verbose level
-int verbose_level = 2;
+int VerboseStream::verbose_level = 2;
 
 // VerboseStream definitions
-VerboseStream v_cout_1(1, "", std::cout);
-VerboseStream v_cerr_1(1, "", std::cerr);
-VerboseStream v_cout_2(2, "", std::cout);
-VerboseStream v_cerr_2(2, "", std::cerr);
-VerboseStream v_cout_3(3, "", std::cout);
-VerboseStream v_cerr_3(3, "", std::cerr);
-VerboseStream v_cout_4(4, "", std::cout);
-VerboseStream v_cerr_4(4, "", std::cerr);
-VerboseStream v_cout_5(5, "", std::cout);
-VerboseStream v_cerr_5(5, "", std::cerr);
+namespace CtrlPrint {
+  VerboseStream v_cout_1(1, "", std::cout);
+  VerboseStream v_cerr_1(1, "", std::cerr);
+  VerboseStream v_cout_2(2, "", std::cout);
+  VerboseStream v_cerr_2(2, "", std::cerr);
+  VerboseStream v_cout_3(3, "", std::cout);
+  VerboseStream v_cerr_3(3, "", std::cerr);
+  VerboseStream v_cout_4(4, "", std::cout);
+  VerboseStream v_cerr_4(4, "", std::cerr);
+  VerboseStream v_cout_5(5, "", std::cout);
+  VerboseStream v_cerr_5(5, "", std::cerr);
+}
 
 // VerboseStream constructor implementation
 VerboseStream::VerboseStream(int level, const std::string& prefix,
@@ -50,7 +51,7 @@ VerboseStream::VerboseStream(int level, const std::string& prefix,
 
 // VerboseStream implementation
 VerboseStream& VerboseStream::operator<<(std::ostream& (*manip)(std::ostream&) ) {
-  if (verbose_level >= level_) {
+  if (VerboseStream::verbose_level >= level_) {
     buffer_ << manip;
     flush();
   }
@@ -58,7 +59,7 @@ VerboseStream& VerboseStream::operator<<(std::ostream& (*manip)(std::ostream&) )
 }
 
 void VerboseStream::flush() {
-  if (verbose_level >= level_) {
+  if (VerboseStream::verbose_level >= level_) {
 #ifdef TUI_SET
     if (print_whole_flag){
       

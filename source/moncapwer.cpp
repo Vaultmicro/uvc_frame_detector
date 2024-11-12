@@ -51,7 +51,7 @@ void clean_exit(int signum) {
 //     log_file.close();
 //   }
 
-  v_cout_2 << "Exiting safely..." << std::endl;
+  CtrlPrint::v_cout_2 << "Exiting safely..." << std::endl;
   std::cout << "End of the process: wait for other pipes to be closed" << std::endl;
 
   exit(signum);
@@ -115,7 +115,7 @@ void capture_packets() {
     //     std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
     //     return;
     // } else {
-    //     v_cout_1 << "Log file opened successfully: " << output_path << std::endl;
+    //     CtrlPrint::v_cout_1 << "Log file opened successfully: " << output_path << std::endl;
     // }
 
 
@@ -132,12 +132,12 @@ void capture_packets() {
     //     first = 0;
     // }
     window_number = 3;
-    v_cout_1 << "Waiting for input...     " << std::endl;
+    CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
 #elif GUI_SET
     gui_window_number = 5;
-    v_cout_1 << "Waiting for input...     " << std::endl;
+    CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
 #else
-    v_cout_1 << "Waiting for input...     " << std::endl;
+    CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
 #endif
     while (std::getline(std::cin, line)) {
 
@@ -408,9 +408,9 @@ void capture_packets() {
         }
 
         // // Print each field separately
-        // v_cout_1 << "frame.time_epoch: " << frame_time_epoch << std::endl;
-        // v_cout_1 << "frame.len: " << frame_len << std::endl;
-        // v_cout_1 << "usb.capdata: " << usb_capdata << std::endl;
+        // CtrlPrint::v_cout_1 << "frame.time_epoch: " << frame_time_epoch << std::endl;
+        // CtrlPrint::v_cout_1 << "frame.len: " << frame_len << std::endl;
+        // CtrlPrint::v_cout_1 << "usb.capdata: " << usb_capdata << std::endl;
 
         // // Log the separated fields
         // log_file << "usb_transfer_type: " << usb_transfer_type << std::endl;
@@ -422,7 +422,7 @@ void capture_packets() {
     }
 
     // log_file.close();
-    // v_cout_1 << "Log file closed." << std::endl;
+    // CtrlPrint::v_cout_1 << "Log file closed." << std::endl;
 
 }
 
@@ -454,21 +454,21 @@ void process_packets() {
       }
 
       if (!packet.empty()) {
-        v_cout_3 << "Processing packet of size: " << packet.size() << std::endl;
+        CtrlPrint::v_cout_3 << "Processing packet of size: " << packet.size() << std::endl;
       }
 
       uint8_t valid_err =
           header_checker.payload_valid_ctrl(packet, received_time);
 
       if (valid_err) {
-        v_cerr_3 << "Invalid packet detected" << std::endl;
+        CtrlPrint::v_cerr_3 << "Invalid packet detected" << std::endl;
         continue;
       }
     } else {
       lock.unlock();
     }
   }
-  v_cout_1 << "Process packet() end" << std::endl;
+  CtrlPrint::v_cout_1 << "Process packet() end" << std::endl;
 }
 
 
@@ -514,9 +514,9 @@ int main(int argc, char* argv[]) {
         } else if (std::strcmp(argv[i], "-mp") == 0 && i + 1 < argc) {
         ControlConfig::set_dwMaxPayloadTransferSize(std::atoi(argv[i + 1]));
         } else if (std::strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
-        verbose_level = std::atoi(argv[i + 1]);
+        VerboseStream::verbose_level = std::atoi(argv[i + 1]);
         } else {
-        v_cerr_1 << "Usage: " << argv[0]
+        CtrlPrint::v_cerr_1 << "Usage: " << argv[0]
                 <<  "[-fw frame_width] [-fh frame_height] [-fps frame_per_sec] "
                     "[-ff frame_format] [-mf max_frame_size] [-mp max_payload_size] "
                     "[-v verbose_level]"
@@ -530,27 +530,27 @@ int main(int argc, char* argv[]) {
 #endif
     if (!fw_set || !fh_set || !fps_set || !ff_set) {
         if (!fw_set) {
-        v_cout_1 << "Frame width not specified, using default: "
+        CtrlPrint::v_cout_1 << "Frame width not specified, using default: "
                     << ControlConfig::get_width() << std::endl;
         }
         if (!fh_set) {
-        v_cout_1 << "Frame height not specified, using default: "
+        CtrlPrint::v_cout_1 << "Frame height not specified, using default: "
                     << ControlConfig::get_height() << std::endl;
         }
         if (!fps_set) {
-        v_cout_1 << "FPS not specified, using default: "
+        CtrlPrint::v_cout_1 << "FPS not specified, using default: "
                     << ControlConfig::get_fps() << std::endl;
         }
         if (!ff_set) {
-        v_cout_1 << "Frame format not specified, using default: "
+        CtrlPrint::v_cout_1 << "Frame format not specified, using default: "
                     << ControlConfig::get_frame_format() << std::endl;
         }
     }
 #if !defined(TUI_SET) && !defined(GUI_SET)
-    v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
-    v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
-    v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
-    v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
+    CtrlPrint::v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
+    CtrlPrint::v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
+    CtrlPrint::v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
+    CtrlPrint::v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
             << std::endl;
 #elif GUI_SET
     gui_window_number = temp_window_number;
@@ -586,7 +586,7 @@ int main(int argc, char* argv[]) {
 #ifdef GUI_SET
   end_screen();
 #else
-    v_cout_1 << "End of main" << std::endl;
+    CtrlPrint::v_cout_1 << "End of main" << std::endl;
 #endif
 
 
