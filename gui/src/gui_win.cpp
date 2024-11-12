@@ -152,6 +152,7 @@ void screen(){
 
             ImGui::SetCursorPos(ImVec2(330, 30));
             if (ImGui::Button("Quit", ImVec2(120, 50))) {
+                exit(0);
             }
 
             if (!error_frame_log_button.empty()) {

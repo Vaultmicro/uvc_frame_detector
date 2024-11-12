@@ -54,7 +54,7 @@ void clean_exit(int signum) {
   v_cout_2 << "Exiting safely..." << std::endl;
   std::cout << "End of the process: wait for other pipes to be closed" << std::endl;
 
-  //exit(signum);
+  exit(signum);
 }
 
 // Helper function to split the input line by a delimiter
