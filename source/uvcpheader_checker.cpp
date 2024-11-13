@@ -104,12 +104,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             temp_window_number = gui_window_number;
             gui_window_number = 9;
     #endif
-            CtrlPrint::v_cout_1 << "FPS: " << frame_count << " : " << formatted_time << std::endl;
+            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS" <<std::endl;
     #ifdef GUI_SET
             gui_window_number = 10;
     #endif
     #ifndef TUI_SET
-            CtrlPrint::v_cout_1 << "Throughput: " << throughput * 8 / 1000000 << " mbps  " << formatted_time << std::endl;
+            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps THRPT" << std::endl;
     #endif
     #ifdef TUI_SET
             window_number = 1;
@@ -132,14 +132,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   temp_window_number = gui_window_number;
   gui_window_number = 9;
 #endif
-    CtrlPrint::v_cout_1 << "FPS: " << frame_count << " : " << formatted_time << std::endl;
+    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS" <<std::endl;
 
 #ifdef GUI_SET
   gui_window_number = 10;
 #endif
 
 #ifndef TUI_SET
-    CtrlPrint::v_cout_1 << "Throughput: " << throughput * 8 / 1000000 << " mbps  " << formatted_time <<std::endl;
+    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps THRPT" << std::endl;
 #endif
 
 #ifdef TUI_SET
@@ -190,7 +190,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     //Process the last frame when EOF is missing
     if (payload_header_valid_return == ERR_MISSING_EOF) {
-      CtrlPrint::v_cerr_3 << " : Missing EOF." << std::endl;
+      CtrlPrint::v_cerr_3 << "Missing EOF." << std::endl;
       if (!frames.empty()) {
         auto& last_frame = frames.back();
         last_frame->frame_error = ERR_FRAME_MISSING_EOF;
@@ -306,7 +306,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
-        data.custom_text = "Frame Number: " + std::to_string(current_frame_number);
+        data.custom_text = "[ " + std::to_string(current_frame_number) + " ]";
         data.graph_reset();
         data.addGraphData(static_cast<float>(uvc_payload.size()));
 #endif
@@ -518,15 +518,15 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 
   // Checks if the Error bit is set
   if (payload_header.bmBFH.BFH_ERR) {
-    CtrlPrint::v_cerr_2 << " : Error bit is set." << formatted_time << std::endl;
+    CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Error bit is set." << std::endl;
     return ERR_ERR_BIT_SET;
   }
 
   // Checks if the header length is valid
   if (payload_header.HLE < 0x02 || payload_header.HLE > 0x0C) {
-    CtrlPrint::v_cerr_2 << " : Unexpected start byte 0x"
+    CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Unexpected start byte 0x"
              << std::hex << std::setw(2) << std::setfill('0')
-             << static_cast<int>(payload_header.HLE) << "." << formatted_time << std::endl;
+             << static_cast<int>(payload_header.HLE) << "." << std::endl;
     return ERR_LENGTH_OUT_OF_RANGE; 
   }
 
@@ -534,27 +534,27 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   // Checks if the Source Clock Reference bit is set
   if (payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
       payload_header.HLE != 0x0C) {
-    CtrlPrint::v_cerr_2 << " : Both Presentation Time Stamp and "
-                "Source Clock Reference bits are set." << formatted_time
+    CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " <<"Both Presentation Time Stamp and "
+                "Source Clock Reference bits are set."
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x06) {
-    CtrlPrint::v_cerr_2 << " : Presentation Time Stamp bit is "
-                "set but header length is less than 6." << formatted_time
+    CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Presentation Time Stamp bit is "
+                "set but header length is less than 6."
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x08) {
-    CtrlPrint::v_cerr_2 << " : Source Clock Reference bit is "
-                "set but header length is less than 12." << formatted_time
+    CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Source Clock Reference bit is "
+                "set but header length is less than 12."
              << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x02) {
     CtrlPrint::v_cerr_2
-        << " : Neither Presentation Time Stamp nor "
-           "Source Clock Reference bits are set but header length is not 2." << formatted_time
+        << "[" << formatted_time << "] " << "Neither Presentation Time Stamp nor "
+           "Source Clock Reference bits are set but header length is not 2."
         << std::endl;
     return ERR_LENGTH_INVALID;
   }
@@ -564,7 +564,7 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   if (payload_header.bmBFH.BFH_EOF) {
   } else {
     if (payload_header.bmBFH.BFH_RES) {
-      CtrlPrint::v_cerr_2 << " : Reserved bit is set." << formatted_time
+      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Reserved bit is set."
                << std::endl;
       return ERR_RESERVED_BIT_SET;
     }
@@ -589,20 +589,20 @@ UVCError UVCPHeaderChecker::payload_header_valid(
         previous_payload_header.bmBFH.BFH_EOF && 
         (payload_header.PTS == previous_payload_header.PTS) && 
         payload_header.PTS != 0) {
-        CtrlPrint::v_cerr_2 << " : Same FID "
-                    "and prev frame and PTS matches0. " << formatted_time << std::endl;
+        CtrlPrint::v_cerr_2 << "[" << formatted_time << "] : Same FID "
+                    "and prev frame and PTS matches0. "  << std::endl;
         return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
             previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
-      CtrlPrint::v_cerr_2 << " : Same FID "
-                  "and prev frame EOF is set." << formatted_time << std::endl;
+      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] : Same FID "
+                  "and prev frame EOF is set."  << std::endl;
       return ERR_FID_MISMATCH;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
             !previous_payload_header.bmBFH.BFH_EOF && 
             previous_payload_header.HLE != 0) {
-      CtrlPrint::v_cerr_2 << " : Missing EOF.   " << formatted_time << std::endl;
+      CtrlPrint::v_cerr_2  << "[" << formatted_time << "] : Missing EOF.   " << std::endl;
       return ERR_MISSING_EOF;      
   } 
 
@@ -661,56 +661,6 @@ void UVCPHeaderChecker::save_frames_to_log(
   log_file.close();
 }
 
-//making graph
-
-void UVCPHeaderChecker::save_payload_header_to_log(
-    const UVC_Payload_Header& payload_header,
-    std::chrono::time_point<std::chrono::steady_clock> received_time) {
-
-#ifdef __linux__
-  std::ofstream log_file("../log/payload_headers_log.txt", std::ios::app);
-#elif _WIN32
-  std::ofstream log_file("..\\..\\log\\payload_headers_log.txt", std::ios::app);
-#endif
-
-  if (!log_file.is_open()) {
-    CtrlPrint::v_cerr_3 << "Error opening payload header log file." << std::endl;
-    return;
-  }
-
-  log_file << std::hex;  // Set the output stream to hexadecimal mode
-  log_file << "HLE: " << std::setw(2) << std::setfill('0')
-           << static_cast<int>(payload_header.HLE) << "\n";
-
-  // Log each bit field separately
-  log_file << "BFH:\n"
-           << "  FID: " << std::bitset<1>(payload_header.bmBFH.BFH_FID) << "\n"
-           << "  EOF: " << std::bitset<1>(payload_header.bmBFH.BFH_EOF) << "\n"
-           << "  PTS: " << std::bitset<1>(payload_header.bmBFH.BFH_PTS) << "\n"
-           << "  SCR: " << std::bitset<1>(payload_header.bmBFH.BFH_SCR) << "\n"
-           << "  RES: " << std::bitset<1>(payload_header.bmBFH.BFH_RES) << "\n"
-           << "  STI: " << std::bitset<1>(payload_header.bmBFH.BFH_STI) << "\n"
-           << "  ERR: " << std::bitset<1>(payload_header.bmBFH.BFH_ERR) << "\n"
-           << "  EOH: " << std::bitset<1>(payload_header.bmBFH.BFH_EOH) << "\n";
-
-  log_file << "PTS: " << std::setw(8) << std::setfill('0') << payload_header.PTS
-           << "\n";
-  log_file << "SCR:\n"
-           << "  STC: " << static_cast<int>(payload_header.bmSCR.SCR_STC)
-           << "\n"
-           << "  TOK: " << std::bitset<11>(payload_header.bmSCR.SCR_TOK) << "\n"
-           << "  RES: " << std::bitset<5>(payload_header.bmSCR.SCR_RES) << "\n";
-
-  log_file << std::dec  // Set the output stream back to decimal mode
-           << "Received Time: "
-           << std::chrono::duration_cast<std::chrono::milliseconds>(
-                  received_time.time_since_epoch())
-                  .count()
-           << " ms since epoch\n"
-           << "\n\n";  // Separate each entry with a double newline
-
-  log_file.close();
-}
 
 void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header) {
     // CtrlPrint::v_cout_2 << "Frame Error Type__: " << frame_error << std::endl;
@@ -724,21 +674,25 @@ void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payl
   gui_window_number = 6;
   print_whole_flag = 1;
 #endif
-    CtrlPrint::v_cout_2 << previous_payload_header << "\n" << p_formatted_time <<  std::endl;
+    CtrlPrint::v_cout_2 << " [" << p_formatted_time << "] \n\n" << previous_payload_header << "\n" <<  std::endl;
+
+if (!e_formatted_time.empty()) {
 #ifdef TUI_SET
   window_number = 5;
     CtrlPrint::v_cout_2 << "Lost Inbetween Header: " <<  "\n";
 #elif GUI_SET
   gui_window_number = 7;
 #endif
-    CtrlPrint::v_cout_2 << temp_error_payload_header << "\n" << e_formatted_time <<  std::endl;
+    CtrlPrint::v_cout_2 << "[" << e_formatted_time << "] \n\n" << temp_error_payload_header << "\n" <<  std::endl;
+}
+
 #ifdef TUI_SET
   window_number = 6;
     CtrlPrint::v_cout_2 << "Current Payload Header: " <<  "\n";
 #elif GUI_SET
   gui_window_number = 8;
 #endif
-    CtrlPrint::v_cout_2 << payload_header << "\n" << formatted_time <<  std::endl;
+    CtrlPrint::v_cout_2 << "[" << formatted_time << "] \n\n" << payload_header << "\n" <<  std::endl;
 #ifdef TUI_SET
   window_number = 1;
   print_whole_flag = 0;
@@ -750,7 +704,6 @@ void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payl
     CtrlPrint::v_cout_2 <<  std::endl;
 #endif
 }
-
 
 std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "HLE: " << static_cast<int>(header.HLE) << "\n";
@@ -834,10 +787,10 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
 
     // Populate vector with both chrono times and error times along with labels
     for (const auto& time_point : frame.received_chrono_times) {
-        all_times.emplace_back(time_point, "Valid : Time");
+        all_times.emplace_back(time_point, "[Valid]");
     }
     for (const auto& error_time : frame.received_error_times) {
-        all_times.emplace_back(error_time, "Error : Time");
+        all_times.emplace_back(error_time, "[Error]");
     }
 
     // Sort all times in ascending order
@@ -846,21 +799,21 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
     });
 
     // Print sorted times with labels and matching payload sizes
-    CtrlPrint::v_cout_2 << "Received Times and Payload Sizes in Order:" << frame.frame_number << "\n";
+    CtrlPrint::v_cout_2 << "[ " << frame.frame_number << " ] \n";
+    
     for (size_t i = 0; i < all_times.size(); ++i) {
 
         auto formatted_time = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(all_times[i].first.time_since_epoch()));
 
-        CtrlPrint::v_cout_2 << all_times[i].second << ": " << formatted_time;
+        CtrlPrint::v_cout_2 << "[" << formatted_time << "] " << all_times[i].second;
 
         // Match with payload size if available
         if (i < frame.payload_sizes.size()) {
-            CtrlPrint::v_cout_2 << ", Payload Size: " << frame.payload_sizes[i];
+            CtrlPrint::v_cout_2 << " Payload Size: " << frame.payload_sizes[i];
         }
 
         CtrlPrint::v_cout_2 << "\n";
     }
-    CtrlPrint::v_cout_2 << "\n";
 
     if (!all_times.empty()) {
         auto first_time = all_times.front().first;
@@ -871,8 +824,8 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
 
     // Calculate total payload size
     size_t total_payload_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
-    CtrlPrint::v_cout_2 << "Total Size: " << total_payload_size << " bytes" << "\n";
-    CtrlPrint::v_cout_2 << "\n" << std::endl;
+    CtrlPrint::v_cout_2 << "Total Size: " << total_payload_size << " bytes";
+    CtrlPrint::v_cout_2 << "\n\n" << std::endl;
 
 #ifdef GUI_SET
     gui_window_number = 5;
@@ -910,9 +863,28 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     gui_window_number = 13;
   }
 #endif
-    CtrlPrint::v_cout_2 << "Frame Number: " << frame.frame_number << "\n";
+    CtrlPrint::v_cout_2 << "[ " << frame.frame_number << " ]"<< "\n";
+
+    // Calculate time taken from valid start to the last of error or valid times
+    if (!frame.received_chrono_times.empty()) {
+        auto valid_start = frame.received_chrono_times.front();
+        auto valid_end = frame.received_chrono_times.back();
+        auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
+
+        // Choose the later of valid_end and error_end as the end point
+        auto final_end = (error_end > valid_end) ? error_end : valid_end;
+        auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
+
+        auto valid_start_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(valid_start.time_since_epoch()));
+        auto final_end_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(final_end.time_since_epoch()));
+
+        CtrlPrint::v_cout_2 << "[ " << valid_start_ms << "  ~ " << final_end_ms << "  ]: " << time_taken << " ms" << "\n";
+    } else {
+        CtrlPrint::v_cout_2 << "No Valid Times Recorded" << "\n";
+    }
+
     CtrlPrint::v_cout_2 << "Toggle Bit (FID): " << static_cast<int>(frame.toggle_bit) << "\n";
-    CtrlPrint::v_cout_2 << "Packet Number: " << frame.packet_number << "\n";
+    CtrlPrint::v_cout_2 << "Payload Count: " << frame.packet_number << "\n";
     CtrlPrint::v_cout_2 << "Frame PTS: " << frame.frame_pts << "\n";
     // Print Frame Error directly with switch statement
     CtrlPrint::v_cout_2 << "Frame Error: ";
@@ -945,27 +917,9 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "\n";
     CtrlPrint::v_cout_2 << "EOF Reached: " << (frame.eof_reached ? "Yes" : "No") << "\n";
 
-    // Calculate time taken from valid start to the last of error or valid times
-    if (!frame.received_chrono_times.empty()) {
-        auto valid_start = frame.received_chrono_times.front();
-        auto valid_end = frame.received_chrono_times.back();
-        auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
-
-        // Choose the later of valid_end and error_end as the end point
-        auto final_end = (error_end > valid_end) ? error_end : valid_end;
-        auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
-
-        auto valid_start_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(valid_start.time_since_epoch()));
-        auto final_end_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(final_end.time_since_epoch()));
-
-        CtrlPrint::v_cout_2 << "Time Taken: " << valid_start_ms << " ms ~ " << final_end_ms << " ms : " << time_taken << " ms" << "\n";
-    } else {
-        CtrlPrint::v_cout_2 << "No Valid Times Recorded" << "\n";
-    }
-
     // Calculate total payload size
     size_t total_payload_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
-    CtrlPrint::v_cout_2 << "Total Payload Size: " << total_payload_size << " bytes" << "\n";
+    CtrlPrint::v_cout_2 << "Frame Size: " << total_payload_size << " bytes" << "\n";
 
     CtrlPrint::v_cout_2 << std::endl;
 #ifdef GUI_SET
@@ -1090,8 +1044,6 @@ void UVCPHeaderChecker::printUVCErrorExplanation(UVCError error) {
 
 }
 
-
-
 void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
  
     if (error == ERR_FRAME_NO_ERROR) {
@@ -1135,4 +1087,53 @@ std::string UVCPHeaderChecker::formatTime(std::chrono::milliseconds ms) {
     std::ostringstream oss;
     oss << std::put_time(&time_info, "%H:%M:%S") << "." << std::setw(3) << std::setfill('0') << milliseconds;
     return oss.str();
+}
+
+void UVCPHeaderChecker::save_payload_header_to_log(
+    const UVC_Payload_Header& payload_header,
+    std::chrono::time_point<std::chrono::steady_clock> received_time) {
+
+#ifdef __linux__
+  std::ofstream log_file("../log/payload_headers_log.txt", std::ios::app);
+#elif _WIN32
+  std::ofstream log_file("..\\..\\log\\payload_headers_log.txt", std::ios::app);
+#endif
+
+  if (!log_file.is_open()) {
+    CtrlPrint::v_cerr_3 << "Error opening payload header log file." << std::endl;
+    return;
+  }
+
+  log_file << std::hex;  // Set the output stream to hexadecimal mode
+  log_file << "HLE: " << std::setw(2) << std::setfill('0')
+           << static_cast<int>(payload_header.HLE) << "\n";
+
+  // Log each bit field separately
+  log_file << "BFH:\n"
+           << "  FID: " << std::bitset<1>(payload_header.bmBFH.BFH_FID) << "\n"
+           << "  EOF: " << std::bitset<1>(payload_header.bmBFH.BFH_EOF) << "\n"
+           << "  PTS: " << std::bitset<1>(payload_header.bmBFH.BFH_PTS) << "\n"
+           << "  SCR: " << std::bitset<1>(payload_header.bmBFH.BFH_SCR) << "\n"
+           << "  RES: " << std::bitset<1>(payload_header.bmBFH.BFH_RES) << "\n"
+           << "  STI: " << std::bitset<1>(payload_header.bmBFH.BFH_STI) << "\n"
+           << "  ERR: " << std::bitset<1>(payload_header.bmBFH.BFH_ERR) << "\n"
+           << "  EOH: " << std::bitset<1>(payload_header.bmBFH.BFH_EOH) << "\n";
+
+  log_file << "PTS: " << std::setw(8) << std::setfill('0') << payload_header.PTS
+           << "\n";
+  log_file << "SCR:\n"
+           << "  STC: " << static_cast<int>(payload_header.bmSCR.SCR_STC)
+           << "\n"
+           << "  TOK: " << std::bitset<11>(payload_header.bmSCR.SCR_TOK) << "\n"
+           << "  RES: " << std::bitset<5>(payload_header.bmSCR.SCR_RES) << "\n";
+
+  log_file << std::dec  // Set the output stream back to decimal mode
+           << "Received Time: "
+           << std::chrono::duration_cast<std::chrono::milliseconds>(
+                  received_time.time_since_epoch())
+                  .count()
+           << " ms since epoch\n"
+           << "\n\n";  // Separate each entry with a double newline
+
+  log_file.close();
 }
