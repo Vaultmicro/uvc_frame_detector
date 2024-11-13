@@ -28,6 +28,10 @@ std::queue<std::vector<u_char>> packet_queue;
 std::mutex queue_mutex;
 std::condition_variable queue_cv;
 bool stop_processing = false;
+std::queue<std::tuple<int, int, int, std::string, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>>> set_control_queue;
+// std::mutex set_control_mutex;
+// std::condition_variable set_control_cv;
+
 
 struct FrameInfo{
   int frame_width;
@@ -170,7 +174,7 @@ void capture_packets() {
         std::string max_payload_size = (tokens.size() > 12 && !tokens[12].empty()) ? tokens[12] : "N/A";
         std::string num_frame_descriptor = (tokens.size() > 13 && !tokens[13].empty()) ? tokens[13] : "N/A";
 
-        auto time_point = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
+        auto time_point_d = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
         uint32_t frame_length = (frame_len != "N/A") ? std::stoul(frame_len) : 0;
 
@@ -210,7 +214,7 @@ void capture_packets() {
                       packet_queue.push(std::move(temp_buffer));
 
                       std::lock_guard<std::mutex> time_lock(time_mutex);
-                      time_records.push(std::move(time_point));
+                      time_records.push(std::move(time_point_d));
                   }
 
                   queue_cv.notify_one();
@@ -301,8 +305,6 @@ void capture_packets() {
                   int height = format_map[format_index_int][frame_index_int].frame_height;
                   int frame_format_subtype = format_map[format_index_int][frame_index_int].frame_format_subtype;
               
-                  ControlConfig::set_width(width);
-                  ControlConfig::set_height(height);
                   std::string frame_format;
                   switch (frame_format_subtype) {
                       case 5:
@@ -326,50 +328,69 @@ void capture_packets() {
                           frame_format = "mjpeg";
                           break;
                   }
-                  
-                  ControlConfig::set_frame_format(frame_format);
 
-                  ControlConfig::set_fps(10000000 / std::stoi(frame_interval_fps));
 
-                  ControlConfig::set_dwMaxVideoFrameSize(std::stoi(max_frame_size));
-                  ControlConfig::set_dwMaxPayloadTransferSize(std::stoi(max_payload_size));
+                    std::tuple<int, int, int, std::string, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>> control_data = 
+                        std::make_tuple(width, height, 10000000 / std::stoi(frame_interval_fps), frame_format, std::stoi(max_frame_size), std::stoi(max_payload_size), time_point_d);
+                  {
+                      std::lock_guard<std::mutex> lock(queue_mutex);
+                      set_control_queue.push(std::move(control_data));
+                  }
+                  queue_cv.notify_one();
+
+                //   set_control_cv.notify_one();
+
+                //   ControlConfig::set_width(width);
+                //   ControlConfig::set_height(height);
+
+                //   ControlConfig::set_frame_format(frame_format);
+
+                //   ControlConfig::set_fps(10000000 / std::stoi(frame_interval_fps));
+
+                //   ControlConfig::set_dwMaxVideoFrameSize(std::stoi(max_frame_size));
+                //   ControlConfig::set_dwMaxPayloadTransferSize(std::stoi(max_payload_size));
                   
               } else {
                   std::cerr << "Error: Invalid format_index or frame_index." << std::endl;
               }
-#ifdef TUI_SET
-              setCursorPosition (2, 1);
-              setColor(WHITE);
-              std::cout << "  Frame Width: " << ControlConfig::width 
-                    << "     Frame Height: " << ControlConfig::height 
-                    << "     FPS: " << ControlConfig::fps 
-                    << "     Frame Format: " << ControlConfig::frame_format 
-                    << "     Max Frame Size: " << ControlConfig::dwMaxVideoFrameSize 
-                    << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
-                    << std::endl;
-#elif GUI_SET
-{
-            WindowManager& manager = WindowManager::getInstance();
-            WindowData& data = manager.getWindowData(3);
-            std::ostringstream logStream;
-            logStream << "width: " << ControlConfig::get_width() << "\n";
-            logStream << "height: " << ControlConfig::get_height() << "\n";
-            logStream << "frame_format: " << ControlConfig::get_frame_format() << "\n";
-            logStream << "fps: " << ControlConfig::get_fps() << "\n";
-            logStream << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
-            logStream << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
-            data.custom_text += logStream.str();
-}
-#else
-              std::cout << "width: " << ControlConfig::get_width() << "   ";
-              std::cout << "height: " << ControlConfig::get_height() << "   ";
-              std::cout << "frame_format: " << ControlConfig::get_frame_format() << "   ";
-              std::cout << "fps: " << ControlConfig::get_fps() << "   ";
-              std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "   ";
-              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   ";
-              std::cout << std::endl;
+// #ifdef TUI_SET
+//               setCursorPosition (2, 1);
+//               setColor(WHITE);
+//               std::cout << "  Frame Width: " << ControlConfig::width 
+//                     << "     Frame Height: " << ControlConfig::height 
+//                     << "     FPS: " << ControlConfig::fps 
+//                     << "     Frame Format: " << ControlConfig::frame_format 
+//                     << "     Max Frame Size: " << ControlConfig::dwMaxVideoFrameSize 
+//                     << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
+//                     << std::endl;
+// #elif GUI_SET
+//             auto duration_since_epoch = time_point_d.time_since_epoch();
+
+//             std::ostringstream logStream;
+//             logStream << "[ " << " ]\n";
+//             logStream << "width: " << ControlConfig::get_width() << "\n";
+//             logStream << "height: " << ControlConfig::get_height() << "\n";
+//             logStream << "frame_format: " << ControlConfig::get_frame_format() << "\n";
+//             logStream << "fps: " << ControlConfig::get_fps() << "\n";
+//             logStream << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
+//             logStream << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
+//             logStream << "\n";
+
+// {
+//             WindowManager& manager = WindowManager::getInstance();
+//             WindowData& data = manager.getWindowData(3);
+//             data.custom_text += logStream.str();
+// }
+// #else
+//               std::cout << "width: " << ControlConfig::get_width() << "   ";
+//               std::cout << "height: " << ControlConfig::get_height() << "   ";
+//               std::cout << "frame_format: " << ControlConfig::get_frame_format() << "   ";
+//               std::cout << "fps: " << ControlConfig::get_fps() << "   ";
+//               std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "   ";
+//               std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   ";
+//               std::cout << std::endl;
               
-#endif
+// #endif
             }
 
           } else if (usb_transfer_type == "0x03") {
@@ -395,7 +416,7 @@ void capture_packets() {
                   packet_queue.push(std::move(temp_buffer));
 
                   std::lock_guard<std::mutex> time_lock(time_mutex);
-                  time_records.push(std::move(time_point));
+                  time_records.push(std::move(time_point_d));
               }
               temp_buffer.clear();
               queue_cv.notify_one();
@@ -434,13 +455,27 @@ void process_packets() {
     std::unique_lock<std::mutex> lock(queue_mutex);
 
     queue_cv.wait(lock,
-                  [] { return !packet_queue.empty() || stop_processing; });
+                  [] { return !packet_queue.empty() || !set_control_queue.empty() || stop_processing; });
 
-    if (stop_processing && packet_queue.empty()) {
+    if (stop_processing && packet_queue.empty() && set_control_queue.empty()) {
       break;
     }
     
-    if (!packet_queue.empty()) {
+    if (!set_control_queue.empty()){
+        auto control_data = std::move(set_control_queue.front());
+        set_control_queue.pop();
+        lock.unlock();
+
+        int width, height, fps;
+        std::string frame_format;
+        uint64_t max_frame_size, max_payload_size;
+        std::chrono::time_point<std::chrono::steady_clock> received_time;
+        std::tie(width, height, fps, frame_format, max_frame_size, max_payload_size, received_time) = control_data;
+
+        CtrlPrint::v_cout_3 << "Processing control configuration" << std::endl;
+        header_checker.control_configuration_ctrl(width, height, fps, frame_format, max_frame_size, max_payload_size, received_time);
+        
+    }else if (!packet_queue.empty()) {
 
       auto packet = std::move(packet_queue.front());
       packet_queue.pop();
@@ -470,6 +505,8 @@ void process_packets() {
   }
   CtrlPrint::v_cout_1 << "Process packet() end" << std::endl;
 }
+
+
 
 
 void develope_frame_image() {

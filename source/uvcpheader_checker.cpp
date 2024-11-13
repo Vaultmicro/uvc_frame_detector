@@ -458,8 +458,61 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 
 
-void UVCPHeaderChecker::frame_valid_ctrl(
-    const std::vector<u_char>& uvc_payload) {
+void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint64_t max_frame_size, uint64_t max_payload_size, std::chrono::time_point<std::chrono::steady_clock> received_time) {
+  ControlConfig::set_width(width);
+  ControlConfig::set_height(height);
+  ControlConfig::set_fps(fps);
+  ControlConfig::set_frame_format(frame_format);
+  ControlConfig::set_dwMaxVideoFrameSize(max_frame_size);
+  ControlConfig::set_dwMaxPayloadTransferSize(max_payload_size);
+
+  received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
+  formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
+  int control_last_frame_number;
+
+  if (!frames.empty()) {
+    auto& last_frame = frames.back();
+    control_last_frame_number = last_frame->frame_number;
+  } else {
+    control_last_frame_number = 0;
+  }
+
+#ifdef TUI_SET
+              setCursorPosition (2, 1);
+              setColor(WHITE);
+              std::cout << "  Frame Width: " << ControlConfig::width 
+                    << "     Frame Height: " << ControlConfig::height 
+                    << "     FPS: " << ControlConfig::fps 
+                    << "     Frame Format: " << ControlConfig::frame_format 
+                    << "     Max Frame Size: " << ControlConfig::dwMaxVideoFrameSize 
+                    << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
+                    << std::endl;
+#elif GUI_SET
+            std::ostringstream logStream;
+            logStream << "[ " << control_last_frame_number << " ]\n";
+            logStream << "[ " << formatted_time << " ]\n";
+            logStream << "width: " << ControlConfig::get_width() << "\n";
+            logStream << "height: " << ControlConfig::get_height() << "\n";
+            logStream << "frame_format: " << ControlConfig::get_frame_format() << "\n";
+            logStream << "fps: " << ControlConfig::get_fps() << "\n";
+            logStream << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
+            logStream << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
+            logStream << "\n";
+{
+            WindowManager& manager = WindowManager::getInstance();
+            WindowData& data = manager.getWindowData(3);
+            data.custom_text += logStream.str();
+}
+#else
+              std::cout << "width: " << ControlConfig::get_width() << "   ";
+              std::cout << "height: " << ControlConfig::get_height() << "   ";
+              std::cout << "frame_format: " << ControlConfig::get_frame_format() << "   ";
+              std::cout << "fps: " << ControlConfig::get_fps() << "   ";
+              std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "   ";
+              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   ";
+              std::cout << std::endl;
+              
+#endif
 
 }
 
@@ -674,7 +727,7 @@ void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payl
   gui_window_number = 6;
   print_whole_flag = 1;
 #endif
-    CtrlPrint::v_cout_2 << " [" << p_formatted_time << "] \n\n" << previous_payload_header << "\n" <<  std::endl;
+    CtrlPrint::v_cout_2 << "[" << p_formatted_time << "] \n\n" << previous_payload_header << "\n" <<  std::endl;
 
 #ifdef TUI_SET
   window_number = 5;
@@ -938,10 +991,22 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
 
     CtrlPrint::v_cout_2 << "Frame Number: " << frame.frame_number << "\n";
 
+    // Calculate time taken from valid start to the last of error or valid times
     if (!frame.received_chrono_times.empty()) {
-      auto first_valid_time = frame.received_chrono_times.front();
-      auto formatted_first_valid_time = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(first_valid_time.time_since_epoch()));
-      CtrlPrint::v_cout_2 << "First Valid Time: " << formatted_first_valid_time << "\n";
+        auto valid_start = frame.received_chrono_times.front();
+        auto valid_end = frame.received_chrono_times.back();
+        auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
+
+        // Choose the later of valid_end and error_end as the end point
+        auto final_end = (error_end > valid_end) ? error_end : valid_end;
+        auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
+
+        auto valid_start_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(valid_start.time_since_epoch()));
+        auto final_end_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(final_end.time_since_epoch()));
+
+        CtrlPrint::v_cout_2 << "[ " << valid_start_ms << "  ~ " << final_end_ms << "  ]: " << time_taken << " ms" << "\n";
+    } else {
+        CtrlPrint::v_cout_2 << "No Valid Times Recorded" << "\n";
     }
 
     CtrlPrint::v_cout_2 << "\nFrame Errors:" << "\n";
@@ -951,8 +1016,8 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
       size_t actual_frame_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
       if (ControlConfig::get_frame_format() == "yuyv") {
         size_t expected_frame_size = ControlConfig::get_width() * ControlConfig::get_height() * 2;
-        CtrlPrint::v_cout_2 << " - Frame Format: YUYV\n";
-        CtrlPrint::v_cout_2 << "expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
+        CtrlPrint::v_cout_2 << "   - Frame Format: YUYV\n";
+        CtrlPrint::v_cout_2 << "  expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
         if (expected_frame_size != actual_frame_size) {
             std::ptrdiff_t diff = static_cast<std::ptrdiff_t>(actual_frame_size) - static_cast<std::ptrdiff_t>(expected_frame_size);
             CtrlPrint::v_cout_2 << "Data Loss :          " << diff << " bytes\n";
@@ -963,7 +1028,7 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "\nPayload Errors:" << "\n";
 
     if (frame.payload_errors.empty()) {
-        CtrlPrint::v_cout_2 << "NO ERROR, NO DATA LOSS \n";
+        CtrlPrint::v_cout_2 << "  NO ERROR, NO data loss for received payloads \n";
     } else {
         size_t temp_lost_data_size = 0;
         for (size_t i = 0; i < frame.payload_errors.size(); ++i) {

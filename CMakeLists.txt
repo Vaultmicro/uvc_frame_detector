@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(
-    uvc_frame_detector
-    DESCRIPTION "Packet Capture And Analysis Tool for UVC Frame"
+    uvc_frame_detector_aka_oldmanandsea
+    DESCRIPTION "Packet Capture And Analysis Tool for UVC Frame [UVC_IFD] stands for USB Video Class Invalid Frame Detector"
     VERSION 0.3.3
     LANGUAGES CXX C
 )
