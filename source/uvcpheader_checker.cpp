@@ -676,14 +676,16 @@ void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payl
 #endif
     CtrlPrint::v_cout_2 << " [" << p_formatted_time << "] \n\n" << previous_payload_header << "\n" <<  std::endl;
 
-if (!e_formatted_time.empty()) {
 #ifdef TUI_SET
   window_number = 5;
     CtrlPrint::v_cout_2 << "Lost Inbetween Header: " <<  "\n";
 #elif GUI_SET
   gui_window_number = 7;
 #endif
+if (!e_formatted_time.empty()) {
     CtrlPrint::v_cout_2 << "[" << e_formatted_time << "] \n\n" << temp_error_payload_header << "\n" <<  std::endl;
+} else {
+    CtrlPrint::v_cout_2 << "-" << std::endl;
 }
 
 #ifdef TUI_SET
