@@ -4,6 +4,9 @@
 cmd /c '"C:\Program Files\Wireshark\extcap\wireshark\USBPcapCMD.exe"  --extcap-interface \\.\USBPcap1 --extcap-config'
 
 $devadd = Read-Host "Please select device address"
+Write-Host "(0x80 is selected by default e.g. 1 for 0x81)"
+$endpointadd = Read-Host "Please select endpoint address"
+
 
 $command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -s 0 -T fields ' +
     '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata ' +
@@ -11,7 +14,8 @@ $command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -s 0 -T fields '
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
     '-e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval ' +
     '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors ' +
-    '-E separator=; -Y "usb.device_address == ' + $devadd + '" -Q | .\build\release\oldmanandsea_g.exe'
+    '-E separator=; -Y "usb.device_address == ' + $devadd + ' && ' +
+    'usb.endpoint_address == 0x80 || usb.endpoint_address == 0x8' + $endpointadd + '" -Q | .\build\release\oldmanandsea_g.exe"'
 
 Write-Output $command
 
