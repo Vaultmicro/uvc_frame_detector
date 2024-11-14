@@ -50,6 +50,13 @@ If this keep happen this could be programme error.
 ![img_dir](./saved_img.JPG)
 
 
+# Unexpected close
+
+This may happen when too many error logs are saved in the heap.  
+Please retry and press Pause befere it shuts. 
+  
+Or may cause of unexpected error in the programme.  
+
 # Unable to Quit
 
 Press ctrl + C in the terminal window that is executing oldmanandsea_g, NOT Vaultmicro USB Frame Detector.  

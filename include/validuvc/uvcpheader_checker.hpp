@@ -337,13 +337,20 @@ class UVCPHeaderChecker {
         void print_summary(const ValidFrame& frame);
 
     public:
-
-    
         uint32_t frame_count;
         uint64_t throughput;
         uint64_t graph_throughput;
         double average_frame_rate;
-        static int continue_capture;
+        static bool play_pause_flag;
+
+        static bool capture_error_flag;
+        static bool capture_suspicous_flag;
+        static bool capture_valid_flag;
+        static bool irregular_define_flag;
+        static bool pts_decrease_filter_flag;
+        static bool stc_decrease_filter_flag;
+
+
 
         UVCPHeaderChecker() :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
             CtrlPrint::v_cout_1 << "UVCPHeaderChecker Constructor" << std::endl;

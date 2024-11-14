@@ -45,12 +45,21 @@
   typedef unsigned char u_char;
 #endif
 
-int UVCPHeaderChecker::continue_capture = 1;
+bool UVCPHeaderChecker::play_pause_flag = 1;
+bool UVCPHeaderChecker::capture_error_flag = 1;
+bool UVCPHeaderChecker::capture_suspicous_flag = 0;
+bool UVCPHeaderChecker::capture_valid_flag = 0;
+bool UVCPHeaderChecker::irregular_define_flag = 0;
+bool UVCPHeaderChecker::pts_decrease_filter_flag = 0;
+bool UVCPHeaderChecker::stc_decrease_filter_flag = 0;
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
-  // Make picture file having mjpeg, yuyv, h264
+
+  if (play_pause_flag) {
+    return 0;
+  }
 
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time_graph;
@@ -228,7 +237,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
         }
-        if (continue_capture){
+        if (capture_error_flag){
           last_frame->push_queue();
         }
         processed_frames.push_back(std::move(frames.back()));
@@ -393,7 +402,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
-        if (continue_capture){
+        if (capture_error_flag){
           last_frame->push_queue();
         }
       } else{
