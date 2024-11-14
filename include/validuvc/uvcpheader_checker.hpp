@@ -149,6 +149,38 @@ struct FrameErrorStats {
     }
 };
 
+struct FrameSuspiciousStats{
+    int count_no_suspicious = 0;
+    int count_payload_time_inconsistent = 0;
+    int count_frame_size_inconsistent = 0;
+    int count_payload_count_inconsistent = 0;   
+    int count_pts_decrease = 0;
+    int count_scr_stc_decrease = 0;
+    int count_unknown_suspicious = 0;
+
+    int total() const {
+        return count_no_suspicious + count_payload_time_inconsistent + count_frame_size_inconsistent +
+               count_payload_count_inconsistent + count_pts_decrease + count_scr_stc_decrease + count_unknown_suspicious;
+    }
+
+    void print_stats () const{
+        int total_count = total();
+        CtrlPrint::v_cout_1 << "\nSuspicious Frame Statistics:\n";
+        CtrlPrint::v_cout_1 << "No Suspicious: " << count_no_suspicious << " (" << percentage(count_no_suspicious, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Payload Time Inconsistent: " << count_payload_time_inconsistent << " (" << percentage(count_payload_time_inconsistent, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Frame Size Inconsistent: " << count_frame_size_inconsistent << " (" << percentage(count_frame_size_inconsistent, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Payload Count Inconsistent: " << count_payload_count_inconsistent << " (" << percentage(count_payload_count_inconsistent, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "PTS Decrease: " << count_pts_decrease << " (" << percentage(count_pts_decrease, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "SCR STC Decrease: " << count_scr_stc_decrease << " (" << percentage(count_scr_stc_decrease, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Unknown Suspicious: " << count_unknown_suspicious << " (" << percentage(count_unknown_suspicious, total_count) << "%)\n";
+    }
+
+    double percentage(int count, int total_count) const {
+        return total_count == 0 ? 0 : static_cast<double>(count) / total_count * 100.0;
+    }
+};
+
+
 enum UVCError {
   ERR_NO_ERROR = 0,
   ERR_EMPTY_PAYLOAD = 1,
@@ -174,7 +206,19 @@ enum FrameError {
   ERR_FRAME_INVALID_YUYV_RAW_SIZE = 4,
   ERR_FRAME_SAME_DIFFERENT_PTS = 5,
   ERR_FRAME_MISSING_EOF = 6,
+
   ERR_FRAME_UNKNOWN = 99
+};
+
+enum FrameSuspicious{
+    SUSPICIOUS_NO_SUSPICIOUS = 0,
+    SUSPICIOUS_PAYLOAD_TIME_INCONSISTENT = 1,
+    SUSPICIOUS_FRAME_SIZE_INCONSISTENT = 2,
+    SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT = 3,
+    SUSPICIOUS_PTS_DECREASE = 4,
+    SUSPICIOUS_SCR_STC_DECREASE = 5,
+
+    SUSPICIOUS_UNKNOWN = 99
 };
 
 class ValidFrame{
@@ -183,6 +227,7 @@ class ValidFrame{
         uint16_t packet_number;
         uint32_t frame_pts;
         FrameError frame_error;
+        FrameSuspicious frame_suspicious;
         uint8_t eof_reached;
         uint8_t toggle_bit;
 
@@ -281,10 +326,13 @@ class UVCPHeaderChecker {
         
         void print_error_bits(const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
 
+        FrameSuspicious frame_suspicious_check(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
+
         uint32_t current_frame_number;
 
         PayloadErrorStats payload_stats;
         FrameErrorStats frame_stats;
+        FrameSuspiciousStats frame_suspicious_stats;
 
         uint32_t frame_average_size;
 
@@ -321,6 +369,19 @@ class UVCPHeaderChecker {
             }
         }
 
+        void update_suspicious_stats(FrameSuspicious suspicious){
+            switch (suspicious) {
+                case SUSPICIOUS_NO_SUSPICIOUS: frame_suspicious_stats.count_no_suspicious++; break;
+                case SUSPICIOUS_PAYLOAD_TIME_INCONSISTENT: frame_suspicious_stats.count_payload_time_inconsistent++; break;
+                case SUSPICIOUS_FRAME_SIZE_INCONSISTENT: frame_suspicious_stats.count_frame_size_inconsistent++; break;
+                case SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT: frame_suspicious_stats.count_payload_count_inconsistent++; break;
+                case SUSPICIOUS_PTS_DECREASE: frame_suspicious_stats.count_pts_decrease++; break;
+                case SUSPICIOUS_SCR_STC_DECREASE: frame_suspicious_stats.count_scr_stc_decrease++; break;
+                case SUSPICIOUS_UNKNOWN: frame_suspicious_stats.count_unknown_suspicious++; break;
+                default: break;
+            }
+        }
+
         void save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame);
         void save_payload_header_to_log(
             const UVC_Payload_Header& payload_header,
@@ -333,6 +394,7 @@ class UVCPHeaderChecker {
         void print_frame_data(const ValidFrame& frame);
         void printUVCErrorExplanation(UVCError error);
         void printFrameErrorExplanation(FrameError error);
+        void printSuspiciousExplanation(FrameSuspicious error);
         std::string formatTime(std::chrono::milliseconds ms);
         void print_summary(const ValidFrame& frame);
 

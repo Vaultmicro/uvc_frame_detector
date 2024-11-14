@@ -45,13 +45,13 @@
   typedef unsigned char u_char;
 #endif
 
-bool UVCPHeaderChecker::play_pause_flag = 1;
+bool UVCPHeaderChecker::play_pause_flag = 0;
 bool UVCPHeaderChecker::capture_error_flag = 1;
 bool UVCPHeaderChecker::capture_suspicous_flag = 0;
 bool UVCPHeaderChecker::capture_valid_flag = 0;
 bool UVCPHeaderChecker::irregular_define_flag = 0;
-bool UVCPHeaderChecker::pts_decrease_filter_flag = 0;
-bool UVCPHeaderChecker::stc_decrease_filter_flag = 0;
+bool UVCPHeaderChecker::pts_decrease_filter_flag = 1;
+bool UVCPHeaderChecker::stc_decrease_filter_flag = 1;
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
@@ -118,7 +118,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             gui_window_number = 10;
     #endif
     #ifndef TUI_SET
-            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps THRPT" << std::endl;
+            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps" << std::endl;
     #endif
     #ifdef TUI_SET
             window_number = 1;
@@ -193,7 +193,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       payload_header_valid(payload_header, previous_payload_header,
                            previous_previous_payload_header);
 
+  FrameSuspicious suspicious_return = 
+      frame_suspicious_check(payload_header, previous_payload_header,
+                           previous_previous_payload_header);
+
   static uint32_t previous_frame_pts = 0;
+
 
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF) {
 
@@ -206,6 +211,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         last_frame->eof_reached = false;
         //finish the last frame
         update_frame_error_stat(last_frame->frame_error);
+        update_suspicious_stats(last_frame->frame_suspicious);
         //save_frames_to_log(last_frame);
         if (last_frame->frame_error) {
 #ifdef GUI_SET
@@ -335,7 +341,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     auto& last_frame = frames.back();
     last_frame->add_image_data(payload_header, uvc_payload);
 
-
+    //suspicious update
+    if (suspicious_return){
+      last_frame->frame_suspicious = suspicious_return;
+    }
 
     if (payload_header.bmBFH.BFH_EOF) {
 
@@ -358,9 +367,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         }
 
         if (actual_frame_size != expected_frame_size) {
-          CtrlPrint::v_cerr_2 << "Frame size mismatch for YUYV: \n expected "
+          CtrlPrint::v_cerr_2 << "[" << formatted_time << "] "
                   << std::dec
-                  << expected_frame_size << " but got " << actual_frame_size
+                  << actual_frame_size << "/" << expected_frame_size
+                  << " YUYV size mismatch"
                   << std::endl;
           last_frame->frame_error = ERR_FRAME_INVALID_YUYV_RAW_SIZE;
         }
@@ -368,6 +378,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
 
       update_frame_error_stat(last_frame->frame_error);
+      update_suspicious_stats(last_frame->frame_suspicious);
       // finish the frame
       // save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
@@ -405,7 +416,20 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         if (capture_error_flag){
           last_frame->push_queue();
         }
-      } else{
+      } else if (last_frame->frame_suspicious){
+#ifdef GUI_SET
+        addSuspiciousFrameLog("Frame " + std::to_string(last_frame->frame_number));
+        WindowManager& manager = WindowManager::getInstance();
+        GraphData& data = manager.getGraphData(0);
+        data.addSuspiciousGraphData();
+        frame_suspicious_flag = 1;
+        print_received_times(*last_frame);
+        print_frame_data(*last_frame);
+        print_summary(*last_frame);
+        frame_suspicious_flag = 0;
+#endif
+
+      }else{
 #ifdef GUI_SET
         print_frame_data(*last_frame);
 #endif      
@@ -632,39 +656,26 @@ UVCError UVCPHeaderChecker::payload_header_valid(
     }
   }
 
-  // if (payload_header.bmSCR.SCR_STC != 0 && previous_payload_header.bmSCR.SCR_STC != 0 &&
-  //     payload_header.bmSCR.SCR_STC < previous_payload_header.bmSCR.SCR_STC &&
-  //     (previous_payload_header.bmSCR.SCR_STC - payload_header.bmSCR.SCR_STC) < 0x80000000) {
-  //   CtrlPrint::v_cerr_2 << " : STC decreased." << formatted_time << std::endl;
-  //   return ERR_TOGGLE_BIT_OVERLAPPED;
-  // }
-
-  // if (payload_header.PTS != 0 && previous_payload_header.PTS != 0 &&
-  //     payload_header.PTS < previous_payload_header.PTS) {
-  //   CtrlPrint::v_cerr_2 << " : PTS is less than previous PTS." << formatted_time << std::endl;
-  //   return ERR_TOGGLE_BIT_OVERLAPPED;
-  // }
-
   // Checks if the Frame Identifier bit is set
   // bmBFH.BFH_FID is for the start of the stream packet
   if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
         previous_payload_header.bmBFH.BFH_EOF && 
         (payload_header.PTS == previous_payload_header.PTS) && 
         payload_header.PTS != 0) {
-        CtrlPrint::v_cerr_2 << "[" << formatted_time << "] : Same FID "
+        CtrlPrint::v_cerr_2 << "[" << formatted_time << "] Same FID "
                     "and prev frame and PTS matches0. "  << std::endl;
         return ERR_SWAP;
 
   } else if (payload_header.bmBFH.BFH_FID == previous_payload_header.bmBFH.BFH_FID && 
             previous_payload_header.bmBFH.BFH_EOF &&  previous_payload_header.HLE !=0) {
-      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] : Same FID "
+      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] Same FID "
                   "and prev frame EOF is set."  << std::endl;
       return ERR_FID_MISMATCH;
 
   } else if (payload_header.bmBFH.BFH_FID != previous_payload_header.bmBFH.BFH_FID && 
             !previous_payload_header.bmBFH.BFH_EOF && 
             previous_payload_header.HLE != 0) {
-      CtrlPrint::v_cerr_2  << "[" << formatted_time << "] : Missing EOF.   " << std::endl;
+      CtrlPrint::v_cerr_2  << "[" << formatted_time << "] Missing EOF.   " << std::endl;
       return ERR_MISSING_EOF;      
   } 
 
@@ -679,6 +690,28 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   // CtrlPrint::v_cout_2 << "UVC payload header is valid." << std::endl;
   return ERR_NO_ERROR;
 }
+
+FrameSuspicious UVCPHeaderChecker::frame_suspicious_check(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header){
+  if (pts_decrease_filter_flag){  
+    if (payload_header.PTS != 0 && previous_payload_header.PTS != 0 &&
+        payload_header.PTS < previous_payload_header.PTS) {
+      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "PTS is less than previous PTS."  << std::endl;
+      return SUSPICIOUS_PTS_DECREASE;
+    }
+  }
+
+  if (stc_decrease_filter_flag){
+    if (payload_header.bmSCR.SCR_STC != 0 && previous_payload_header.bmSCR.SCR_STC != 0 &&
+        payload_header.bmSCR.SCR_STC < previous_payload_header.bmSCR.SCR_STC &&
+        (previous_payload_header.bmSCR.SCR_STC - payload_header.bmSCR.SCR_STC) < 0x80000000) {
+      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "STC decreased." << std::endl;
+      return SUSPICIOUS_SCR_STC_DECREASE;
+    }
+  }
+
+  return SUSPICIOUS_NO_SUSPICIOUS;
+}
+
 
 void UVCPHeaderChecker::save_frames_to_log(
     std::unique_ptr<ValidFrame>& current_frame) {
@@ -908,6 +941,7 @@ void UVCPHeaderChecker::print_stats() const {
 
     payload_stats.print_stats();
     frame_stats.print_stats();
+    frame_suspicious_stats.print_stats();
     CtrlPrint::v_cout_1 << std::flush;
 
 #ifdef TUI_SET
@@ -921,7 +955,7 @@ void UVCPHeaderChecker::print_stats() const {
 
 void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 #ifdef GUI_SET
-  if (frame.frame_error) {
+  if (frame.frame_error || frame.frame_suspicious) {
     gui_window_number = 0;
   } else {
     gui_window_number = 13;
@@ -976,6 +1010,28 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
             break;
         default:
             CtrlPrint::v_cout_2 << "Unknown Error";
+            break;
+    }
+    CtrlPrint::v_cout_2 << "\n";
+    CtrlPrint::v_cout_2 << "Frame Suspicious: ";
+    switch (frame.frame_suspicious) {
+        case SUSPICIOUS_NO_SUSPICIOUS:
+            CtrlPrint::v_cout_2 << "No Suspicious";
+            break;
+        case SUSPICIOUS_PAYLOAD_TIME_INCONSISTENT:
+            CtrlPrint::v_cout_2 << "Payload Time Inconsistent";
+            break;
+        case SUSPICIOUS_FRAME_SIZE_INCONSISTENT:
+            CtrlPrint::v_cout_2 << "Frame Size Inconsistent";
+            break;
+        case SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT:
+            CtrlPrint::v_cout_2 << "Payload Count Inconsistent";
+            break;
+        case SUSPICIOUS_PTS_DECREASE:
+            CtrlPrint::v_cout_2 << "PTS Decrease";
+            break;
+        case SUSPICIOUS_SCR_STC_DECREASE:
+            CtrlPrint::v_cout_2 << "SCR STC Decrease";
             break;
     }
     CtrlPrint::v_cout_2 << "\n";
@@ -1071,6 +1127,12 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
           << "Or two frames could be overlapped \n";
         }
     }
+
+    CtrlPrint::v_cout_2 << "\nSuspicious:" << "\n";
+
+    printSuspiciousExplanation(frame.frame_suspicious);
+
+
     CtrlPrint::v_cout_2 << "\n ---- \n";
 
 // if current frame is out of boundary, likely data loss
@@ -1142,6 +1204,25 @@ void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
     }
   CtrlPrint::v_cout_2 << " \n";
 
+}
+
+void UVCPHeaderChecker::printSuspiciousExplanation(FrameSuspicious error) {
+    if (error == SUSPICIOUS_NO_SUSPICIOUS) {
+        CtrlPrint::v_cout_2 << "No Suspicious - No suspicious behavior detected.\n";
+    } else if (error == SUSPICIOUS_PAYLOAD_TIME_INCONSISTENT) {
+        CtrlPrint::v_cout_2 << "Payload Time Inconsistent - Payload times are inconsistent.\n";
+    } else if (error == SUSPICIOUS_FRAME_SIZE_INCONSISTENT) {
+        CtrlPrint::v_cout_2 << "Frame Size Inconsistent - Frame size is inconsistent.\n";
+    } else if (error == SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT) {
+        CtrlPrint::v_cout_2 << "Payload Count Inconsistent - Payload count is inconsistent.\n";
+    } else if (error == SUSPICIOUS_PTS_DECREASE) {
+        CtrlPrint::v_cout_2 << "PTS Decrease - PTS values are decreasing.\n";
+    } else if (error == SUSPICIOUS_SCR_STC_DECREASE) {
+        CtrlPrint::v_cout_2 << "SCR STC Decrease - SCR STC values are decreasing.\n";
+    } else {
+        CtrlPrint::v_cout_2 << "Unknown Suspicious Error - The suspicious error code is not recognized.\n";
+    }
+  CtrlPrint::v_cout_2 << " \n";
 }
 
 std::string UVCPHeaderChecker::formatTime(std::chrono::milliseconds ms) {

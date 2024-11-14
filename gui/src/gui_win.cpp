@@ -31,6 +31,7 @@ int gui_window_number = 5;
 int print_whole_flag = 0;
 int temp_window_number = 5;
 int frame_error_flag = 0;
+int frame_suspicious_flag = 0;
 
 static std::vector<std::string> error_frame_log_button;
 void addErrorFrameLog(const std::string& efn) {
@@ -103,6 +104,7 @@ void screen(){
     static int selected_error_payload = 0;
     static bool show_image = false;
     static int selected_suspicous_frame = 0;
+    static bool show_suspicous_log = false;
 
     static bool capture_image_flag = false;
     static bool prev_capture_error_image_flag = false;
@@ -168,7 +170,6 @@ void screen(){
                         if (ImGui::Selectable(error_frame_log_button[n].c_str(), is_selected)) {
                             selected_error_payload = 0;
                             selected_error_frame = n; 
-                            show_image = false;
                         }
                         if (is_selected) {
                             ImGui::SetItemDefaultFocus(); 
@@ -219,7 +220,6 @@ void screen(){
                         bool is_selected = (selected_suspicous_frame == n);
                         if (ImGui::Selectable(suspicious_frame_log_button[n].c_str(), is_selected)) {
                             selected_suspicous_frame = n; 
-                            show_image = false;
                         }
                         if (is_selected) {
                             ImGui::SetItemDefaultFocus(); 
@@ -233,35 +233,41 @@ void screen(){
                 ImGui::Text("    No Suspicous Log Available");
             }
 
-
-
-
             ImGui::SetCursorPos(ImVec2(27, 115));
-            if (ImGui::Button("Show Image", ImVec2(96, 40))) {
+            if (show_image) {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
+            }
+            if (ImGui::Button(show_image ? "Show Image" : "Show Image", ImVec2(96, 40))){
                 if (!error_frame_log_button.empty()) {
-                    show_image = true;
-                    
-                    std::string selected_log_name = error_frame_log_button[selected_error_frame];
-                    size_t pos = selected_log_name.find("Frame ");
-                    if (pos != std::string::npos) {
-                        std::string frame_number = selected_log_name.substr(pos + 6);
-    #ifdef _WIN32
-                        image_file_path = "images\\frame_" + frame_number + ".jpg";
-    #elif __linux__
-                        image_file_path = "images/frame_" + frame_number + ".jpg";
-    #endif
-                    } else {
-    #ifdef _WIN32
-                        image_file_path = "images\\smpte.jpg";
-    #elif __linux__
-                        image_file_path = "images/smpte.jpg";
-    #endif
+                    show_image = !show_image;
+                    if (show_image) {
+
+                        std::string selected_log_name = error_frame_log_button[selected_error_frame];
+                        size_t pos = selected_log_name.find("Frame ");
+                        if (pos != std::string::npos) {
+                            std::string frame_number = selected_log_name.substr(pos + 6);
+        #ifdef _WIN32
+                            image_file_path = "images\\frame_" + frame_number + ".jpg";
+        #elif __linux__
+                            image_file_path = "images/frame_" + frame_number + ".jpg";
+        #endif
+                        } else {
+        #ifdef _WIN32
+                            image_file_path = "images\\smpte.jpg";
+        #elif __linux__
+                            image_file_path = "images/smpte.jpg";
+        #endif
+                        }
+                        UpdateImageTexture(image_file_path);
                     }
-                    UpdateImageTexture(image_file_path);
-                } else {
-                    data.custom_text = "No Error";
                 }
             }
+            ImGui::PopStyleColor(2);
+
             ImGui::SetCursorPos(ImVec2(137, 115));
             if (ImGui::Button("Error Log", ImVec2(96, 40))){
                 if (!error_frame_log_button.empty()) {
@@ -273,15 +279,19 @@ void screen(){
             }
             ImGui::SetCursorPos(ImVec2(247, 115));
             if (ImGui::Button("Suspicous Log", ImVec2(96, 40))) {
+                if (!suspicious_frame_log_button.empty()) {
+                    show_suspicous_log = true;
+                    data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicous_frame];
+                }
             }
+
             ImGui::SetCursorPos(ImVec2(357, 115));
             if (ImGui::Button("Streaming Log", ImVec2(96, 40))) {  
                 if (!error_frame_log_button.empty()) {
                     show_error_log = false;
+                    show_suspicous_log = false;
                     show_image = false;
                     data.custom_text = "Streaming is shown";
-                } else {
-                    data.custom_text = "No Error";
                 }
             }
 
@@ -448,7 +458,7 @@ void screen(){
                 exit(0);
             }
 
-            ImGui::SetCursorPos(ImVec2(30, 305));
+            ImGui::SetCursorPos(ImVec2(40, 300));
             ImGui::Text("%s", data.custom_text.c_str());
 
             ImGui::End();
@@ -467,6 +477,8 @@ void screen(){
 
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
+            } else if (show_suspicous_log && selected_suspicous_frame < data.suspicous_log_text.size()) {
+                ImGui::Text("%s", data.suspicous_log_text[selected_suspicous_frame].c_str());
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -492,7 +504,9 @@ void screen(){
             // ImGui::Text("Custom Text:");
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else {
+            } else if (show_suspicous_log && selected_suspicous_frame < data.suspicous_log_text.size()) {
+                ImGui::Text("%s", data.suspicous_log_text[selected_suspicous_frame].c_str());    
+            }else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
             
@@ -516,7 +530,9 @@ void screen(){
             ImGui::Begin("Summary");
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else {
+            } else if(show_suspicous_log && selected_suspicous_frame < data.suspicous_log_text.size()) {
+                ImGui::Text("%s", data.suspicous_log_text[selected_suspicous_frame].c_str());
+            }else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
 
@@ -594,6 +610,8 @@ void screen(){
                 } else {
                     ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
                 }
+            } else if(show_suspicous_log) {
+                    ImGui::Text("-");
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -616,6 +634,8 @@ void screen(){
                 } else {
                     ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
                 }
+            } else if(show_suspicous_log) {
+                    ImGui::Text("-");
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -638,6 +658,8 @@ void screen(){
                 } else {
                     ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
                 }
+            } else if(show_suspicous_log) {
+                    ImGui::Text("-");
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -710,6 +732,17 @@ void screen(){
                     "Throughput Data",
                     data.error_log_graph_data[selected_error_frame].data(),
                     static_cast<int>(data.error_log_graph_data[selected_error_frame].size()),
+                    0, nullptr,
+                    0.0f, max_value,  
+                    ImVec2(960, 300)
+                );
+            } else if(show_suspicous_log && selected_suspicous_frame < data.suspicous_log_graph_data.size()) {
+                data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicous_frame];
+                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::PlotHistogram(
+                    "Throughput Data",
+                    data.suspicous_log_graph_data[selected_suspicous_frame].data(),
+                    static_cast<int>(data.suspicous_log_graph_data[selected_suspicous_frame].size()),
                     0, nullptr,
                     0.0f, max_value,  
                     ImVec2(960, 300)

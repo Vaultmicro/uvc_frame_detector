@@ -85,6 +85,9 @@ void VerboseStream::flush() {
     if (frame_error_flag){
       data.error_log_text.push_back(prefix_ + buffer_.str());
     }
+    if (frame_suspicious_flag){
+      data.suspicous_log_text.push_back(prefix_ + buffer_.str());
+    }
 #else
     output_stream_ << buffer_.str();
 #endif
