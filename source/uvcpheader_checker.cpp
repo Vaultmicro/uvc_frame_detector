@@ -52,8 +52,8 @@ bool UVCPHeaderChecker::capture_error_flag = 1;
 bool UVCPHeaderChecker::capture_suspicious_flag = 1;
 bool UVCPHeaderChecker::capture_valid_flag = 0;
 bool UVCPHeaderChecker::filter_on_off_flag = 1;
-bool UVCPHeaderChecker::irregular_define_flag = 1;
-bool UVCPHeaderChecker::pts_decrease_filter_flag = 1;
+bool UVCPHeaderChecker::irregular_define_flag = 0;
+bool UVCPHeaderChecker::pts_decrease_filter_flag = 0;
 bool UVCPHeaderChecker::stc_decrease_filter_flag = 0;
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
@@ -78,13 +78,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
 
   if (uvc_payload.empty()) {          
-    CtrlPrint::v_cerr_2 << "[ "<< formatted_time << "]" << " UVC payload is empty." << std::endl;
+    CtrlPrint::v_cerr_2 << "["<< formatted_time << "]" << " UVC payload is empty." << std::endl;
     update_payload_error_stat(ERR_EMPTY_PAYLOAD);
     return ERR_EMPTY_PAYLOAD;
   }
   if (uvc_payload.size() > ControlConfig::dwMaxPayloadTransferSize) {
 
-    CtrlPrint::v_cerr_2 << "[ "<< formatted_time << "]" << " Payload size exceeds maximum transfer size." << std::endl;
+    CtrlPrint::v_cerr_2 << "["<< formatted_time << "]" << " Payload size exceeds maximum transfer size." << std::endl;
 
     update_payload_error_stat(ERR_MAX_PAYLAOD_OVERFLOW);
     return ERR_MAX_PAYLAOD_OVERFLOW;
@@ -203,7 +203,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   static uint32_t previous_frame_pts = 0;
 
 
-  if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF) {
+  if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF || payload_header_valid_return == ERR_FID_MISMATCH) {
 
     //Process the last frame when EOF is missing
     if (payload_header_valid_return == ERR_MISSING_EOF) {
@@ -254,7 +254,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         frames.pop_back();
         frame_count++;
 
-        if (processed_frames.size() > 8) {
+        if (processed_frames.size() > 4) {
           processed_frames.erase(processed_frames.begin());
         }
 
@@ -263,39 +263,42 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     bool frame_found = false;
 
-    for (auto& frame : frames) {
-      if (previous_payload_header.bmBFH.BFH_FID == payload_header.bmBFH.BFH_FID) {
-        frame_found = true;
+    if (payload_header_valid_return != ERR_FRAME_FID_MISMATCH) {
+    
+      for (auto& frame : frames) {
+        if (previous_payload_header.bmBFH.BFH_FID == payload_header.bmBFH.BFH_FID) {
+          frame_found = true;
 
-        if (payload_header.PTS){          
-          if (!previous_frame_pts) {
-            previous_frame_pts = payload_header.PTS;
-          } else if (payload_header.PTS == previous_frame_pts){
-            
-          } else if (payload_header.PTS != previous_frame_pts) {
-            frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
+          if (payload_header.PTS){          
+            if (!previous_frame_pts) {
+              previous_frame_pts = payload_header.PTS;
+            } else if (payload_header.PTS == previous_frame_pts){
+              
+            } else if (payload_header.PTS != previous_frame_pts) {
+              frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
+            }
           }
+
+          frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
+          frame->add_received_chrono_time(received_time);
+
+  #ifdef GUI_SET
+          WindowManager& manager = WindowManager::getInstance();
+          GraphData& data = manager.getGraphData(0);
+          data.addGraphData(static_cast<float>(uvc_payload.size()));
+  #endif
+
+          size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
+          if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
+            frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
+          }
+
+          if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF) {
+            frame->set_frame_error();  // if error set, add error flag to the frame
+          }
+
+          break;
         }
-
-        frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
-        frame->add_received_chrono_time(received_time);
-
-#ifdef GUI_SET
-        WindowManager& manager = WindowManager::getInstance();
-        GraphData& data = manager.getGraphData(0);
-        data.addGraphData(static_cast<float>(uvc_payload.size()));
-#endif
-
-        size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
-        if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
-          frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
-        }
-
-        if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF) {
-          frame->set_frame_error();  // if error set, add error flag to the frame
-        }
-
-        break;
       }
     }
     
@@ -319,7 +322,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
 
       new_frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
-      new_frame->add_received_chrono_time(received_time);
+      if (payload_header_valid_return == ERR_FRAME_FID_MISMATCH) {
+        new_frame->add_received_error_time(received_time);
+        new_frame->frame_error = ERR_FRAME_FID_MISMATCH;
+      } else {
+        new_frame->add_received_chrono_time(received_time);
+      }
       new_frame->set_frame_format(ControlConfig::get_width(), ControlConfig::get_height(), ControlConfig::get_frame_format());
 
 #ifdef GUI_SET
@@ -329,13 +337,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         data.graph_reset();
         data.addGraphData(static_cast<float>(uvc_payload.size()));
 #endif
-
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
       if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
         new_frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
       }
 
-      if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF) {
+      if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF && payload_header_valid_return != ERR_FRAME_FID_MISMATCH) {
         new_frame->set_frame_error();
       }
     }
@@ -346,8 +353,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     last_frame->add_image_data(payload_header, uvc_payload);
 
     //suspicious update
-    if (suspicious_return){
+    if (suspicious_return != SUSPICIOUS_NO_SUSPICIOUS && suspicious_return != SUSPICIOUS_UNCHECKED) {
       last_frame->frame_suspicious = suspicious_return;
+    } else if (suspicious_return == SUSPICIOUS_UNCHECKED) {
+      last_frame->frame_suspicious = SUSPICIOUS_UNCHECKED;
     }
 
     if (payload_header.bmBFH.BFH_EOF) {
@@ -395,15 +404,18 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           size_t last_frame_sum = std::accumulate(last_frame->payload_sizes.begin(), last_frame->payload_sizes.end(), size_t(0));
           if (last_frame_sum < average_size * 0.9) {
             last_frame->frame_suspicious = SUSPICIOUS_FRAME_SIZE_INCONSISTENT;
+            CtrlPrint::v_cout_2 << "[" << formatted_time << "] " << "Inconsistent frame size detected." << std::endl;
           }
 
           if (total_size_sum < ControlConfig::get_height() * ControlConfig::get_width() * 2 * 0.05) {
             last_frame->frame_suspicious = SUSPICIOUS_OVERCOMPRESSED;
+            CtrlPrint::v_cout_2 << "[" << formatted_time << "] " << "Overcompressed frame detected." << std::endl;
           }
 
           double average_payload_count = static_cast<double>(total_payload_count_sum) / processed_frames.size();
           if (last_frame->packet_number < average_payload_count) {
             last_frame->frame_suspicious = SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT;
+            CtrlPrint::v_cout_2 << "[" << formatted_time << "] " << "Inconsistent payload count detected." << std::endl;
           }
 
         }
@@ -450,7 +462,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         if (capture_error_flag && capture_image_flag){
           last_frame->push_queue();
         }
-      } else if (last_frame->frame_suspicious){
+      } else if (last_frame->frame_suspicious && last_frame->frame_suspicious != SUSPICIOUS_UNCHECKED) {
       update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
         addSuspiciousFrameLog("Suspicious " + std::to_string(last_frame->frame_number));
@@ -480,7 +492,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       frames.pop_back();
       frame_count++;
 
-      if (processed_frames.size() > 8) {
+      if (processed_frames.size() > 4) {
         processed_frames.erase(processed_frames.begin());
       }
 
@@ -1002,7 +1014,7 @@ void UVCPHeaderChecker::print_stats() const {
 
 void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 #ifdef GUI_SET
-  if (frame.frame_error || frame.frame_suspicious) {
+  if ((frame.frame_error || frame.frame_suspicious) && frame.frame_suspicious != SUSPICIOUS_UNCHECKED) {
     gui_window_number = 0;
   } else {
     gui_window_number = 13;
@@ -1055,6 +1067,9 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         case ERR_FRAME_MISSING_EOF:
             CtrlPrint::v_cout_2 << "Missing EOF";
             break;
+        case ERR_FRAME_FID_MISMATCH:
+            CtrlPrint::v_cout_2 << "Frame FID Mismatch";
+            break;
         default:
             CtrlPrint::v_cout_2 << "Unknown Error";
             break;
@@ -1082,6 +1097,12 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
             break;
         case SUSPICIOUS_OVERCOMPRESSED:
             CtrlPrint::v_cout_2 << "Overcompressed";
+            break;
+        case SUSPICIOUS_ERROR_CHECKED:
+            CtrlPrint::v_cout_2 << "Error Checked";
+            break;
+        case SUSPICIOUS_UNCHECKED:
+            CtrlPrint::v_cout_2 << "Unchecked";
             break;
         default:
             CtrlPrint::v_cout_2 << "Unknown Suspicious";
@@ -1252,6 +1273,8 @@ void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
         CtrlPrint::v_cout_2 << "Same Frame Different PTS - Only PTS mismatch detected without other validation errors.\nPTS mismatch occurs without errors in toggle validation.\n";
     } else if (error == ERR_FRAME_MISSING_EOF) {
         CtrlPrint::v_cout_2 << "Missing EOF - EOF is not found in the frame.\n";
+    } else if (error == ERR_FRAME_FID_MISMATCH) {
+        CtrlPrint::v_cout_2 << "FID Mismatch - Frame Identifier mismatch with previous frame.\n May have had lost data at the start of the frame.\n";
     } else {
         CtrlPrint::v_cout_2 << "Unknown Frame Error - The frame error code is not recognized.\n";
     }
@@ -1272,6 +1295,10 @@ void UVCPHeaderChecker::printSuspiciousExplanation(FrameSuspicious error) {
         CtrlPrint::v_cout_2 << "PTS Decrease - PTS value decreased. \n";
     } else if (error == SUSPICIOUS_SCR_STC_DECREASE) {
         CtrlPrint::v_cout_2 << "SCR STC Decrease - SCR STC value decreased.\n";
+    } else if (error == SUSPICIOUS_OVERCOMPRESSED) {
+        CtrlPrint::v_cout_2 << "Overcompressed - Frame is overcompressed.\nSmaller than " << 
+        ControlConfig::get_width() << " x " << ControlConfig::get_height() << " x 2 x 0.05\n" <<
+        ControlConfig::get_width() * ControlConfig::get_height() * 2 * 0.05 << "bytes .\n";
     } else {
         CtrlPrint::v_cout_2 << "Unknown Suspicious Error - The suspicious error code is not recognized.\n";
     }

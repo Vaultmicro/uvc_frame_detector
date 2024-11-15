@@ -355,7 +355,7 @@ void screen(){
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
-            if (ImGui::Button(UVCPHeaderChecker::capture_image_flag ? "Capture Image" : "Pause Image", ImVec2(96, 40))){
+            if (ImGui::Button(UVCPHeaderChecker::capture_image_flag ? "Capture On" : "Capture Off", ImVec2(96, 40))){
                 UVCPHeaderChecker::capture_image_flag = !UVCPHeaderChecker::capture_image_flag;
                 if (UVCPHeaderChecker::capture_image_flag) {
                     UVCPHeaderChecker::capture_error_flag = prev_capture_error_image_flag;

@@ -125,11 +125,12 @@ struct FrameErrorStats {
     int count_invalid_yuyv_raw_size = 0;
     int count_same_different_pts = 0;
     int count_missing_eof = 0;
+    int count_f_fid_mismatch = 0;
     int count_unknown_frame_error = 0;
 
     int total() const {
         return count_no_error + count_frame_drop + count_frame_error +
-               count_max_frame_overflow + count_invalid_yuyv_raw_size + count_same_different_pts + count_missing_eof + count_unknown_frame_error;
+               count_max_frame_overflow + count_invalid_yuyv_raw_size + count_same_different_pts + count_missing_eof + count_f_fid_mismatch + count_unknown_frame_error;
     }
 
     void print_stats() const {
@@ -142,6 +143,7 @@ struct FrameErrorStats {
         CtrlPrint::v_cout_1 << "Invalid YUYV Raw Size: " << count_invalid_yuyv_raw_size << " (" << percentage(count_invalid_yuyv_raw_size, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Same Different PTS: " << count_same_different_pts << " (" << percentage(count_same_different_pts, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "FID Mismatch: " << count_f_fid_mismatch << " (" << percentage(count_f_fid_mismatch, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Unknown Frame Error: " << count_unknown_frame_error << " (" << percentage(count_unknown_frame_error, total_count) << "%)\n";
     }
 
@@ -213,6 +215,7 @@ enum FrameError {
   ERR_FRAME_INVALID_YUYV_RAW_SIZE = 4,
   ERR_FRAME_SAME_DIFFERENT_PTS = 5,
   ERR_FRAME_MISSING_EOF = 6,
+  ERR_FRAME_FID_MISMATCH = 7,
 
   ERR_FRAME_UNKNOWN = 99
 };
@@ -374,6 +377,7 @@ class UVCPHeaderChecker {
                 case ERR_FRAME_INVALID_YUYV_RAW_SIZE: frame_stats.count_invalid_yuyv_raw_size++; break;
                 case ERR_FRAME_SAME_DIFFERENT_PTS: frame_stats.count_same_different_pts++; break;
                 case ERR_FRAME_MISSING_EOF: frame_stats.count_missing_eof++; break;
+                case ERR_FRAME_FID_MISMATCH: frame_stats.count_f_fid_mismatch++; break;
                 case ERR_UNKNOWN: frame_stats.count_unknown_frame_error++; break;
                 default: break;
             }
