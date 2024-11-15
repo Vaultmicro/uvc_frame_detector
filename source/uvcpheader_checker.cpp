@@ -334,7 +334,17 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
         data.custom_text = "[ " + std::to_string(current_frame_number) + " ]";
-        data.graph_reset();
+
+
+        // static std::chrono::time_point<std::chrono::steady_clock> temp_last_graph_processed_time = 0;
+        // if (temp_last_graph_processed_time < received_time){
+          
+        // } else if (temp_last_graph_processed_time >= received_time){
+        //   data.addSuspiciousGraphData();
+        // }
+        // // TODO: ADD SAME THING FOR THE ERROR AND SUSPICIOUS
+        // // data.graph_reset();
+
         data.addGraphData(static_cast<float>(uvc_payload.size()));
 #endif
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));

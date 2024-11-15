@@ -31,12 +31,12 @@ struct WindowData {
 
 struct GraphData {
     std::mutex mutex;
-    std::array<float, 300> graph_data = {};
+    std::array<float, 10000> graph_data = {};
     int index = 0;
     std::string custom_text;
     bool stop_flag;
-    std::vector<std::array<float, 300>> error_log_graph_data;
-    std::vector<std::array<float, 300>> suspicious_log_graph_data;
+    std::vector<std::array<float, 10000>> error_log_graph_data;
+    std::vector<std::array<float, 10000>> suspicious_log_graph_data;
 
     GraphData(){
         graph_data.fill(0.0f);
