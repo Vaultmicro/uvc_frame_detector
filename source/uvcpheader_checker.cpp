@@ -45,15 +45,16 @@
   typedef unsigned char u_char;
 #endif
 
+//Initialize values here
 bool UVCPHeaderChecker::play_pause_flag = 1;
 bool UVCPHeaderChecker::capture_image_flag = 1;
 bool UVCPHeaderChecker::capture_error_flag = 1;
 bool UVCPHeaderChecker::capture_suspicious_flag = 1;
 bool UVCPHeaderChecker::capture_valid_flag = 0;
 bool UVCPHeaderChecker::filter_on_off_flag = 1;
-bool UVCPHeaderChecker::irregular_define_flag = 0;
+bool UVCPHeaderChecker::irregular_define_flag = 1;
 bool UVCPHeaderChecker::pts_decrease_filter_flag = 1;
-bool UVCPHeaderChecker::stc_decrease_filter_flag = 1;
+bool UVCPHeaderChecker::stc_decrease_filter_flag = 0;
 
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
@@ -253,7 +254,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         frames.pop_back();
         frame_count++;
 
-        if (processed_frames.size() > 3) {
+        if (processed_frames.size() > 8) {
           processed_frames.erase(processed_frames.begin());
         }
 
@@ -378,8 +379,36 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           last_frame->frame_error = ERR_FRAME_INVALID_YUYV_RAW_SIZE;
           last_frame->frame_suspicious = SUSPICIOUS_ERROR_CHECKED;
         }
-
       }
+
+
+      if (filter_on_off_flag && irregular_define_flag){
+        if (ControlConfig::frame_format == "mjpeg"){
+          size_t total_size_sum = 0;
+          size_t total_payload_count_sum = 0;
+          for (const auto& frame : processed_frames) {
+            total_size_sum += std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
+            total_payload_count_sum += frame->packet_number;
+          }
+
+          double average_size = total_payload_count_sum ? static_cast<double>(total_size_sum) / processed_frames.size() : 0;
+          size_t last_frame_sum = std::accumulate(last_frame->payload_sizes.begin(), last_frame->payload_sizes.end(), size_t(0));
+          if (last_frame_sum < average_size * 0.9) {
+            last_frame->frame_suspicious = SUSPICIOUS_FRAME_SIZE_INCONSISTENT;
+          }
+
+          if (total_size_sum < ControlConfig::get_height() * ControlConfig::get_width() * 2 * 0.05) {
+            last_frame->frame_suspicious = SUSPICIOUS_OVERCOMPRESSED;
+          }
+
+          double average_payload_count = static_cast<double>(total_payload_count_sum) / processed_frames.size();
+          if (last_frame->packet_number < average_payload_count) {
+            last_frame->frame_suspicious = SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT;
+          }
+
+        }
+      }
+
 
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
@@ -451,7 +480,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       frames.pop_back();
       frame_count++;
 
-      if (processed_frames.size() > 3) {
+      if (processed_frames.size() > 8) {
         processed_frames.erase(processed_frames.begin());
       }
 
@@ -711,8 +740,9 @@ FrameSuspicious UVCPHeaderChecker::frame_suspicious_check(const UVC_Payload_Head
   
   if (pts_decrease_filter_flag){  
     if (payload_header.PTS != 0 && previous_payload_header.PTS != 0 &&
-        payload_header.PTS < previous_payload_header.PTS) {
-      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "PTS is less than previous PTS."  << std::endl;
+        payload_header.PTS < previous_payload_header.PTS && 
+        (previous_payload_header.PTS - payload_header.PTS) < 0x800000000) {
+      CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "PTS decreased."  << std::endl;
       return SUSPICIOUS_PTS_DECREASE;
     }
   }
@@ -1050,6 +1080,12 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         case SUSPICIOUS_SCR_STC_DECREASE:
             CtrlPrint::v_cout_2 << "SCR STC Decrease";
             break;
+        case SUSPICIOUS_OVERCOMPRESSED:
+            CtrlPrint::v_cout_2 << "Overcompressed";
+            break;
+        default:
+            CtrlPrint::v_cout_2 << "Unknown Suspicious";
+            break;
     }
     CtrlPrint::v_cout_2 << "\n";
     CtrlPrint::v_cout_2 << "EOF Reached: " << (frame.eof_reached ? "Yes" : "No") << "\n";
@@ -1233,9 +1269,9 @@ void UVCPHeaderChecker::printSuspiciousExplanation(FrameSuspicious error) {
     } else if (error == SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT) {
         CtrlPrint::v_cout_2 << "Payload Count Inconsistent - Payload count is inconsistent.\n";
     } else if (error == SUSPICIOUS_PTS_DECREASE) {
-        CtrlPrint::v_cout_2 << "PTS Decrease - PTS values are decreasing.\n";
+        CtrlPrint::v_cout_2 << "PTS Decrease - PTS value decreased. \n";
     } else if (error == SUSPICIOUS_SCR_STC_DECREASE) {
-        CtrlPrint::v_cout_2 << "SCR STC Decrease - SCR STC values are decreasing.\n";
+        CtrlPrint::v_cout_2 << "SCR STC Decrease - SCR STC value decreased.\n";
     } else {
         CtrlPrint::v_cout_2 << "Unknown Suspicious Error - The suspicious error code is not recognized.\n";
     }

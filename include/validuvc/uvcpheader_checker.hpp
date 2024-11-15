@@ -157,13 +157,14 @@ struct FrameSuspiciousStats{
     int count_payload_count_inconsistent = 0;   
     int count_pts_decrease = 0;
     int count_scr_stc_decrease = 0;
+    int count_overcompressed = 0;
     int count_error_checked = 0;
     int count_unknown_suspicious = 0;
     int count_unchecked = 0;
 
     int total() const {
         return count_no_suspicious + count_payload_time_inconsistent + count_frame_size_inconsistent +
-               count_payload_count_inconsistent + count_pts_decrease + count_scr_stc_decrease + count_error_checked + count_unknown_suspicious;
+               count_payload_count_inconsistent + count_pts_decrease + count_scr_stc_decrease + count_overcompressed + count_error_checked + count_unknown_suspicious;
     }
 
     void print_stats () const{
@@ -175,6 +176,7 @@ struct FrameSuspiciousStats{
         CtrlPrint::v_cout_1 << "Payload Count Inconsistent: " << count_payload_count_inconsistent << " (" << percentage(count_payload_count_inconsistent, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "PTS Decrease: " << count_pts_decrease << " (" << percentage(count_pts_decrease, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "SCR STC Decrease: " << count_scr_stc_decrease << " (" << percentage(count_scr_stc_decrease, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Overcompressed: " << count_overcompressed << " (" << percentage(count_overcompressed, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Error Checked: " << count_error_checked << " (" << percentage(count_error_checked, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Unknown Suspicious: " << count_unknown_suspicious << " (" << percentage(count_unknown_suspicious, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Unchecked: " << count_unchecked << "\n";
@@ -222,6 +224,7 @@ enum FrameSuspicious{
     SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT = 3,
     SUSPICIOUS_PTS_DECREASE = 4,
     SUSPICIOUS_SCR_STC_DECREASE = 5,
+    SUSPICIOUS_OVERCOMPRESSED = 6,
 
     SUSPICIOUS_ERROR_CHECKED = 97,
     SUSPICIOUS_UNKNOWN = 98,
@@ -384,6 +387,7 @@ class UVCPHeaderChecker {
                 case SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT: frame_suspicious_stats.count_payload_count_inconsistent++; break;
                 case SUSPICIOUS_PTS_DECREASE: frame_suspicious_stats.count_pts_decrease++; break;
                 case SUSPICIOUS_SCR_STC_DECREASE: frame_suspicious_stats.count_scr_stc_decrease++; break;
+                case SUSPICIOUS_OVERCOMPRESSED: frame_suspicious_stats.count_overcompressed++; break;
                 case SUSPICIOUS_ERROR_CHECKED: frame_suspicious_stats.count_error_checked++; break;
                 case SUSPICIOUS_UNKNOWN: frame_suspicious_stats.count_unknown_suspicious++; break;
                 case SUSPICIOUS_UNCHECKED: frame_suspicious_stats.count_unchecked++; break;
@@ -424,11 +428,11 @@ class UVCPHeaderChecker {
 
 
         UVCPHeaderChecker() :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
-            CtrlPrint::v_cout_1 << "UVCPHeaderChecker Constructor" << std::endl;
+            CtrlPrint::v_cout_1 << "\nUVCPHeaderChecker Constructor\n" << std::endl;
         }
 
         ~UVCPHeaderChecker() {
-            CtrlPrint::v_cout_1 << "UVCPHeaderChecker Destructor" << std::endl;
+            CtrlPrint::v_cout_1 << "\nUVCPHeaderChecker Destructor\n" << std::endl;
             print_stats();
         }
 
