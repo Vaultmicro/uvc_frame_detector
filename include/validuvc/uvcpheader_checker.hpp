@@ -129,7 +129,7 @@ struct FrameErrorStats {
 
     int total() const {
         return count_no_error + count_frame_drop + count_frame_error +
-               count_max_frame_overflow + count_invalid_yuyv_raw_size + count_same_different_pts + count_missing_eof;
+               count_max_frame_overflow + count_invalid_yuyv_raw_size + count_same_different_pts + count_missing_eof + count_unknown_frame_error;
     }
 
     void print_stats() const {
@@ -142,6 +142,7 @@ struct FrameErrorStats {
         CtrlPrint::v_cout_1 << "Invalid YUYV Raw Size: " << count_invalid_yuyv_raw_size << " (" << percentage(count_invalid_yuyv_raw_size, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Same Different PTS: " << count_same_different_pts << " (" << percentage(count_same_different_pts, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Missing EOF: " << count_missing_eof << " (" << percentage(count_missing_eof, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Unknown Frame Error: " << count_unknown_frame_error << " (" << percentage(count_unknown_frame_error, total_count) << "%)\n";
     }
 
     double percentage(int count, int total_count) const {
@@ -156,11 +157,13 @@ struct FrameSuspiciousStats{
     int count_payload_count_inconsistent = 0;   
     int count_pts_decrease = 0;
     int count_scr_stc_decrease = 0;
+    int count_error_checked = 0;
     int count_unknown_suspicious = 0;
+    int count_unchecked = 0;
 
     int total() const {
         return count_no_suspicious + count_payload_time_inconsistent + count_frame_size_inconsistent +
-               count_payload_count_inconsistent + count_pts_decrease + count_scr_stc_decrease + count_unknown_suspicious;
+               count_payload_count_inconsistent + count_pts_decrease + count_scr_stc_decrease + count_error_checked + count_unknown_suspicious;
     }
 
     void print_stats () const{
@@ -172,7 +175,9 @@ struct FrameSuspiciousStats{
         CtrlPrint::v_cout_1 << "Payload Count Inconsistent: " << count_payload_count_inconsistent << " (" << percentage(count_payload_count_inconsistent, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "PTS Decrease: " << count_pts_decrease << " (" << percentage(count_pts_decrease, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "SCR STC Decrease: " << count_scr_stc_decrease << " (" << percentage(count_scr_stc_decrease, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Error Checked: " << count_error_checked << " (" << percentage(count_error_checked, total_count) << "%)\n";
         CtrlPrint::v_cout_1 << "Unknown Suspicious: " << count_unknown_suspicious << " (" << percentage(count_unknown_suspicious, total_count) << "%)\n";
+        CtrlPrint::v_cout_1 << "Unchecked: " << count_unchecked << "\n";
     }
 
     double percentage(int count, int total_count) const {
@@ -218,7 +223,9 @@ enum FrameSuspicious{
     SUSPICIOUS_PTS_DECREASE = 4,
     SUSPICIOUS_SCR_STC_DECREASE = 5,
 
-    SUSPICIOUS_UNKNOWN = 99
+    SUSPICIOUS_ERROR_CHECKED = 97,
+    SUSPICIOUS_UNKNOWN = 98,
+    SUSPICIOUS_UNCHECKED = 99
 };
 
 class ValidFrame{
@@ -247,7 +254,7 @@ class ValidFrame{
         std::vector<UVCError> payload_errors;
         std::vector<size_t> lost_data_sizes;
 
-        ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0) {}
+        ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0), frame_suspicious(SUSPICIOUS_NO_SUSPICIOUS) {}
 
         void add_payload(const UVC_Payload_Header& header, size_t payload_size, const std::vector<u_char>& payload) {
             payload_headers.push_back(header);  // Add header to the vector
@@ -377,7 +384,9 @@ class UVCPHeaderChecker {
                 case SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT: frame_suspicious_stats.count_payload_count_inconsistent++; break;
                 case SUSPICIOUS_PTS_DECREASE: frame_suspicious_stats.count_pts_decrease++; break;
                 case SUSPICIOUS_SCR_STC_DECREASE: frame_suspicious_stats.count_scr_stc_decrease++; break;
+                case SUSPICIOUS_ERROR_CHECKED: frame_suspicious_stats.count_error_checked++; break;
                 case SUSPICIOUS_UNKNOWN: frame_suspicious_stats.count_unknown_suspicious++; break;
+                case SUSPICIOUS_UNCHECKED: frame_suspicious_stats.count_unchecked++; break;
                 default: break;
             }
         }
@@ -404,14 +413,14 @@ class UVCPHeaderChecker {
         uint64_t graph_throughput;
         double average_frame_rate;
         static bool play_pause_flag;
-
+        static bool capture_image_flag;
         static bool capture_error_flag;
-        static bool capture_suspicous_flag;
+        static bool capture_suspicious_flag;
         static bool capture_valid_flag;
+        static bool filter_on_off_flag;
         static bool irregular_define_flag;
         static bool pts_decrease_filter_flag;
         static bool stc_decrease_filter_flag;
-
 
 
         UVCPHeaderChecker() :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {

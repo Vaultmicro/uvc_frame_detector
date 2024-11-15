@@ -103,15 +103,13 @@ void screen(){
     static int selected_error_frame = 0;
     static int selected_error_payload = 0;
     static bool show_image = false;
-    static int selected_suspicous_frame = 0;
-    static bool show_suspicous_log = false;
+    static int selected_suspicious_frame = 0;
+    static bool show_suspicious_log = false;
 
-    static bool capture_image_flag = false;
     static bool prev_capture_error_image_flag = false;
-    static bool prev_capture_suspicous_image_flag = false;
+    static bool prev_capture_suspicious_image_flag = false;
     static bool prev_capture_valid_image_flag = false;
 
-    static bool filter_on_off = false;
     static bool prev_static_const_img_filter = false;
     static bool prev_pts_decrease_filter = false;
     static bool prev_scr_stc_decrease_filter = false;
@@ -168,6 +166,7 @@ void screen(){
                     for (int n = 0; n < error_frame_log_button.size(); n++) {
                         bool is_selected = (selected_error_frame == n);
                         if (ImGui::Selectable(error_frame_log_button[n].c_str(), is_selected)) {
+                            show_image = false;
                             selected_error_payload = 0;
                             selected_error_frame = n; 
                         }
@@ -215,11 +214,12 @@ void screen(){
             if (!suspicious_frame_log_button.empty()){
 
                 ImGui::SetCursorPos(ImVec2(9, 90));
-                if (ImGui::BeginCombo(":: Select Error Frame", suspicious_frame_log_button[selected_suspicous_frame].c_str())) {
+                if (ImGui::BeginCombo(":: Select Suspicious", suspicious_frame_log_button[selected_suspicious_frame].c_str())) {
                     for (int n = 0; n < suspicious_frame_log_button.size(); n++) {
-                        bool is_selected = (selected_suspicous_frame == n);
+                        bool is_selected = (selected_suspicious_frame == n);
                         if (ImGui::Selectable(suspicious_frame_log_button[n].c_str(), is_selected)) {
-                            selected_suspicous_frame = n; 
+                            show_image = false;
+                            selected_suspicious_frame = n; 
                         }
                         if (is_selected) {
                             ImGui::SetItemDefaultFocus(); 
@@ -230,7 +230,7 @@ void screen(){
 
             } else {
                 ImGui::SetCursorPos(ImVec2(9, 90));
-                ImGui::Text("    No Suspicous Log Available");
+                ImGui::Text("    No suspicious Log Available");
             }
 
             ImGui::SetCursorPos(ImVec2(27, 115));
@@ -242,87 +242,139 @@ void screen(){
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
             if (ImGui::Button(show_image ? "Show Image" : "Show Image", ImVec2(96, 40))){
-                if (!error_frame_log_button.empty()) {
-                    show_image = !show_image;
-                    if (show_image) {
+                if (show_error_log){
+                    if (!error_frame_log_button.empty()) {
+                        show_image = !show_image;
+                        if (show_image) {
 
-                        std::string selected_log_name = error_frame_log_button[selected_error_frame];
-                        size_t pos = selected_log_name.find("Frame ");
-                        if (pos != std::string::npos) {
-                            std::string frame_number = selected_log_name.substr(pos + 6);
-        #ifdef _WIN32
-                            image_file_path = "images\\frame_" + frame_number + ".jpg";
-        #elif __linux__
-                            image_file_path = "images/frame_" + frame_number + ".jpg";
-        #endif
-                        } else {
-        #ifdef _WIN32
-                            image_file_path = "images\\smpte.jpg";
-        #elif __linux__
-                            image_file_path = "images/smpte.jpg";
-        #endif
+                            std::string selected_log_name = error_frame_log_button[selected_error_frame];
+                            size_t pos = selected_log_name.find("Frame ");
+                            if (pos != std::string::npos) {
+                                std::string frame_number = selected_log_name.substr(pos + 6);
+            #ifdef _WIN32
+                                image_file_path = "images\\frame_" + frame_number + ".jpg";
+            #elif __linux__
+                                image_file_path = "images/frame_" + frame_number + ".jpg";
+            #endif
+                            } else {
+            #ifdef _WIN32
+                                image_file_path = "images\\smpte.jpg";
+            #elif __linux__
+                                image_file_path = "images/smpte.jpg";
+            #endif
+                            }
+                            UpdateImageTexture(image_file_path);
                         }
-                        UpdateImageTexture(image_file_path);
+                    }
+                } else if (show_suspicious_log) {
+                    if (!suspicious_frame_log_button.empty()) {
+                        show_image = !show_image;
+                        if (show_image) {
+                            std::string selected_log_name = suspicious_frame_log_button[selected_suspicious_frame];
+                            size_t pos = selected_log_name.find("Suspicious ");
+                            if (pos != std::string::npos) {
+                                std::string frame_number = selected_log_name.substr(pos + 11);
+            #ifdef _WIN32
+                                image_file_path = "images\\frame_" + frame_number + ".jpg";
+            #elif __linux__
+                                image_file_path = "images/frame_" + frame_number + ".jpg";
+            #endif
+                            } else {
+            #ifdef _WIN32
+                                image_file_path = "images\\smpte.jpg";
+            #elif __linux__
+                                image_file_path = "images/smpte.jpg";
+            #endif
+                            }
+                            UpdateImageTexture(image_file_path);
+                        }
                     }
                 }
             }
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(137, 115));
-            if (ImGui::Button("Error Log", ImVec2(96, 40))){
-                if (!error_frame_log_button.empty()) {
-                    show_error_log = true;
-                    data.custom_text = "Selected Log: " + error_frame_log_button[selected_error_frame];
-                } else {
-                    data.custom_text = "No Error";
-                }
-            }
-            ImGui::SetCursorPos(ImVec2(247, 115));
-            if (ImGui::Button("Suspicous Log", ImVec2(96, 40))) {
-                if (!suspicious_frame_log_button.empty()) {
-                    show_suspicous_log = true;
-                    data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicous_frame];
-                }
-            }
 
-            ImGui::SetCursorPos(ImVec2(357, 115));
-            if (ImGui::Button("Streaming Log", ImVec2(96, 40))) {  
-                if (!error_frame_log_button.empty()) {
-                    show_error_log = false;
-                    show_suspicous_log = false;
-                    show_image = false;
-                    data.custom_text = "Streaming is shown";
-                }
-            }
-
-            ImGui::SetCursorPos(ImVec2(27, 170));
-            if (capture_image_flag) {
+            if (show_error_log) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
-            if (ImGui::Button(capture_image_flag ? "Capture Image" : "Pause Image", ImVec2(96, 40))){
-                capture_image_flag = !capture_image_flag;
-                if (capture_image_flag) {
+            if (ImGui::Button(show_error_log ? "Error Log" : "Error Log", ImVec2(96, 40))) {
+                if (!error_frame_log_button.empty()) {
+                    show_suspicious_log = false;
+                    show_error_log = true;
+                    data.custom_text = "Selected Log: " + error_frame_log_button[selected_error_frame];
+                } else {
+                    data.custom_text = "No Error";
+                }
+            }
+            ImGui::PopStyleColor(2);
+
+            ImGui::SetCursorPos(ImVec2(247, 115));
+            if (show_suspicious_log) {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
+            }
+            if (ImGui::Button(show_error_log ? "Suspicious Log" : "Suspicious Log", ImVec2(96, 40))) {
+                if (!suspicious_frame_log_button.empty()) {
+                    show_error_log = false;
+                    show_suspicious_log = true;
+                    data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame];
+                }
+            }
+            ImGui::PopStyleColor(2);
+
+            ImGui::SetCursorPos(ImVec2(357, 115));
+            if (!show_error_log && !show_suspicious_log) {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
+            }
+            if (ImGui::Button(show_error_log ? "Streaming Log" : "Streaming Log", ImVec2(96, 40))) {
+                show_error_log = false;
+                show_suspicious_log = false;
+                show_image = false;
+                data.custom_text = "Streaming is shown";
+            }
+            ImGui::PopStyleColor(2);
+
+
+            ImGui::SetCursorPos(ImVec2(27, 170));
+            if (UVCPHeaderChecker::capture_image_flag) {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
+            }
+            if (ImGui::Button(UVCPHeaderChecker::capture_image_flag ? "Capture Image" : "Pause Image", ImVec2(96, 40))){
+                UVCPHeaderChecker::capture_image_flag = !UVCPHeaderChecker::capture_image_flag;
+                if (UVCPHeaderChecker::capture_image_flag) {
                     UVCPHeaderChecker::capture_error_flag = prev_capture_error_image_flag;
-                    UVCPHeaderChecker::capture_suspicous_flag = prev_capture_suspicous_image_flag;
+                    UVCPHeaderChecker::capture_suspicious_flag = prev_capture_suspicious_image_flag;
                     UVCPHeaderChecker::capture_valid_flag = prev_capture_valid_image_flag;
                 } else {
                     prev_capture_error_image_flag = UVCPHeaderChecker::capture_error_flag;
-                    prev_capture_suspicous_image_flag = UVCPHeaderChecker::capture_suspicous_flag;
+                    prev_capture_suspicious_image_flag = UVCPHeaderChecker::capture_suspicious_flag;
                     prev_capture_valid_image_flag = UVCPHeaderChecker::capture_valid_flag;
 
                     UVCPHeaderChecker::capture_error_flag = false;
-                    UVCPHeaderChecker::capture_suspicous_flag = false;
+                    UVCPHeaderChecker::capture_suspicious_flag = false;
                     UVCPHeaderChecker::capture_valid_flag = false;
                 }
             }
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(137, 170));
-            if (UVCPHeaderChecker::capture_error_flag && capture_image_flag) {
+            if (UVCPHeaderChecker::capture_error_flag && UVCPHeaderChecker::capture_image_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
@@ -330,29 +382,29 @@ void screen(){
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
             if (ImGui::Button(UVCPHeaderChecker::capture_error_flag ? "Error Image" : "Error Image", ImVec2(96, 40))) {
-                if (capture_image_flag){
+                if (UVCPHeaderChecker::capture_image_flag){
                     UVCPHeaderChecker::capture_error_flag = !UVCPHeaderChecker::capture_error_flag;
                 }
             }
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(247, 170));
-            if (UVCPHeaderChecker::capture_suspicous_flag && capture_image_flag) {
+            if (UVCPHeaderChecker::capture_suspicious_flag && UVCPHeaderChecker::capture_image_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
-            if (ImGui::Button(UVCPHeaderChecker::capture_suspicous_flag ? "Suspicous Image" : "Suspicous Image", ImVec2(96, 40))) {
-                if (capture_image_flag){
-                    UVCPHeaderChecker::capture_suspicous_flag = !UVCPHeaderChecker::capture_suspicous_flag;
+            if (ImGui::Button(UVCPHeaderChecker::capture_suspicious_flag ? "Suspicious Image" : "Suspicious Image", ImVec2(96, 40))) {
+                if (UVCPHeaderChecker::capture_image_flag){
+                    UVCPHeaderChecker::capture_suspicious_flag = !UVCPHeaderChecker::capture_suspicious_flag;
                 }
             }
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(357, 170));
-            if (UVCPHeaderChecker::capture_valid_flag && capture_image_flag) {
+            if (UVCPHeaderChecker::capture_valid_flag && UVCPHeaderChecker::capture_image_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
@@ -360,23 +412,23 @@ void screen(){
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
             if (ImGui::Button(UVCPHeaderChecker::capture_valid_flag ? "Valid Image" : "Valid Image", ImVec2(96, 40))) {
-                if (capture_image_flag){
+                if (UVCPHeaderChecker::capture_image_flag){
                     UVCPHeaderChecker::capture_valid_flag = !UVCPHeaderChecker::capture_valid_flag;
                 }
             }
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(27, 225));
-            if (filter_on_off) {
+            if (UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
-            if (ImGui::Button(filter_on_off ? "Filter ON" : "Filter OFF", ImVec2(96, 40))){
-                filter_on_off = !filter_on_off;
-                if (filter_on_off) {
+            if (ImGui::Button(UVCPHeaderChecker::filter_on_off_flag ? "Filter ON" : "Filter OFF", ImVec2(96, 40))){
+                UVCPHeaderChecker::filter_on_off_flag = !UVCPHeaderChecker::filter_on_off_flag;
+                if (UVCPHeaderChecker::filter_on_off_flag) {
                     UVCPHeaderChecker::irregular_define_flag = prev_static_const_img_filter;
                     UVCPHeaderChecker::pts_decrease_filter_flag = prev_pts_decrease_filter;
                     UVCPHeaderChecker::stc_decrease_filter_flag = prev_scr_stc_decrease_filter;
@@ -395,7 +447,7 @@ void screen(){
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(137, 225));
-            if (UVCPHeaderChecker::irregular_define_flag && filter_on_off) {
+            if (UVCPHeaderChecker::irregular_define_flag && UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
@@ -403,14 +455,14 @@ void screen(){
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
             if (ImGui::Button(UVCPHeaderChecker::irregular_define_flag ? "Irregular" : "Irregular", ImVec2(96, 40))) {
-                if (filter_on_off){
+                if (UVCPHeaderChecker::filter_on_off_flag){
                     UVCPHeaderChecker::irregular_define_flag = !UVCPHeaderChecker::irregular_define_flag;  
                 }
             }
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(247, 225));
-            if (UVCPHeaderChecker::pts_decrease_filter_flag && filter_on_off) {
+            if (UVCPHeaderChecker::pts_decrease_filter_flag && UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
@@ -418,14 +470,14 @@ void screen(){
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
             if (ImGui::Button(UVCPHeaderChecker::pts_decrease_filter_flag ? "PTS Dec" : "PTS Dec", ImVec2(96, 40))) {
-                if (filter_on_off){
+                if (UVCPHeaderChecker::filter_on_off_flag){
                     UVCPHeaderChecker::pts_decrease_filter_flag = !UVCPHeaderChecker::pts_decrease_filter_flag;  
                 }
             }
             ImGui::PopStyleColor(2);
 
             ImGui::SetCursorPos(ImVec2(357, 225));
-            if (UVCPHeaderChecker::stc_decrease_filter_flag && filter_on_off) {
+            if (UVCPHeaderChecker::stc_decrease_filter_flag && UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
             } else {
@@ -433,7 +485,7 @@ void screen(){
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
             }
             if (ImGui::Button(UVCPHeaderChecker::stc_decrease_filter_flag ? "STC Dec" : "STC Dec", ImVec2(96, 40))) {
-                if(filter_on_off){ 
+                if(UVCPHeaderChecker::filter_on_off_flag){ 
                     UVCPHeaderChecker::stc_decrease_filter_flag = !UVCPHeaderChecker::stc_decrease_filter_flag;  
                 }
             }
@@ -441,14 +493,14 @@ void screen(){
 
 
             ImGui::SetCursorPos(ImVec2(247, 280));
-            if (!UVCPHeaderChecker::play_pause_flag) {
+            if (UVCPHeaderChecker::play_pause_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f));
             } else {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.10f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.50f)); 
             }
-            if (ImGui::Button(UVCPHeaderChecker::play_pause_flag ? "Pause" : "Play", ImVec2(96, 40))) {
+            if (ImGui::Button(UVCPHeaderChecker::play_pause_flag ? "Play" : "Pause", ImVec2(96, 40))) {
                 UVCPHeaderChecker::play_pause_flag = ! UVCPHeaderChecker::play_pause_flag;
             }
             ImGui::PopStyleColor(2);
@@ -458,7 +510,7 @@ void screen(){
                 exit(0);
             }
 
-            ImGui::SetCursorPos(ImVec2(40, 300));
+            ImGui::SetCursorPos(ImVec2(34, 295));
             ImGui::Text("%s", data.custom_text.c_str());
 
             ImGui::End();
@@ -477,8 +529,8 @@ void screen(){
 
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else if (show_suspicous_log && selected_suspicous_frame < data.suspicous_log_text.size()) {
-                ImGui::Text("%s", data.suspicous_log_text[selected_suspicous_frame].c_str());
+            } else if (show_suspicious_log && selected_suspicious_frame < data.suspicious_log_text.size()) {
+                ImGui::Text("%s", data.suspicious_log_text[selected_suspicious_frame].c_str());
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -504,8 +556,8 @@ void screen(){
             // ImGui::Text("Custom Text:");
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else if (show_suspicous_log && selected_suspicous_frame < data.suspicous_log_text.size()) {
-                ImGui::Text("%s", data.suspicous_log_text[selected_suspicous_frame].c_str());    
+            } else if (show_suspicious_log && selected_suspicious_frame < data.suspicious_log_text.size()) {
+                ImGui::Text("%s", data.suspicious_log_text[selected_suspicious_frame].c_str());    
             }else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -530,8 +582,8 @@ void screen(){
             ImGui::Begin("Summary");
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else if(show_suspicous_log && selected_suspicous_frame < data.suspicous_log_text.size()) {
-                ImGui::Text("%s", data.suspicous_log_text[selected_suspicous_frame].c_str());
+            } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_text.size()) {
+                ImGui::Text("%s", data.suspicious_log_text[selected_suspicious_frame].c_str());
             }else {
                 ImGui::Text("%s", data.custom_text.c_str());
             }
@@ -610,7 +662,7 @@ void screen(){
                 } else {
                     ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
                 }
-            } else if(show_suspicous_log) {
+            } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
@@ -634,7 +686,7 @@ void screen(){
                 } else {
                     ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
                 }
-            } else if(show_suspicous_log) {
+            } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
@@ -658,7 +710,7 @@ void screen(){
                 } else {
                     ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
                 }
-            } else if(show_suspicous_log) {
+            } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
@@ -736,13 +788,13 @@ void screen(){
                     0.0f, max_value,  
                     ImVec2(960, 300)
                 );
-            } else if(show_suspicous_log && selected_suspicous_frame < data.suspicous_log_graph_data.size()) {
-                data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicous_frame];
+            } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_graph_data.size()) {
+                data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame];
                 ImGui::Text("%s", data.custom_text.c_str());
                 ImGui::PlotHistogram(
                     "Throughput Data",
-                    data.suspicous_log_graph_data[selected_suspicous_frame].data(),
-                    static_cast<int>(data.suspicous_log_graph_data[selected_suspicous_frame].size()),
+                    data.suspicious_log_graph_data[selected_suspicious_frame].data(),
+                    static_cast<int>(data.suspicious_log_graph_data[selected_suspicious_frame].size()),
                     0, nullptr,
                     0.0f, max_value,  
                     ImVec2(960, 300)

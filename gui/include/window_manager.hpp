@@ -13,7 +13,7 @@ struct WindowData {
     bool stop_flag;
     std::vector<std::string> error_log_text;
     std::vector<std::vector<std::string>> button_log_text;
-    std::vector<std::string> suspicous_log_text;
+    std::vector<std::string> suspicious_log_text;
 
     void add_error_log_text(std::string text) {
         error_log_text.push_back(text);
@@ -24,8 +24,8 @@ struct WindowData {
         error_log_text.clear();
     }
 
-    void add_suspicous_log_text(std::string text) {
-        suspicous_log_text.push_back(text);
+    void add_suspicious_log_text(std::string text) {
+        suspicious_log_text.push_back(text);
     }   
 };
 
@@ -36,7 +36,7 @@ struct GraphData {
     std::string custom_text;
     bool stop_flag;
     std::vector<std::array<float, 300>> error_log_graph_data;
-    std::vector<std::array<float, 300>> suspicous_log_graph_data;
+    std::vector<std::array<float, 300>> suspicious_log_graph_data;
 
     GraphData(){
         graph_data.fill(0.0f);
@@ -55,7 +55,7 @@ struct GraphData {
     }
 
     void addSuspiciousGraphData(){
-        suspicous_log_graph_data.push_back(graph_data);
+        suspicious_log_graph_data.push_back(graph_data);
     }
 
     void graph_reset() {

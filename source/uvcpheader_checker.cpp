@@ -45,10 +45,12 @@
   typedef unsigned char u_char;
 #endif
 
-bool UVCPHeaderChecker::play_pause_flag = 0;
+bool UVCPHeaderChecker::play_pause_flag = 1;
+bool UVCPHeaderChecker::capture_image_flag = 1;
 bool UVCPHeaderChecker::capture_error_flag = 1;
-bool UVCPHeaderChecker::capture_suspicous_flag = 0;
+bool UVCPHeaderChecker::capture_suspicious_flag = 1;
 bool UVCPHeaderChecker::capture_valid_flag = 0;
+bool UVCPHeaderChecker::filter_on_off_flag = 1;
 bool UVCPHeaderChecker::irregular_define_flag = 0;
 bool UVCPHeaderChecker::pts_decrease_filter_flag = 1;
 bool UVCPHeaderChecker::stc_decrease_filter_flag = 1;
@@ -57,7 +59,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
 
-  if (play_pause_flag) {
+  if (!play_pause_flag) {
     return 0;
   }
 
@@ -75,13 +77,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
 
   if (uvc_payload.empty()) {          
-    CtrlPrint::v_cerr_2 << "UVC payload is empty." << std::endl;
+    CtrlPrint::v_cerr_2 << "[ "<< formatted_time << "]" << " UVC payload is empty." << std::endl;
     update_payload_error_stat(ERR_EMPTY_PAYLOAD);
     return ERR_EMPTY_PAYLOAD;
   }
   if (uvc_payload.size() > ControlConfig::dwMaxPayloadTransferSize) {
 
-    CtrlPrint::v_cerr_2 << "UVC payload size exceeds maximum transfer size." << std::endl;
+    CtrlPrint::v_cerr_2 << "[ "<< formatted_time << "]" << " Payload size exceeds maximum transfer size." << std::endl;
 
     update_payload_error_stat(ERR_MAX_PAYLAOD_OVERFLOW);
     return ERR_MAX_PAYLAOD_OVERFLOW;
@@ -148,7 +150,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
 
 #ifndef TUI_SET
-    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps THRPT" << std::endl;
+    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps" << std::endl;
 #endif
 
 #ifdef TUI_SET
@@ -209,6 +211,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         auto& last_frame = frames.back();
         last_frame->frame_error = ERR_FRAME_MISSING_EOF;
         last_frame->eof_reached = false;
+        last_frame->frame_suspicious = SUSPICIOUS_ERROR_CHECKED;
         //finish the last frame
         update_frame_error_stat(last_frame->frame_error);
         update_suspicious_stats(last_frame->frame_suspicious);
@@ -243,7 +246,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
         }
-        if (capture_error_flag){
+        if (capture_error_flag && capture_image_flag){
           last_frame->push_queue();
         }
         processed_frames.push_back(std::move(frames.back()));
@@ -373,15 +376,17 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
                   << " YUYV size mismatch"
                   << std::endl;
           last_frame->frame_error = ERR_FRAME_INVALID_YUYV_RAW_SIZE;
+          last_frame->frame_suspicious = SUSPICIOUS_ERROR_CHECKED;
         }
 
       }
 
       update_frame_error_stat(last_frame->frame_error);
-      update_suspicious_stats(last_frame->frame_suspicious);
       // finish the frame
       // save_frames_to_log(frames.back());
       if (last_frame->frame_error) {
+        last_frame->frame_suspicious = SUSPICIOUS_ERROR_CHECKED;
+        update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
         addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
         WindowManager& manager = WindowManager::getInstance();
@@ -413,12 +418,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
-        if (capture_error_flag){
+        if (capture_error_flag && capture_image_flag){
           last_frame->push_queue();
         }
       } else if (last_frame->frame_suspicious){
+      update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
-        addSuspiciousFrameLog("Frame " + std::to_string(last_frame->frame_number));
+        addSuspiciousFrameLog("Suspicious " + std::to_string(last_frame->frame_number));
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
         data.addSuspiciousGraphData();
@@ -428,11 +434,18 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         print_summary(*last_frame);
         frame_suspicious_flag = 0;
 #endif
+        if (capture_suspicious_flag && capture_image_flag){
+          last_frame->push_queue();
+        }
 
       }else{
+      update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
         print_frame_data(*last_frame);
-#endif      
+#endif
+        if (capture_valid_flag && capture_image_flag){
+          last_frame->push_queue();
+        }
       }
       processed_frames.push_back(std::move(frames.back()));
       frames.pop_back();
@@ -555,7 +568,7 @@ UVC_Payload_Header UVCPHeaderChecker::parse_uvc_payload_header(
 
   UVC_Payload_Header payload_header = {};
   if (uvc_payload.size() < 2) {
-    CtrlPrint::v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
+    // CtrlPrint::v_cerr_2 << "Error: UVC payload size is too small." << std::endl;
     //save_payload_header_to_log(payload_header, received_time);
     return payload_header;  // check if payload is too small for payload header
   }
@@ -692,6 +705,10 @@ UVCError UVCPHeaderChecker::payload_header_valid(
 }
 
 FrameSuspicious UVCPHeaderChecker::frame_suspicious_check(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header){
+  if (!filter_on_off_flag){
+    return SUSPICIOUS_UNCHECKED;
+  }
+  
   if (pts_decrease_filter_flag){  
     if (payload_header.PTS != 0 && previous_payload_header.PTS != 0 &&
         payload_header.PTS < previous_payload_header.PTS) {
