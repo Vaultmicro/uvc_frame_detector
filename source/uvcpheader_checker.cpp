@@ -263,7 +263,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     bool frame_found = false;
 
-    if (payload_header_valid_return != ERR_FRAME_FID_MISMATCH) {
+    if (payload_header_valid_return != ERR_FID_MISMATCH) {
     
       for (auto& frame : frames) {
         if (previous_payload_header.bmBFH.BFH_FID == payload_header.bmBFH.BFH_FID) {
@@ -293,7 +293,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
           }
 
-          if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF) {
+          if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF && payload_header_valid_return != ERR_FID_MISMATCH) {
             frame->set_frame_error();  // if error set, add error flag to the frame
           }
 
@@ -322,7 +322,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
 
       new_frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
-      if (payload_header_valid_return == ERR_FRAME_FID_MISMATCH) {
+      if (payload_header_valid_return == ERR_FID_MISMATCH) {
         new_frame->add_received_error_time(received_time);
         new_frame->frame_error = ERR_FRAME_FID_MISMATCH;
       } else {
@@ -342,7 +342,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         new_frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
       }
 
-      if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF && payload_header_valid_return != ERR_FRAME_FID_MISMATCH) {
+      if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF && payload_header_valid_return != ERR_FID_MISMATCH) {
         new_frame->set_frame_error();
       }
     }
@@ -1299,6 +1299,10 @@ void UVCPHeaderChecker::printSuspiciousExplanation(FrameSuspicious error) {
         CtrlPrint::v_cout_2 << "Overcompressed - Frame is overcompressed.\nSmaller than " << 
         ControlConfig::get_width() << " x " << ControlConfig::get_height() << " x 2 x 0.05\n" <<
         ControlConfig::get_width() * ControlConfig::get_height() * 2 * 0.05 << "bytes .\n";
+    } else if (error == SUSPICIOUS_ERROR_CHECKED) {
+        CtrlPrint::v_cout_2 << "Error Checked - Frame is already set ERROR.\n";
+    } else if (error == SUSPICIOUS_UNCHECKED) {
+        CtrlPrint::v_cout_2 << "Unchecked - Suspicious error has not been checked.\n";
     } else {
         CtrlPrint::v_cout_2 << "Unknown Suspicious Error - The suspicious error code is not recognized.\n";
     }
