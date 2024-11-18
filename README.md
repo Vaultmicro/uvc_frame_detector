@@ -1,15 +1,24 @@
-# uvc_frame_detector
+# UVC Frame Detector (uvc_frame_detector)
 
-version 0.3.3
-included linux and window verison  
-each using usbmon and tshark for stream  
-added tui, gui version respectively  
-added buttons to recall the error frame log  
+version 0.3.4
+New method for Graphs and Buttons.  
+New feature included, capturing and summarize suspicious frames.
 
+---
+
+## Overview
+The UVC Frame Detector (UVCFD) analyzes USB video frames by capturing data, validating headers, and detecting errors in payloads and frames. It supports live camera streams and pre-recorded `pcapng` files.
+
+### Key Features:
+- Real-time analysis of USB video data.
+- Validation and error detection for payloads and frames.
+- Comprehensive error statistics.
+---
 
 ## Executable Files
 
-### Oldmanandsea, Oldmanandsea_t, Oldmanandsea_g  
+### Main Project :  
+### UVCFD (UVC Frame Detector)  
 This programme uses pipeline with tshark gets parsed data, recombine urb into payloads and frames.  
 Detects invalid datas and payload headers, frames.  
 Shows error data, stats. _t stands for tui, _g stands for gui.  
@@ -17,15 +26,24 @@ Can use live stream using camera application
 Or can use pcapng file 
 
 in window using camera application  
-.\run_oldmanandsea_g.ps1  
+  ```
+.\run_uvcfd.ps1  
+  ```
 
 in window using pcapng  
-.\run_pcapng_oldmanandsea_g.ps1  
+  ```
+.\run_uvcfdp.ps1  
+  ```
 
 in linux  
- sudo tshark -i usbmon1 -s 0 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usb.device_address -e usbvideo.format.numFrameDescriptors -E separator=\; -Y "usb.device_address == 3" -Q | ./oldmanandsea_g
+  ```
+./run_uvcfd.bash
+  ```
+  
+</br>
+</br>
 
-
+### Side Projects:
 ### Moncapler
 This programme uses usbmon* in linux to get raw data, recombine urb into payloads and frames.  
 Uses same validation with oldmanandsea, however controlconfig data is not yet programmed.  
@@ -67,8 +85,16 @@ If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wiresha
 0. mkdir log
 1. mkdir build
 2. cd build
-3. cmake ..
-4. cmake --build .
+3. cmake ..             (cmake -DCMAKE_BUILD_TYPE=Release ..)
+3. Configure the build system using CMake:
+- For Debug build:
+  ```
+  cmake -DCMAKE_BUILD_TYPE=Debug ..
+  ```
+- For Release build:
+  ```
+  cmake -DCMAKE_BUILD_TYPE=Release ..
+  ```
 5. cd Debug  
 
 compiler info  
@@ -80,13 +106,8 @@ compiler info
 
 ### Run  
   
-Go to project Directory  
-0. cd build  
-
-For both BULK & ISO & CTRL  
-"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -T fields -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -E separator=; -Y "usb.device_address == 3" -Q | .\debug\oldmanandsea.exe  
-  
-
+Use the shellscript given.
+0. .\run_uvcfd
   
 If want to force the format then type down below...  
 Can find maximum frame size and maximum payload size in  
@@ -158,73 +179,6 @@ When it is done, fps are calculated and shows whether frame has errors<br/>
 Error statistics will be given<br/>
 Below is one of them <br/>
 
-### Example Result
-
-### For window & linux
-
-press ctrl + c once to see statistics  
-
-UVCPHeaderChecker Destructor  
-Payload Error Statistics:  
-No Error: 1064 (99.2537%)  
-Empty Payload: 0 (0%)  
-Max Payload Overflow: 0 (0%)  
-Error Bit Set: 3 (0.279851%)  
-Length Out of Range: 1 (0.0932836%)  
-Length Invalid: 0 (0%)  
-Reserved Bit Set: 0 (0%)  
-End of Header Bit: 0 (0%)  
-Toggle Bit Overlapped: 0 (0%)  
-Frame Identifier Mismatch: 4 (0.373134%)  
-Swap: 0 (0%)  
-Missing EOF: 0 (0%)  
-Unknown Error: 0 (0%)  
-  
-Frame Error Statistics:  
-No Error: 1064 (94.1593%)  
-Frame Drop: 66 (5.84071%)  
-Frame Error: 0 (0%)  
-Max Frame Overflow: 0 (0%)  
-Invalid YUYV Raw Size: 0 (0%)  
-Same Different PTS: 0 (0%)  
-Exiting safely...  
-End of main  
-
-
-### For Linux only
-
-Capture Statistics:<br/>
-  
-Total Packets received in usbmon: 6982<br/>
-Total Packets dropped by system buffer: 10122<br/>
-Total Packets dropped by interface: 0<br/>
-  
-Total Packets counted in usbmon by application: 6952<br/>
-Total Packet Length bytes: 40249996<br/>
-Total Captured Packet Length bytes: 40249996<br/>
-  
-Filtered Packets (busnum=1, devnum=4): 6940<br/>
-Filtered Packet Length bytes (busnum=1, devnum=4): 40249115<br/>
-Filtered Captured Packet Length bytes (busnum=1, devnum=4): 40249115<br/>
-  
-  
-If Filtered Packet Length bytes and Filtered Captured Packet Length bytes are different, then test enviroment is maybe unstable <br/>
-Starting camera after running code may cause difference in this value, ignore it if think unnecessary <br/>
-  
-### Saved log file
-To compare raw data with result, go to log dir<br/>
-
-frames_log.txt can see every frame packets information  
-
-### Test Codes
-valid_tests  
-frame_tests  
-all tests passed 100  
-
-test_packaet_handler is also available for linux  
-
-
-
 # uvcperf
 
 Modified Libuvc stream file to get the live stream from the camera and validate the data at the final stage  
@@ -243,8 +197,8 @@ ctrl + c to end
 ![uml_img](./documents/dark_uvc_frame_detector.drawio.png)
 
 # Example
-![example_0](./documents/img_yuyv_specific_frame_example.jpg)
-![example_1](./documents/img_mjpeg_streaming_frame_example.jpg)
+![example_0](./documents/034_0.jpg)
+![example_1](./documents/034_1.jpg)
 
 ### TODO
 Test Linux version <br/>
