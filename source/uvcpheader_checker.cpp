@@ -65,7 +65,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   }
 
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
-  static std::chrono::time_point<std::chrono::steady_clock> temp_received_time_graph;
+  static std::chrono::time_point<std::chrono::steady_clock> temp_r_graph_time;
+  auto pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
+  auto graph_time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(received_time - temp_r_graph_time).count();
+
+  static uint64_t received_frames_count = 0;
+  static uint64_t received_throughput = 0;  
 
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
@@ -88,12 +93,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
     update_payload_error_stat(ERR_MAX_PAYLAOD_OVERFLOW);
     return ERR_MAX_PAYLAOD_OVERFLOW;
-  }
-
-  static uint64_t received_frames_cnt = 0;
-  static uint64_t received_throughput = 0;  
-  
-  auto pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
+  }  
 
   if (temp_received_time == std::chrono::time_point<std::chrono::steady_clock>()) {
     temp_received_time = received_time;
@@ -108,8 +108,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             if (frame_count != ControlConfig::fps) {
                 frame_stats.count_frame_drop += fps_difference;
             }
-            average_frame_rate = (average_frame_rate * received_frames_cnt + frame_count) / (received_frames_cnt + 1);
-            received_frames_cnt++;
+            average_frame_rate = (average_frame_rate * received_frames_count + frame_count) / (received_frames_count + 1);
+            received_frames_count++;
     #ifdef TUI_SET
             window_number = 2;
     #elif GUI_SET
@@ -168,11 +168,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       frame_stats.count_frame_drop += fps_difference;
     }
 
-    average_frame_rate = (average_frame_rate * received_frames_cnt + frame_count)/(received_frames_cnt + 1);
-    received_frames_cnt++;
+    average_frame_rate = (average_frame_rate * received_frames_count + frame_count)/(received_frames_count + 1);
+    received_frames_count++;
 
     frame_count = 0;
-    temp_received_time = received_time - std::chrono::milliseconds(1);
+    // temp_received_time = received_time - std::chrono::milliseconds(1);
+    temp_received_time += std::chrono::seconds(1);
     throughput = 0;
 
 #if defined(TUI_SET) || defined(GUI_SET)
@@ -201,7 +202,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
                            previous_previous_payload_header);
 
   static uint32_t previous_frame_pts = 0;
-
 
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF || payload_header_valid_return == ERR_FID_MISMATCH) {
 
@@ -334,18 +334,38 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
         data.custom_text = "[ " + std::to_string(current_frame_number) + " ]";
+        
+        int graph_time_gap_insec = graph_time_gap / 1000;
+        if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>()) {
+            temp_r_graph_time = received_time;
+        } else if (graph_time_gap_insec >= 1) {
+            if (graph_time_gap_insec >= 2) {
+              for (int i = 0; i < (graph_time_gap_insec - 1); ++i) {
+                  data.graph_reset();
+                  temp_r_graph_time += std::chrono::seconds(1);
+              }
+            }
+          data.graph_reset();
+          for (int i = 0; i < data.index; ++i) {
+              data.addGraphData(0.0f);
+          }
+          temp_r_graph_time += std::chrono::seconds(1);
+          graph_time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(received_time - temp_r_graph_time).count();
+        }
 
+        if (graph_time_gap >= 0 && graph_time_gap < 1000) {
+            if (graph_time_gap * 10 <= data.index) {
+                data.addGraphData(static_cast<float>(uvc_payload.size()));
+            } else {
+                for (int i = data.index; i < graph_time_gap * 10; ++i) {
+                    data.addGraphData(0.0f);
+                }
+                data.addGraphData(static_cast<float>(uvc_payload.size()));
+            }
+        }
 
-        // static std::chrono::time_point<std::chrono::steady_clock> temp_last_graph_processed_time = 0;
-        // if (temp_last_graph_processed_time < received_time){
-          
-        // } else if (temp_last_graph_processed_time >= received_time){
-        //   data.addSuspiciousGraphData();
-        // }
         // // TODO: ADD SAME THING FOR THE ERROR AND SUSPICIOUS
-        // // data.graph_reset();
-
-        data.addGraphData(static_cast<float>(uvc_payload.size()));
+        // data.addGraphData(static_cast<float>(uvc_payload.size()));
 #endif
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
       if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
@@ -530,11 +550,16 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->lost_data_sizes.push_back(uvc_payload.size());
       last_frame->packet_number++;
 
-      // print_frame_data(*last_frame);
 #ifndef GUI_SET
       plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
 #endif
     }
+#ifdef GUI_SET
+        WindowManager& manager = WindowManager::getInstance();
+        GraphData& data = manager.getGraphData(0);
+        data.addGraphData(static_cast<float>(0));
+#endif
+
     print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 
     temp_error_payload_header = payload_header;
@@ -1166,13 +1191,13 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
       if (ControlConfig::get_frame_format() == "yuyv") {
         size_t expected_frame_size = ControlConfig::get_width() * ControlConfig::get_height() * 2;
         CtrlPrint::v_cout_2 << "   - Frame Format: YUYV\n";
-        CtrlPrint::v_cout_2 << "  expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
+        CtrlPrint::v_cout_2 << "Expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
         if (expected_frame_size != actual_frame_size) {
             std::ptrdiff_t diff = static_cast<std::ptrdiff_t>(actual_frame_size) - static_cast<std::ptrdiff_t>(expected_frame_size);
             CtrlPrint::v_cout_2 << "Data Loss :          " << diff << " bytes\n";
         }
       }
-      CtrlPrint::v_cout_2 << "actual frame size:   " << actual_frame_size << "\n";
+      CtrlPrint::v_cout_2 << "Actual frame size:   " << actual_frame_size << "\n";
 
     CtrlPrint::v_cout_2 << "\nPayload Errors:" << "\n";
 

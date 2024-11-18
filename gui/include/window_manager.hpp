@@ -62,6 +62,14 @@ struct GraphData {
         graph_data.fill(0.0f);
         index = 0;
     }
+
+    int check_if_last(){
+        if (index >= graph_data.size() - 1) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 };
 
 class WindowManager {
