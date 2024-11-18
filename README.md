@@ -85,7 +85,6 @@ If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wiresha
 0. mkdir log
 1. mkdir build
 2. cd build
-3. cmake ..             (cmake -DCMAKE_BUILD_TYPE=Release ..)
 3. Configure the build system using CMake:
 - For Debug build:
   ```
@@ -95,13 +94,24 @@ If so go to C:\Program Files\Wireshark\extcap and move USBPcapCMD.exe to wiresha
   ```
   cmake -DCMAKE_BUILD_TYPE=Release ..
   ```
-5. cd Debug  
+4. Configure the build system using CMake:
+- For Debug build:
+  ```
+  cmake --build . --config Debug
+  ```
+- For Release build:
+  ```
+  cmake --build . --config Release
+  ```
+5. cd Debug/Release  
 
-compiler info  
+### Compiler info  
+```
 -- Building for: Visual Studio 17 2022  
 -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.19045.  
 -- The CXX compiler identification is MSVC 19.41.34120.0  
 -- The C compiler identification is MSVC 19.41.34120.0  
+```
 
 
 ### Run  
