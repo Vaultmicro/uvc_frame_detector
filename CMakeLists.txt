@@ -143,7 +143,7 @@ endif(WIN32)
 
 
 add_executable(
-    oldmanandsea_g
+    uvcfd
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
@@ -154,9 +154,9 @@ add_executable(
     ${IMGUI_SOURCES}
 )
 
-target_compile_definitions(oldmanandsea_g PUBLIC GUI_SET GLEW_STATIC)
+target_compile_definitions(uvcfd PUBLIC GUI_SET GLEW_STATIC)
 
-target_link_libraries(oldmanandsea_g
+target_link_libraries(uvcfd
     ${GUI_LIBRARIES}
     ${LIBJPEGTURBO64_LIBRARIES}
 )

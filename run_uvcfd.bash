@@ -11,7 +11,7 @@ command="sudo tshark -i usbmon1 -s 0 -T fields \
     -e usbvideo.frame.width -e usbvideo.frame.height \
     -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval \
     -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors \
-    -E separator=\; -Y \"usb.device_address == $devadd\" -Q | ./build/oldmanandsea_g"
+    -E separator=\; -Y \"usb.device_address == $devadd\" -Q | ./build/uvcfd"
 
 echo "$command"
 
