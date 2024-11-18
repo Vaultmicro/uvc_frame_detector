@@ -22,8 +22,8 @@ $command = '"C:\Program Files\Wireshark\tshark.exe" -r "'+ $filepath +'" -s 0 -T
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
     '-e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval ' +
     '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors ' +
-    '-E separator=; -Y "usb.device_address == ' + $devadd + ' && ' +
-    'usb.endpoint_address == 0x80 || usb.endpoint_address == 0x8' + $endpointadd + '" -Q | .\build\release\oldmanandsea_g.exe"'
+    '-E separator=; -Y "(usb.device_address == ' + $devadd + ') && (' +
+    'usb.endpoint_address == 0x80 || usb.endpoint_address == 0x8' + $endpointadd + '") -Q | .\build\release\oldmanandsea_g.exe"'
 
 Write-Output $commands
 cmd /c $command

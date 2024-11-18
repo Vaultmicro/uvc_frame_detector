@@ -557,7 +557,37 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
-        data.addGraphData(static_cast<float>(0));
+
+        int graph_time_gap_insec = graph_time_gap / 1000;
+        if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>()) {
+            temp_r_graph_time = received_time;
+        } else if (graph_time_gap_insec >= 1) {
+            if (graph_time_gap_insec >= 2) {
+              for (int i = 0; i < (graph_time_gap_insec - 1); ++i) {
+                  data.graph_reset();
+                  temp_r_graph_time += std::chrono::seconds(1);
+              }
+            }
+          data.graph_reset();
+          for (int i = 0; i < data.index; ++i) {
+              data.addGraphData(0.0f);
+          }
+          temp_r_graph_time += std::chrono::seconds(1);
+          graph_time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(received_time - temp_r_graph_time).count();
+        }
+
+        if (graph_time_gap >= 0 && graph_time_gap < 1000) {
+            if (graph_time_gap * 10 <= data.index) {
+                data.addGraphData(0.0f);
+            } else {
+                for (int i = data.index; i < graph_time_gap * 10; ++i) {
+                    data.addGraphData(0.0f);
+                }
+                data.addGraphData(0.0f);
+            }
+        }
+
+        // data.addGraphData(static_cast<float>(0));
 #endif
 
     print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
@@ -1190,7 +1220,7 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
       size_t actual_frame_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
       if (ControlConfig::get_frame_format() == "yuyv") {
         size_t expected_frame_size = ControlConfig::get_width() * ControlConfig::get_height() * 2;
-        CtrlPrint::v_cout_2 << "   - Frame Format: YUYV\n";
+        CtrlPrint::v_cout_2 << " - Frame Format: YUYV\n";
         CtrlPrint::v_cout_2 << "Expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
         if (expected_frame_size != actual_frame_size) {
             std::ptrdiff_t diff = static_cast<std::ptrdiff_t>(actual_frame_size) - static_cast<std::ptrdiff_t>(expected_frame_size);
@@ -1202,7 +1232,7 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "\nPayload Errors:" << "\n";
 
     if (frame.payload_errors.empty()) {
-        CtrlPrint::v_cout_2 << "  NO ERROR, NO data loss for received payloads \n";
+        CtrlPrint::v_cout_2 << "NO ERROR, NO data loss for received payloads \n";
     } else {
         size_t temp_lost_data_size = 0;
         for (size_t i = 0; i < frame.payload_errors.size(); ++i) {
