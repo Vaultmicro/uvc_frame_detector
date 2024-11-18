@@ -210,5 +210,7 @@ ctrl + c to end
 ![example_0](./documents/034_0.jpg)
 ![example_1](./documents/034_1.jpg)
 
+![usage](./documents/usage.gif)
+
 ### TODO
 Test Linux version <br/>
