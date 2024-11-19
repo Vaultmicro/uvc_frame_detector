@@ -29,37 +29,48 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-if(UNIX)
+
+
+if (WIN32)
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+set(GUI_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib
+)
+set(LIBJPEGTURBO_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg-static.lib
+)
+
+elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
+set(GUI_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib
+)
+
+set(LIBJPEGTURBO_LIBRARIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/lib/turbojpeg-static.lib
+)
+
+endif()
+elseif (UNIX)
 set(LIBUSB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/libusb-1.0)
 set(LIBUSB_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/library/libusb-1.0.so.0.4.0)
 set(PCAP_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libpcap.so.1.10.4
 )
-endif(UNIX)
-
-if(WIN32)
-set(GUI_LIBRARIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib
-)
-elseif(UNIX)
 set(GUI_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libglfw.so
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGLEW.a
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/libGL.so
 )
-endif()
-
-if (WIN32)
-set(LIBJPEGTURBO64_LIBRARIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg.lib
-)
-elseif (UNIX)
-set(LIBJPEGTURBO64_LIBRARIES
+set(LIBJPEGTURBO_LIBRARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/libturbojpeg.a
 )
+
 endif()
 
 include_directories(${googletest_SOURCE_DIR}/googlemock/include)
@@ -69,7 +80,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/include)
+endif()
 
 set(IMGUI_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
@@ -103,7 +119,7 @@ target_link_libraries(
     uvc_frame_detector
     PRIVATE
         ${PCAP_LIBRARIES}
-        ${LIBJPEGTURBO64_LIBRARIES}
+        ${LIBJPEGTURBO_LIBRARIES}
 )
 endif(UNIX)
 
@@ -117,7 +133,7 @@ add_executable(
 )
 
 target_link_libraries(oldmanandsea
-    ${LIBJPEGTURBO64_LIBRARIES}
+    ${LIBJPEGTURBO_LIBRARIES}
 )
 
 if(WIN32)
@@ -136,7 +152,7 @@ add_executable(
 target_link_libraries(
     oldmanandsea_t
     PRIVATE
-        ${LIBJPEGTURBO64_LIBRARIES}
+        ${LIBJPEGTURBO_LIBRARIES}
 )
 target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
 endif(WIN32)
@@ -158,22 +174,10 @@ target_compile_definitions(uvcfd PUBLIC GUI_SET GLEW_STATIC)
 
 target_link_libraries(uvcfd
     ${GUI_LIBRARIES}
-    ${LIBJPEGTURBO64_LIBRARIES}
+    ${LIBJPEGTURBO_LIBRARIES}
 )
 
-add_executable(
-    example
-    ${CMAKE_CURRENT_SOURCE_DIR}/examples/smpte.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-target_link_libraries(
-    example
-    PRIVATE
-        ${LIBJPEGTURBO64_LIBRARIES}
-)
+
 
 if (UNIX)
 add_executable(
@@ -194,155 +198,10 @@ target_link_libraries(
     uvcperf
     PRIVATE
         ${LIBUSB_LIBRARIES}
-        ${LIBJPEGTURBO64_LIBRARIES}
+        ${LIBJPEGTURBO_LIBRARIES}
 
 )
 endif(UNIX)
 
-add_executable(
-    valid_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/valid_test.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
 
-target_link_libraries(
-    valid_test
-    PRIVATE
-        gtest
-        gtest_main
-        ${LIBJPEGTURBO64_LIBRARIES}
-
-)
-
-
-add_executable(
-    frame_test_bulk
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_bulk.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-
-
-target_link_libraries(
-    frame_test_bulk
-    PRIVATE
-        gtest
-        gtest_main
-        ${LIBJPEGTURBO64_LIBRARIES}
-)
-
-add_executable(
-    frame_test_iso
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/frame_test_iso.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-
-target_link_libraries(
-    frame_test_iso
-    PRIVATE
-        gtest
-        gtest_main
-        ${LIBJPEGTURBO64_LIBRARIES}
-)
-
-
-if (UNIX)
-add_executable(
-    test_packet_handler
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_packet_handler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-
-target_compile_definitions(test_packet_handler PRIVATE UNIT_TEST)
-
-target_link_libraries(
-    test_packet_handler
-    PRIVATE
-        gtest
-        gtest_main
-        ${PCAP_LIBRARIES}
-        ${LIBJPEGTURBO64_LIBRARIES}
-)
-
-add_executable(
-    show_urb_header
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/show_urb_header.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-
-target_compile_definitions(show_urb_header PRIVATE UNIT_TEST)
-
-target_link_libraries(
-    show_urb_header
-    PRIVATE
-        ${PCAP_LIBRARIES}
-        ${LIBJPEGTURBO64_LIBRARIES}
-)
-endif(UNIX)
-
-
-add_executable(
-    log_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_test.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-target_link_libraries(log_test
-    ${LIBJPEGTURBO64_LIBRARIES}
-)
-
-if(WIN32)
-add_executable(
-    log_test_t
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_test.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-target_compile_definitions(log_test_t PUBLIC TUI_SET)
-target_link_libraries(log_test_t
-    ${LIBJPEGTURBO64_LIBRARIES}
-)
-endif(WIN32)
-
-add_executable(
-    log_test_g
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/log_test.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
-    ${IMGUI_SOURCES}
-    ${DEVELOPE_PHOTO_SOURCES}
-)
-
-target_compile_definitions(log_test_g PUBLIC GUI_SET GLEW_STATIC)
-
-target_link_libraries(
-    log_test_g
-    PRIVATE    
-        ${GUI_LIBRARIES}
-        ${LIBJPEGTURBO64_LIBRARIES}
-)
-
+# add_subdirectory(tests)

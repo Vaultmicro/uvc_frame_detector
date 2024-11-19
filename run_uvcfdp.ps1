@@ -3,7 +3,7 @@
 
 $filepath = Read-Host "Please enter the path to the pcapng file"
 
-$find_dev_num = '"C:\Program Files\Wireshark\tshark.exe" -r "'+ $filepath +'" -s 0 -T fields ' +
+$find_dev_num = '"C:\Program Files\Wireshark\tshark.exe" -r '+ $filepath +' -s 0 -T fields ' +
 '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index '+
 '-e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType ' +
 '-e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize ' +
@@ -16,14 +16,14 @@ $devadd = Read-Host "Please select device address"
 Write-Host "(0x80 is selected by default e.g. 1 for 0x81)"
 $endpointadd = Read-Host "Please select endpoint address"
 
-$command = '"C:\Program Files\Wireshark\tshark.exe" -r "'+ $filepath +'" -s 0 -T fields ' +
+$command = '"C:\Program Files\Wireshark\tshark.exe" -r '+ $filepath +' -s 0 -T fields ' +
     '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata ' +
     '-e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index ' +
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
     '-e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval ' +
     '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors ' +
     '-E separator=; -Y "(usb.device_address == ' + $devadd + ') && (' +
-    'usb.endpoint_address == 0x80 || usb.endpoint_address == 0x8' + $endpointadd + '") -Q | .\build\release\uvcfd.exe"'
+    'usb.endpoint_address == 0x80 || usb.endpoint_address == 0x8' + $endpointadd + ')" -Q | .\build\release\uvcfd.exe"'
 
 Write-Output $commands
 cmd /c $command

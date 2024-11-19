@@ -117,19 +117,19 @@ void screen(){
     WindowManager& manager = WindowManager::getInstance();
 
     const ImVec2 initial_positions[14] = {
-        ImVec2(0, 360), ImVec2(480, 360), ImVec2(960, 360),
-        ImVec2(480, 720), ImVec2(800, 720), ImVec2(1120, 720),
-        ImVec2(1440, 360), ImVec2(1600, 360), ImVec2(1760, 360),
-        ImVec2(1440, 720), ImVec2(1680, 720), ImVec2(1440, 0),
-        ImVec2(0, 0), ImVec2(0, 720)
+        ImVec2(0, 330), ImVec2(480, 330), ImVec2(960, 330),
+        ImVec2(480, 690), ImVec2(800, 690), ImVec2(1120, 690),
+        ImVec2(1440, 330), ImVec2(1600, 330), ImVec2(1760, 330),
+        ImVec2(1440, 690), ImVec2(1680, 690), ImVec2(1440, 0),
+        ImVec2(0, 0), ImVec2(0, 690)
     };
 
     const ImVec2 window_sizes[14] = {
         ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
         ImVec2(320, 360), ImVec2(320, 360), ImVec2(320, 360),
         ImVec2(160, 360), ImVec2(160, 360), ImVec2(160, 360),
-        ImVec2(240, 360), ImVec2(240, 360), ImVec2(480, 360), 
-        ImVec2(480, 360), ImVec2(480, 360)
+        ImVec2(240, 360), ImVec2(240, 360), ImVec2(480, 330), 
+        ImVec2(480, 330), ImVec2(480, 360)
     };
 
     const ImVec2 initial_positions_graph[1] = {
@@ -137,7 +137,7 @@ void screen(){
     };
 
     const ImVec2 window_sizes_graph[1] = {
-        ImVec2(960, 360)
+        ImVec2(960, 330)
     };
 
     while (!glfwWindowShouldClose(window)) {
@@ -157,7 +157,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
 
-            ImGui::Begin("Error log buttons");
+            ImGui::Begin("Error log buttons", nullptr, ImGuiWindowFlags_NoCollapse);
 
             if (!error_frame_log_button.empty()) {
 
@@ -552,7 +552,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[1], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[1], ImGuiCond_Always);
 
-            ImGui::Begin("Error Frame: Time & Payload Size Data");
+            ImGui::Begin("Error Frame: Time & Payload Size Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Custom Text:");
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
@@ -579,7 +579,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[2], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[2], ImGuiCond_Always);
 
-            ImGui::Begin("Summary");
+            ImGui::Begin("Summary", nullptr, ImGuiWindowFlags_NoCollapse);
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
                 ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
             } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_text.size()) {
@@ -599,7 +599,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[3], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[3], ImGuiCond_Always);
 
-            ImGui::Begin("Control Config");
+            ImGui::Begin("Control Config", nullptr, ImGuiWindowFlags_NoCollapse);
             ImGui::Text("Current Defined Configs:");
             ImGui::Text("%s", data.custom_text.c_str());
 
@@ -620,7 +620,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[4], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[4], ImGuiCond_Always);
 
-            ImGui::Begin("Statistics");
+            ImGui::Begin("Statistics", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
             ImGui::Text("%s", data.custom_text.c_str());
             ImGui::End();
@@ -634,7 +634,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[5], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[5], ImGuiCond_Always);
 
-            ImGui::Begin("Debug");
+            ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoCollapse);
             ImGui::Text("%s", data.custom_text.c_str());
             
             float current_scroll_y = ImGui::GetScrollY();
@@ -654,7 +654,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[6], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[6], ImGuiCond_Always);
 
-            ImGui::Begin("Previous Valid Data");
+            ImGui::Begin("Previous Valid Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
             if (show_error_log && selected_error_frame < data.button_log_text.size()) {
                 if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
@@ -678,7 +678,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[7], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[7], ImGuiCond_Always);
 
-            ImGui::Begin("Lost Inbetween Error Data");
+            ImGui::Begin("Lost Inbetween Error Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
             if (show_error_log && selected_error_frame < data.button_log_text.size()) {
                 if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
@@ -702,7 +702,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[8], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[8], ImGuiCond_Always);
 
-            ImGui::Begin("Current Error Data");
+            ImGui::Begin("Current Error Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
             if (show_error_log && selected_error_frame < data.button_log_text.size()) {
                 if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
@@ -726,7 +726,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[9], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[9], ImGuiCond_Always);
 
-            ImGui::Begin("FPS & Lost Frames");
+            ImGui::Begin("FPS & Lost Frames", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
             ImGui::Text("%s", data.custom_text.c_str());
             
@@ -747,7 +747,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[10], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[10], ImGuiCond_Always);
 
-            ImGui::Begin("Throughput");
+            ImGui::Begin("Throughput", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
             ImGui::Text("%s", data.custom_text.c_str());
             
@@ -768,7 +768,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions_graph[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes_graph[0], ImGuiCond_Always);
 
-            ImGui::Begin("Histogram");
+            ImGui::Begin("Histogram", nullptr, ImGuiWindowFlags_NoCollapse);
 
 
             static float max_value = 0.0f;
@@ -786,7 +786,7 @@ void screen(){
                     static_cast<int>(data.error_log_graph_data[selected_error_frame].size()),
                     0, nullptr,
                     0.0f, max_value,  
-                    ImVec2(960, 300)
+                    ImVec2(960, 270)
                 );
             } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_graph_data.size()) {
                 data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame];
@@ -797,7 +797,7 @@ void screen(){
                     static_cast<int>(data.suspicious_log_graph_data[selected_suspicious_frame].size()),
                     0, nullptr,
                     0.0f, max_value,  
-                    ImVec2(960, 300)
+                    ImVec2(960, 270)
                 );
             } else {
                 ImGui::Text("%s", data.custom_text.c_str());
@@ -807,7 +807,7 @@ void screen(){
                     static_cast<int>(data.graph_data.size()),
                     0, nullptr,
                     0.0f, max_value,  
-                    ImVec2(960, 300)
+                    ImVec2(960, 270)
                 );
             }
 
@@ -822,7 +822,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[12], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
 
-            ImGui::Begin("Image");
+            ImGui::Begin("Image", nullptr, ImGuiWindowFlags_NoCollapse);
 
             if (show_image) {
                 ImGui::Text("Image:");
@@ -846,7 +846,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[13], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[13], ImGuiCond_Always);
 
-            ImGui::Begin("Valid Frame Data");
+            ImGui::Begin("Valid Frame Data", nullptr, ImGuiWindowFlags_NoCollapse);
             ImGui::Text("%s", data.custom_text.c_str());
             
             float current_scroll_y = ImGui::GetScrollY();

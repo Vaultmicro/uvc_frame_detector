@@ -5,6 +5,62 @@
 #include "imgui_impl_opengl3.h"
 #include <iostream>
 
+
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <windows.h>
+#include <GLFW/glfw3native.h>
+#endif
+
+#ifdef __linux__
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#endif
+
+#ifdef __APPLE__
+#include <objc/objc.h>
+#include <objc/runtime.h>
+#endif
+
+void remove_close_button(GLFWwindow* window) {
+#ifdef _WIN32
+    HWND hwnd = glfwGetWin32Window(window);
+    if (hwnd) {
+        HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+        if (hMenu) {
+            DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
+        }
+    }
+#endif
+
+#ifdef __linux__
+    Display* display = glfwGetX11Display();
+    Window x11Window = glfwGetX11Window(window);
+
+    Atom wmHints = XInternAtom(display, "_MOTIF_WM_HINTS", True);
+    if (wmHints) {
+        struct {
+            unsigned long flags;
+            unsigned long functions;
+            unsigned long decorations;
+            long input_mode;
+            unsigned long status;
+        } hints = {2, ~0UL & ~1UL, 0, 0, 0}; 
+
+        XChangeProperty(display, x11Window, wmHints, wmHints, 32, PropModeReplace,
+                        (unsigned char*)&hints, sizeof(hints) / sizeof(long));
+        XFlush(display);
+    }
+#endif
+
+#ifdef __APPLE__
+    id cocoaWindow = glfwGetCocoaWindow(window);
+    id closeButton = [cocoaWindow standardWindowButton:NSWindowCloseButton];
+    [closeButton setHidden:YES]; 
+#endif
+}
+
+
 GLFWwindow* window = nullptr;  
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -22,12 +78,15 @@ bool init_imgui() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(1920, 1080, "Vaultmicro USB Video Class Frame Detector", NULL, NULL);
+    window = glfwCreateWindow(1920, 1050, "Vaultmicro USB Video Class Frame Detector", NULL, NULL);
     if (window == nullptr) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return false;
     }
+
+    remove_close_button(window);
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
