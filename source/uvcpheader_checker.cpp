@@ -333,7 +333,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
-        data.custom_text = "[ " + std::to_string(current_frame_number) + " ]";
+        data.custom_text = "[ " + std::to_string(current_frame_number) + " ]"
+            + std::to_string(ControlConfig::get_width()) + "x" 
+            + std::to_string(ControlConfig::get_height()) + " " 
+            + ControlConfig::get_frame_format();
         
         int graph_time_gap_insec = graph_time_gap / 1000;
         if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>()) {

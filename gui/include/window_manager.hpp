@@ -37,6 +37,9 @@ struct GraphData {
     bool stop_flag;
     std::vector<std::array<float, 10000>> error_log_graph_data;
     std::vector<std::array<float, 10000>> suspicious_log_graph_data;
+    int current_graph_height = 0;
+    std::vector<int> error_graph_height_history = {};
+    std::vector<int> suspicious_graph_height_history = {};
 
     GraphData(){
         graph_data.fill(0.0f);
@@ -48,19 +51,25 @@ struct GraphData {
         if (index >= graph_data.size()) {
             graph_reset();
         }
+        if (new_value > current_graph_height){
+            current_graph_height = new_value;
+        }
     }
 
     void addErrorGraphData(){
         error_log_graph_data.push_back(graph_data);
+        error_graph_height_history.push_back(current_graph_height);
     }
 
     void addSuspiciousGraphData(){
         suspicious_log_graph_data.push_back(graph_data);
+        suspicious_graph_height_history.push_back(current_graph_height);
     }
 
     void graph_reset() {
         graph_data.fill(0.0f);
         index = 0;
+        current_graph_height = 0;
     }
 
     int check_if_last(){

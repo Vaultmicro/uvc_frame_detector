@@ -778,10 +778,10 @@ void screen(){
             }
 
             if (show_error_log && selected_error_frame < data.error_log_graph_data.size()) {
-                data.custom_text = "Selected Log: " + error_frame_log_button[selected_error_frame];
-                ImGui::Text("%s", data.custom_text.c_str());
+                data.custom_text = "E [ " + error_frame_log_button[selected_error_frame] + " ]";
+                ImGui::Text("%s T-put_size: %i", data.custom_text.c_str(), data.error_graph_height_history[selected_error_frame]);
                 ImGui::PlotHistogram(
-                    "Throughput Data",
+                    "Throughput Data", 
                     data.error_log_graph_data[selected_error_frame].data(),
                     static_cast<int>(data.error_log_graph_data[selected_error_frame].size()),
                     0, nullptr,
@@ -789,8 +789,8 @@ void screen(){
                     ImVec2(960, 270)
                 );
             } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_graph_data.size()) {
-                data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame];
-                ImGui::Text("%s", data.custom_text.c_str());
+                data.custom_text = "S [ " + suspicious_frame_log_button[selected_suspicious_frame] + " ]";
+                ImGui::Text("%s T-put_size: %i", data.custom_text.c_str(), data.suspicious_graph_height_history[selected_suspicious_frame]);
                 ImGui::PlotHistogram(
                     "Throughput Data",
                     data.suspicious_log_graph_data[selected_suspicious_frame].data(),
@@ -800,7 +800,7 @@ void screen(){
                     ImVec2(960, 270)
                 );
             } else {
-                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::Text("%s T-put_size: %i", data.custom_text.c_str(), data.current_graph_height);
                 ImGui::PlotHistogram(
                     "Throughput Data",
                     data.graph_data.data(),
