@@ -293,8 +293,16 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(137, 115));
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImVec2 window_pos = ImGui::GetWindowPos();
+            draw_list->AddRectFilled(
+                ImVec2(window_pos.x + 134, window_pos.y + 112),
+                ImVec2(window_pos.x + 456, window_pos.y + 158),
+                IM_COL32(70, 120, 200, 70),
+                0.0f
+            );
 
+            ImGui::SetCursorPos(ImVec2(137, 115));
             if (show_error_log) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -346,6 +354,12 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
+            draw_list->AddRectFilled(
+                ImVec2(window_pos.x + 24, window_pos.y + 167),
+                ImVec2(window_pos.x + 456, window_pos.y + 213),
+                IM_COL32(70, 120, 200, 70),
+                0.0f
+            );
 
             ImGui::SetCursorPos(ImVec2(27, 170));
             if (UVCPHeaderChecker::capture_image_flag) {
@@ -417,6 +431,13 @@ void screen(){
                 }
             }
             ImGui::PopStyleColor(2);
+
+            draw_list->AddRectFilled(
+                ImVec2(window_pos.x + 24, window_pos.y + 222),
+                ImVec2(window_pos.x + 456, window_pos.y + 268),
+                IM_COL32(70, 120, 200, 70),
+                0.0f
+            );
 
             ImGui::SetCursorPos(ImVec2(27, 225));
             if (UVCPHeaderChecker::filter_on_off_flag) {
@@ -524,7 +545,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[0], ImGuiCond_Always);
 
-            ImGui::Begin("Error Frame Data");
+            ImGui::Begin("Error Frame Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("%s", data.custom_text.c_str());
 
             if (show_error_log && selected_error_frame < data.error_log_text.size()) {
@@ -868,7 +889,6 @@ void screen(){
         
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
-
 }
 
 void end_screen(){
