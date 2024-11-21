@@ -223,23 +223,19 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           WindowManager& manager = WindowManager::getInstance();
           GraphData& data = manager.getGraphData(0);
           data.addErrorGraphData();
-          // error_frame_log_button.push_back("Frame " + std::to_string(last_frame->frame_number));
           frame_error_flag = 1;
           print_received_times(*last_frame);
           print_frame_data(*last_frame);
           print_summary(*last_frame);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
           {
-            WindowData& data = manager.getWindowData(6);
-            data.add_button_log_text();
+            manager.pushbackButtonLogText(6);
           }
           {
-            WindowData& data = manager.getWindowData(7);
-            data.add_button_log_text();
+            manager.pushbackButtonLogText(7);
           }
           {
-            WindowData& data = manager.getWindowData(8);
-            data.add_button_log_text();
+            manager.pushbackButtonLogText(8);
           }
           frame_error_flag = 0;
 #else
@@ -466,23 +462,19 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
         data.addErrorGraphData();
-        // error_frame_log_button.push_back("Frame " + std::to_string(last_frame->frame_number));
         frame_error_flag = 1;
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
           {
-            WindowData& data = manager.getWindowData(6);
-            data.add_button_log_text();
+            manager.pushbackButtonLogText(6);
           }
           {
-            WindowData& data = manager.getWindowData(7);
-            data.add_button_log_text();
+            manager.pushbackButtonLogText(7);
           }
           {
-            WindowData& data = manager.getWindowData(8);
-            data.add_button_log_text();
+            manager.pushbackButtonLogText(8);
           }
         frame_error_flag = 0;
 
@@ -655,8 +647,7 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
             logStream << "\n";
 {
             WindowManager& manager = WindowManager::getInstance();
-            WindowData& data = manager.getWindowData(3);
-            data.custom_text += logStream.str();
+            manager.addCustomText(3, logStream.str());
 }
 #else
               std::cout << "width: " << ControlConfig::get_width() << "   ";

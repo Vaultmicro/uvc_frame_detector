@@ -89,10 +89,10 @@ public:
     void setmoveCustomText(int index, const std::string& text);
     void addCustomText(int index, const std::string& text);
     void addmoveCustomText(int index, const std::string& text);
-    void getCustomText(int index, std::string& text);
     
     void pushbackErrorLogText(int index, const std::string& text);
     void pushbackSuspiciousLogText(int index, const std::string& text);
+    void pushbackButtonLogText(int index);
 
     WindowData& getWindowData(int index);
     size_t getWindowCount() const;

@@ -44,13 +44,6 @@ void WindowManager::addmoveCustomText(int index, const std::string& text) {
     }
 }
 
-void WindowManager::getCustomText(int index, std::string& text) {
-    if (index >= 0 && index < windows.size()) {
-        std::lock_guard<std::mutex> lock(windows[index].mutex);
-        text = windows[index].custom_text;
-    }
-}
-
 void WindowManager::pushbackErrorLogText(int index, const std::string& text) {
     if (index >= 0 && index < windows.size()) {
         std::lock_guard<std::mutex> lock(windows[index].mutex);
@@ -62,6 +55,14 @@ void WindowManager::pushbackSuspiciousLogText(int index, const std::string& text
     if (index >= 0 && index < windows.size()) {
         std::lock_guard<std::mutex> lock(windows[index].mutex);
         windows[index].suspicious_log_text.push_back(text);
+    }
+}
+
+void WindowManager::pushbackButtonLogText(int index) {
+    if (index >= 0 && index < windows.size()) {
+        std::lock_guard<std::mutex> lock(windows[index].mutex);
+        windows[index].button_log_text.push_back(windows[index].error_log_text);
+        windows[index].error_log_text.clear();
     }
 }
 
