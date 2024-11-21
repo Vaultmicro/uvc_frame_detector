@@ -165,6 +165,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/window_manager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
     ${DEVELOPE_PHOTO_SOURCES}
     ${IMGUI_SOURCES}

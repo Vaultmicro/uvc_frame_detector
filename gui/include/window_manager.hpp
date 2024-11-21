@@ -83,35 +83,25 @@ struct GraphData {
 
 class WindowManager {
 public:
-    static WindowManager& getInstance() {
-        static WindowManager instance;
-        return instance;
-    }
+    static WindowManager& getInstance();
 
-    void setCustomText(int index, const std::string& text) {
-        if (index >= 0 && index < windows.size()) {
-            std::lock_guard<std::mutex> lock(windows[index].mutex);
-            windows[index].custom_text = text;
-        }
-    }
+    void setCustomText(int index, const std::string& text);
+    void setmoveCustomText(int index, const std::string& text);
+    void addCustomText(int index, const std::string& text);
+    void addmoveCustomText(int index, const std::string& text);
+    void getCustomText(int index, std::string& text);
+    
+    void pushbackErrorLogText(int index, const std::string& text);
+    void pushbackSuspiciousLogText(int index, const std::string& text);
 
-    WindowData& getWindowData(int index) { return windows[index]; }
-    size_t getWindowCount() const { return windows.size(); }
+    WindowData& getWindowData(int index);
+    size_t getWindowCount() const;
 
-    GraphData& getGraphData(int index) { return graphs[index]; }
-    size_t getGraphCount() const { return graphs.size(); }
+    GraphData& getGraphData(int index);
+    size_t getGraphCount() const;
 
 private:
-    WindowManager() {
-        for (auto& window : windows) {
-            window.counter = 1;
-            window.stop_flag = false;
-            window.custom_text = "";
-        }
-        for (auto& graph : graphs) {
-            graph.stop_flag = false;
-        }
-    }
+    WindowManager();
 
     std::array<WindowData, 14> windows;
     std::array<GraphData, 1> graphs;

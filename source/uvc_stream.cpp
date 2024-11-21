@@ -20,7 +20,6 @@
  * SOFTWARE.
 *********************************************************************/
 
-
 #include "libuvc/libuvc.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -35,6 +34,7 @@
 #include <iostream>
 
 #include "validuvc/uvc_stream.hpp"
+
 #include "validuvc/uvcpheader_checker.hpp"
 #include "validuvc/control_config.hpp"
 #include "utils/verbose.hpp"

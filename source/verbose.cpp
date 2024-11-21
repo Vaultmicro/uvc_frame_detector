@@ -76,17 +76,17 @@ void VerboseStream::flush() {
     }
 #elif GUI_SET
     WindowManager& manager = WindowManager::getInstance();
-    WindowData& data = manager.getWindowData(gui_window_number);
-    if (print_whole_flag){
-      data.custom_text = prefix_ + buffer_.str();
-    } else {
-      data.custom_text += prefix_ + buffer_.str();
-    }
+    // WindowData& data = manager.getWindowData(gui_window_number);
     if (frame_error_flag){
-      data.error_log_text.push_back(prefix_ + buffer_.str());
+      manager.pushbackErrorLogText(gui_window_number,buffer_.str());
     }
     if (frame_suspicious_flag){
-      data.suspicious_log_text.push_back(prefix_ + buffer_.str());
+      manager.pushbackSuspiciousLogText(gui_window_number,buffer_.str());
+    }
+    if (print_whole_flag){
+      manager.setmoveCustomText(gui_window_number, buffer_.str());
+    } else {
+      manager.addmoveCustomText(gui_window_number, buffer_.str()); 
     }
 #else
     output_stream_ << buffer_.str();

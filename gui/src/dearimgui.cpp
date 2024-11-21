@@ -4,13 +4,15 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <iostream>
-
+#include <stb_image/stb_image.h>
+#include <GLFW/glfw3.h>
 
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <windows.h>
 #include <GLFW/glfw3native.h>
 #endif
+
 
 #ifdef __linux__
 #include <X11/Xlib.h>
@@ -60,6 +62,26 @@ void remove_close_button(GLFWwindow* window) {
 #endif
 }
 
+void set_window_icon(GLFWwindow* window, const char* iconPath) {
+    int width, height, channels;
+    unsigned char* data = stbi_load(iconPath, &width, &height, &channels, 4);
+
+    if (!data) {
+        std::cerr << "Failed to load icon image: " << iconPath << std::endl;
+        return;
+    }
+
+    GLFWimage icon;
+    icon.width = width;
+    icon.height = height;
+    icon.pixels = data;
+
+    glfwSetWindowIcon(window, 1, &icon);
+
+    stbi_image_free(data);
+}
+
+
 
 GLFWwindow* window = nullptr;  
 
@@ -86,6 +108,7 @@ bool init_imgui() {
     }
 
     remove_close_button(window);
+    set_window_icon(window, "icon.png");
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
