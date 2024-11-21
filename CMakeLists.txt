@@ -79,7 +79,6 @@ include_directories(${googletest_SOURCE_DIR}/googletest/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/src)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
@@ -164,9 +163,9 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/gui_win.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/window_manager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/dearimgui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/gui_win.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/window_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/dearimgui.cpp
     ${DEVELOPE_PHOTO_SOURCES}
     ${IMGUI_SOURCES}
 )

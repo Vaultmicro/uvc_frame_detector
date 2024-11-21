@@ -1,4 +1,4 @@
-#include "dearimgui.hpp"
+#include "gui/dearimgui.hpp"
 #include <GL/glew.h>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"

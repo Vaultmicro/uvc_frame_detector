@@ -1,4 +1,4 @@
-#include "window_manager.hpp"
+#include "gui/window_manager.hpp"
 
 WindowManager& WindowManager::getInstance() {
     static WindowManager instance;

@@ -26,7 +26,7 @@
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
 #elif GUI_SET
-#include "gui_win.hpp"
+#include "gui/gui_win.hpp"
 #endif
 
 void clean_exit(int signum);

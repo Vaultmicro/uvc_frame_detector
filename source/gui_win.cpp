@@ -20,7 +20,7 @@
  * SOFTWARE.
 *********************************************************************/
 
-#include "gui_win.hpp"
+#include "gui/gui_win.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
 #include "validuvc/uvcpheader_checker.hpp"
