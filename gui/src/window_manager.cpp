@@ -44,6 +44,13 @@ void WindowManager::addmoveCustomText(int index, const std::string& text) {
     }
 }
 
+void WindowManager::setButtonLogText(int index, const std::vector<std::vector<std::string>>& vector_text) {
+    if (index >= 0 && index < windows.size()) {
+        std::lock_guard<std::mutex> lock(windows[index].mutex);
+        windows[index].button_log_text = vector_text;
+    }
+}
+
 void WindowManager::pushbackErrorLogText(int index, const std::string& text) {
     if (index >= 0 && index < windows.size()) {
         std::lock_guard<std::mutex> lock(windows[index].mutex);
@@ -66,8 +73,24 @@ void WindowManager::pushbackButtonLogText(int index) {
     }
 }
 
-WindowData& WindowManager::getWindowData(int index) {
-    return windows[index];
+std::mutex& WindowManager::getMutex(int index) {
+    return windows[index].mutex;
+}
+
+const std::string& WindowManager::getCustomText(int index) const {
+    return windows[index].custom_text;
+}
+
+const std::vector<std::string>& WindowManager::getErrorLogText(int index) const {
+    return windows[index].error_log_text;
+}
+
+const std::vector<std::string>& WindowManager::getSuspiciousLogText(int index) const {
+    return windows[index].suspicious_log_text;
+}
+
+const std::vector<std::vector<std::string>>& WindowManager::getButtonLogText(int index) const {
+    return windows[index].button_log_text;
 }
 
 size_t WindowManager::getWindowCount() const {

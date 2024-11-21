@@ -14,19 +14,6 @@ struct WindowData {
     std::vector<std::string> error_log_text;
     std::vector<std::vector<std::string>> button_log_text;
     std::vector<std::string> suspicious_log_text;
-
-    void add_error_log_text(std::string text) {
-        error_log_text.push_back(text);
-    }
-
-    void add_button_log_text(){
-        button_log_text.push_back(error_log_text);
-        error_log_text.clear();
-    }
-
-    void add_suspicious_log_text(std::string text) {
-        suspicious_log_text.push_back(text);
-    }   
 };
 
 struct GraphData {
@@ -89,12 +76,20 @@ public:
     void setmoveCustomText(int index, const std::string& text);
     void addCustomText(int index, const std::string& text);
     void addmoveCustomText(int index, const std::string& text);
+    void setButtonLogText(int index, const std::vector<std::vector<std::string>>& vector_text);
     
     void pushbackErrorLogText(int index, const std::string& text);
     void pushbackSuspiciousLogText(int index, const std::string& text);
     void pushbackButtonLogText(int index);
 
-    WindowData& getWindowData(int index);
+    const std::string& getCustomText(int index) const;
+    const std::vector<std::string>& getErrorLogText(int index) const;
+    const std::vector<std::string>& getSuspiciousLogText(int index) const;
+    const std::vector<std::vector<std::string>>& getButtonLogText(int index) const;
+
+    std::mutex& getMutex(int index);
+
+    // WindowData& getWindowData(int index);
     size_t getWindowCount() const;
 
     GraphData& getGraphData(int index);

@@ -13,7 +13,6 @@
 #include "imgui_impl_opengl3.h"
 #include "window_manager.hpp"
 #include "dearimgui.hpp"
-#include "other_file.hpp"
 #include <atomic>
 
 // Global variable declaration

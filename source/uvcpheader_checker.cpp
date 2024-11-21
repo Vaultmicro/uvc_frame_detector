@@ -362,9 +362,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
                 data.addGraphData(static_cast<float>(uvc_payload.size()));
             }
         }
-
-        // // TODO: ADD SAME THING FOR THE ERROR AND SUSPICIOUS
-        // data.addGraphData(static_cast<float>(uvc_payload.size()));
 #endif
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
       if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {

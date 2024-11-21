@@ -151,9 +151,6 @@ void screen(){
 
         // **Window 11  **
         {
-            WindowData& data = manager.getWindowData(11);
-            std::lock_guard<std::mutex> lock(data.mutex);
-
             ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
 
@@ -177,20 +174,15 @@ void screen(){
                     ImGui::EndCombo();
                 }
 
-                {
-                    WindowManager& manager = WindowManager::getInstance();
-                    WindowData& source_data = manager.getWindowData(8);
-
-                    if (!source_data.button_log_text.empty()) {
-                        data.button_log_text = source_data.button_log_text;
-                    }
+                if (!manager.getButtonLogText(8).empty()) {
+                    manager.setButtonLogText(11, manager.getButtonLogText(8));
                 }
 
                 ImGui::SetCursorPos(ImVec2(9, 60));
-                if (selected_error_frame < data.button_log_text.size()) {
+                if (selected_error_frame < manager.getButtonLogText(11).size()) {
                     std::string current_error_label = "Error " + std::to_string(selected_error_payload);
                     if (ImGui::BeginCombo(":: Error Payload", current_error_label.c_str())) {
-                        for (size_t j = 0; j < data.button_log_text[selected_error_frame].size(); j++) {
+                        for (size_t j = 0; j < manager.getButtonLogText(11)[selected_error_frame].size(); j++) {
                             std::string item_label = "Error " + std::to_string(j);
                             bool is_selected = (j == selected_error_payload);
 
@@ -314,9 +306,9 @@ void screen(){
                 if (!error_frame_log_button.empty()) {
                     show_suspicious_log = false;
                     show_error_log = true;
-                    data.custom_text = "Selected Log: " + error_frame_log_button[selected_error_frame];
+                    manager.setCustomText(11, "Selected Log: " + error_frame_log_button[selected_error_frame]);
                 } else {
-                    data.custom_text = "No Error";
+                    manager.setCustomText(11,"No Error");
                 }
             }
             ImGui::PopStyleColor(2);
@@ -333,7 +325,7 @@ void screen(){
                 if (!suspicious_frame_log_button.empty()) {
                     show_error_log = false;
                     show_suspicious_log = true;
-                    data.custom_text = "Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame];
+                    manager.setCustomText(11, "Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame]);
                 }
             }
             ImGui::PopStyleColor(2);
@@ -350,7 +342,7 @@ void screen(){
                 show_error_log = false;
                 show_suspicious_log = false;
                 show_image = false;
-                data.custom_text = "Streaming is shown";
+                manager.setCustomText(11, "Streaming is shown");
             }
             ImGui::PopStyleColor(2);
 
@@ -532,28 +524,26 @@ void screen(){
             }
 
             ImGui::SetCursorPos(ImVec2(34, 295));
-            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::Text("%s", manager.getCustomText(11).c_str());
 
             ImGui::End();
         }
 
         // **Window 0 - Frame Data**
         {
-            WindowData& data = manager.getWindowData(0);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(0));
 
             ImGui::SetNextWindowPos(initial_positions[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[0], ImGuiCond_Always);
 
             ImGui::Begin("Error Frame Data", nullptr, ImGuiWindowFlags_NoCollapse);
-            // ImGui::Text("%s", data.custom_text.c_str());
 
-            if (show_error_log && selected_error_frame < data.error_log_text.size()) {
-                ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else if (show_suspicious_log && selected_suspicious_frame < data.suspicious_log_text.size()) {
-                ImGui::Text("%s", data.suspicious_log_text[selected_suspicious_frame].c_str());
+            if (show_error_log && selected_error_frame < manager.getErrorLogText(0).size()) {
+                ImGui::Text("%s", manager.getErrorLogText(0)[selected_error_frame].c_str());
+            } else if (show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(0).size()) {
+                ImGui::Text("%s", manager.getSuspiciousLogText(0)[selected_suspicious_frame].c_str());
             } else {
-                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::Text("%s", manager.getCustomText(0).c_str());
             }
 
             float current_scroll_y = ImGui::GetScrollY();
@@ -567,20 +557,19 @@ void screen(){
 
         // **Window 1 - Time Data**
         {
-            WindowData& data = manager.getWindowData(1);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(1));
 
             ImGui::SetNextWindowPos(initial_positions[1], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[1], ImGuiCond_Always);
 
             ImGui::Begin("Error Frame: Time & Payload Size Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Custom Text:");
-            if (show_error_log && selected_error_frame < data.error_log_text.size()) {
-                ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else if (show_suspicious_log && selected_suspicious_frame < data.suspicious_log_text.size()) {
-                ImGui::Text("%s", data.suspicious_log_text[selected_suspicious_frame].c_str());    
+            if (show_error_log && selected_error_frame < manager.getErrorLogText(1).size()) {
+                ImGui::Text("%s", manager.getErrorLogText(1)[selected_error_frame].c_str());
+            } else if (show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(1).size()) {
+                ImGui::Text("%s", manager.getSuspiciousLogText(1)[selected_suspicious_frame].c_str());    
             }else {
-                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::Text("%s", manager.getCustomText(1).c_str());
             }
             
             float current_scroll_y = ImGui::GetScrollY();
@@ -594,19 +583,18 @@ void screen(){
 
         // **Window 2 - Summary**
         {
-            WindowData& data = manager.getWindowData(2);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(2));
 
             ImGui::SetNextWindowPos(initial_positions[2], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[2], ImGuiCond_Always);
 
             ImGui::Begin("Summary", nullptr, ImGuiWindowFlags_NoCollapse);
-            if (show_error_log && selected_error_frame < data.error_log_text.size()) {
-                ImGui::Text("%s", data.error_log_text[selected_error_frame].c_str());
-            } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_text.size()) {
-                ImGui::Text("%s", data.suspicious_log_text[selected_suspicious_frame].c_str());
+            if (show_error_log && selected_error_frame < manager.getErrorLogText(2).size()) {
+                ImGui::Text("%s", manager.getErrorLogText(2)[selected_error_frame].c_str());
+            } else if(show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(2).size()) {
+                ImGui::Text("%s", manager.getSuspiciousLogText(2)[selected_suspicious_frame].c_str());
             }else {
-                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::Text("%s", manager.getCustomText(2).c_str());
             }
 
             ImGui::End();
@@ -614,15 +602,14 @@ void screen(){
 
         // **Window 3 - Control**
         {
-            WindowData& data = manager.getWindowData(3);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(3));
 
             ImGui::SetNextWindowPos(initial_positions[3], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[3], ImGuiCond_Always);
 
             ImGui::Begin("Control Config", nullptr, ImGuiWindowFlags_NoCollapse);
             ImGui::Text("Current Defined Configs:");
-            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::Text("%s", manager.getCustomText(3).c_str());
 
             float current_scroll_y = ImGui::GetScrollY();
             float max_scroll_y = ImGui::GetScrollMaxY();
@@ -635,28 +622,26 @@ void screen(){
 
         // **Window 4 - Statistics**
         {
-            WindowData& data = manager.getWindowData(4);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(4));
 
             ImGui::SetNextWindowPos(initial_positions[4], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[4], ImGuiCond_Always);
 
             ImGui::Begin("Statistics", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
-            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::Text("%s", manager.getCustomText(4).c_str());
             ImGui::End();
         }
 
         // **Window 5 - Debug**
         {
-            WindowData& data = manager.getWindowData(5);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(5));
 
             ImGui::SetNextWindowPos(initial_positions[5], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[5], ImGuiCond_Always);
 
             ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoCollapse);
-            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::Text("%s", manager.getCustomText(5).c_str());
             
             float current_scroll_y = ImGui::GetScrollY();
             float max_scroll_y = ImGui::GetScrollMaxY();
@@ -669,87 +654,83 @@ void screen(){
 
         // **Window 6 - prev **
         {
-            WindowData& data = manager.getWindowData(6);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(6));
 
             ImGui::SetNextWindowPos(initial_positions[6], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[6], ImGuiCond_Always);
 
             ImGui::Begin("Previous Valid Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < data.button_log_text.size()) {
-                if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
-                    ImGui::Text("%s", data.button_log_text[selected_error_frame][selected_error_payload].c_str());
+            if (show_error_log && selected_error_frame < manager.getButtonLogText(6).size()) {
+                if (selected_error_payload < manager.getButtonLogText(6)[selected_error_frame].size()) {
+                    ImGui::Text("%s", manager.getButtonLogText(6)[selected_error_frame][selected_error_payload].c_str());
                 } else {
-                    ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
+                    ImGui::Text("%s", manager.getButtonLogText(6)[selected_error_frame][0].c_str());
                 }
             } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
-                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::Text("%s", manager.getCustomText(6).c_str());
             }
             ImGui::End();
         }
 
         // **Window 7 - inbetween error **
         {
-            WindowData& data = manager.getWindowData(7);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(7));
 
             ImGui::SetNextWindowPos(initial_positions[7], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[7], ImGuiCond_Always);
 
             ImGui::Begin("Lost Inbetween Error Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < data.button_log_text.size()) {
-                if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
-                    ImGui::Text("%s", data.button_log_text[selected_error_frame][selected_error_payload].c_str());
+            if (show_error_log && selected_error_frame < manager.getButtonLogText(7).size()) {
+                if (selected_error_payload < manager.getButtonLogText(7)[selected_error_frame].size()) {
+                    ImGui::Text("%s", manager.getButtonLogText(7)[selected_error_frame][selected_error_payload].c_str());
                 } else {
-                    ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
+                    ImGui::Text("%s", manager.getButtonLogText(7)[selected_error_frame][0].c_str());
                 }
             } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
-                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::Text("%s", manager.getCustomText(7).c_str());
             }
             ImGui::End();
         }
 
         // **Window 8 - current **
         {
-            WindowData& data = manager.getWindowData(8);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(8));
 
             ImGui::SetNextWindowPos(initial_positions[8], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[8], ImGuiCond_Always);
 
             ImGui::Begin("Current Error Data", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < data.button_log_text.size()) {
-                if (selected_error_payload < data.button_log_text[selected_error_frame].size()) {
-                    ImGui::Text("%s", data.button_log_text[selected_error_frame][selected_error_payload].c_str());
+            if (show_error_log && selected_error_frame < manager.getButtonLogText(8).size()) {
+                if (selected_error_payload < manager.getButtonLogText(8)[selected_error_frame].size()) {
+                    ImGui::Text("%s", manager.getButtonLogText(8)[selected_error_frame][selected_error_payload].c_str());
                 } else {
-                    ImGui::Text("%s", data.button_log_text[selected_error_frame][0].c_str());
+                    ImGui::Text("%s", manager.getButtonLogText(8)[selected_error_frame][0].c_str());
                 }
             } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
-                ImGui::Text("%s", data.custom_text.c_str());
+                ImGui::Text("%s", manager.getCustomText(8).c_str());
             }
             ImGui::End();
         }
 
         // **Window 9 - **
         {
-            WindowData& data = manager.getWindowData(9);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(9));
 
             ImGui::SetNextWindowPos(initial_positions[9], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[9], ImGuiCond_Always);
 
             ImGui::Begin("FPS & Lost Frames", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
-            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::Text("%s", manager.getCustomText(9).c_str());
             
             float current_scroll_y = ImGui::GetScrollY();
             float max_scroll_y = ImGui::GetScrollMaxY();
@@ -762,15 +743,14 @@ void screen(){
 
         // **Window 10 - **
         {
-            WindowData& data = manager.getWindowData(10);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(10));
 
             ImGui::SetNextWindowPos(initial_positions[10], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[10], ImGuiCond_Always);
 
             ImGui::Begin("Throughput", nullptr, ImGuiWindowFlags_NoCollapse);
             // ImGui::Text("Counting:");
-            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::Text("%s", manager.getCustomText(10).c_str());
             
             float current_scroll_y = ImGui::GetScrollY();
             float max_scroll_y = ImGui::GetScrollMaxY();
@@ -837,8 +817,7 @@ void screen(){
 
         // **Window 12 - Photo **
         {
-            WindowData& data = manager.getWindowData(12);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(12));
 
             ImGui::SetNextWindowPos(initial_positions[12], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
@@ -861,14 +840,13 @@ void screen(){
 
         // **Window 13  **
         {
-            WindowData& data = manager.getWindowData(13);
-            std::lock_guard<std::mutex> lock(data.mutex);
+            std::lock_guard<std::mutex> lock(manager.getMutex(13));
 
             ImGui::SetNextWindowPos(initial_positions[13], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[13], ImGuiCond_Always);
 
             ImGui::Begin("Valid Frame Data", nullptr, ImGuiWindowFlags_NoCollapse);
-            ImGui::Text("%s", data.custom_text.c_str());
+            ImGui::Text("%s", manager.getCustomText(13).c_str());
             
             float current_scroll_y = ImGui::GetScrollY();
             float max_scroll_y = ImGui::GetScrollMaxY();
@@ -896,15 +874,12 @@ void end_screen(){
     WindowManager& manager = WindowManager::getInstance();
 
     for (int i = 0; i < manager.getWindowCount(); ++i) {
-        WindowData& data = manager.getWindowData(i);
-        std::lock_guard<std::mutex> lock(data.mutex);
-        data.stop_flag = true;
+        std::lock_guard<std::mutex> lock(manager.getMutex(i));
     }
 
     for (int i = 0; i < manager.getGraphCount(); ++i) {
         GraphData& graph_data = manager.getGraphData(i);
         std::lock_guard<std::mutex> lock(graph_data.mutex);
-        graph_data.stop_flag = true;
     }
 
 
