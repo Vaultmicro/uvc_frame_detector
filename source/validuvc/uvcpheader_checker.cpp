@@ -125,11 +125,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     #endif
     #ifdef TUI_SET
             window_number = 1;
-    // #elif GUI_SET
-    //         WindowManager& manager = WindowManager::getInstance();
-    //         GraphData& data = manager.getGraphData(0);
-    //         data.addGraphData(0.0f);
-    //         gui_window_number = 5;
     #endif
     #if defined(TUI_SET) || defined(GUI_SET)
             print_stats();
@@ -157,9 +152,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
     window_number = 1;
 #elif GUI_SET
-//   WindowManager& manager = WindowManager::getInstance();
-//   GraphData& data = manager.getGraphData(0);
-//   data.addGraphData(static_cast<float>(throughput * 8));
   gui_window_number = 5;
 #endif
 
@@ -547,8 +539,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
     }
 #ifdef GUI_SET
+{
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
+        
 
         int graph_time_gap_insec = graph_time_gap / 1000;
         if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>()) {
@@ -578,7 +572,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
                 data.addGraphData(0.0f);
             }
         }
-
+}
         // data.addGraphData(static_cast<float>(0));
 #endif
 

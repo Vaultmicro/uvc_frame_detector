@@ -97,20 +97,20 @@ set(IMGUI_SOURCES
 )
 
 set(DEVELOPE_PHOTO_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/develope_photo.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/rgb_to_jpeg.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/yuyv_to_rgb.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/image_develope/develope_photo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/image_develope/rgb_to_jpeg.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/image_develope/yuyv_to_rgb.cpp
 )
 
   
 if(UNIX)
 add_executable(
     uvc_frame_detector
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/logger.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -124,10 +124,10 @@ endif(UNIX)
 
 add_executable(
     oldmanandsea
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -140,11 +140,11 @@ set(CMAKE_BUILD_TYPE Release)
 
 add_executable(
     oldmanandsea_t
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/tui_win.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/tui/tui_win.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
@@ -159,13 +159,13 @@ endif(WIN32)
 
 add_executable(
     uvcfd
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/gui_win.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/window_manager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/dearimgui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/gui/gui_win.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/gui/window_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/gui/dearimgui.cpp
     ${DEVELOPE_PHOTO_SOURCES}
     ${IMGUI_SOURCES}
 )
@@ -182,15 +182,15 @@ target_link_libraries(uvcfd
 if (UNIX)
 add_executable(
     uvcperf
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvc_stream.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvc_stream.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/stream.c
     ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/ctrl-gen.c
     ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/device.c
     ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/diag.c
     ${CMAKE_CURRENT_SOURCE_DIR}/source/libuvc/init.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/uvcpheader_checker.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/control_config.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/verbose.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
 
