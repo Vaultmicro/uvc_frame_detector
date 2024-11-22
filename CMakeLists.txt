@@ -22,89 +22,24 @@ if (WIN32)
     )
 endif()
 
-include(FetchContent)
-
-# # Fetch libusb
-# FetchContent_Declare(
-#   libusb
-#   URL https://github.com/libusb/libusb/archive/refs/tags/v1.0.26.zip
-#   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-# )
-# FetchContent_MakeAvailable(libusb)
-
-# # Fetch libpcap
-# FetchContent_Declare(
-#   libpcap
-#   URL https://www.tcpdump.org/release/libpcap-1.10.4.tar.gz
-#   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-# )
-# FetchContent_MakeAvailable(libpcap)
-
-# Fetch ImGui
-FetchContent_Declare(
-  imgui
-  GIT_REPOSITORY https://github.com/ocornut/imgui
-  GIT_TAG v1.91.5
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(imgui)
-
-include_directories(${imgui_SOURCE_DIR})
 set(IMGUI_SOURCES
-    ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-    ${imgui_SOURCE_DIR}/imgui_demo.cpp
-    ${imgui_SOURCE_DIR}/imgui_tables.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_draw.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_widgets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_demo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_tables.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_glfw.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_opengl3.cpp
 )
 
-# Fetch GLEW
-FetchContent_Declare(
-  glew_prebuilt
-  URL https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0-win32.zip
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(glew_prebuilt)
+find_package(GLEW REQUIRED)
+include_directories(${GLEW_INCLUDE_DIRS})
 
-include_directories(${glew_prebuilt_SOURCE_DIR}/include)
+find_package(GLFW REQUIRED)
+include_directories(${GLFW_INCLUDE_DIRS})
 
-if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/x64/glew32s.lib)
-elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
-set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/Win32/glew32s.lib)
-endif()
-
-# Fetch GLFW
-FetchContent_Declare(
-  glfw
-  GIT_REPOSITORY https://github.com/glfw/glfw
-  GIT_TAG 3.4
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(glfw)
-
-include_directories(${glfw_SOURCE_DIR}/include)
-
-include(ExternalProject)
-# Fetch libjpeg-turbo
-ExternalProject_Add(
-  libjpeg-turbo
-  PREFIX ${CMAKE_BINARY_DIR}/libjpeg-turbo
-  GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  GIT_TAG 3.0.4
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-             -DENABLE_SHARED=OFF
-             -DENABLE_STATIC=ON
-             -DWITH_SIMD=ON
-)
-ExternalProject_Get_Property(libjpeg-turbo install_dir)
-
-set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
-set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
-
-include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
+find_package(JPEG REQUIRED)
+include_directories(${JPEG_INCLUDE_DIRS})
 
 find_package(OpenGL REQUIRED)
 
@@ -133,10 +68,10 @@ target_compile_definitions(uvcfd PUBLIC GUI_SET GLEW_STATIC)
 
 target_link_libraries(uvcfd
     PRIVATE
-    ${GLEW_LIBRARIES_STATIC}
+    turbojpeg
     glfw
+    glew
     OpenGL::GL
-    ${LIBJPEG_TURBO_LIBRARIES}
 )
 
 # if (WIN32)
