@@ -230,6 +230,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             manager.pushbackButtonLogText(8);
           }
           frame_error_flag = 0;
+#elif CLI_SET 
+          print_frame_data(*last_frame);
+          print_summary(*last_frame);
+          plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+          print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #else
           plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
@@ -469,6 +474,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
         // develope frame image here
 
+#elif CLI_SET
+        print_frame_data(*last_frame);
+        print_summary(*last_frame);
+        plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+        print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);

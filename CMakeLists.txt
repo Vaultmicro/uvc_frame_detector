@@ -24,6 +24,7 @@ endif()
 
 include(FetchContent)
 
+if (UNIX)
 # # Fetch libusb
 # FetchContent_Declare(
 #   libusb
@@ -39,6 +40,7 @@ include(FetchContent)
 #   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 # )
 # FetchContent_MakeAvailable(libpcap)
+endif(UNIX)
 
 # Fetch ImGui
 FetchContent_Declare(
@@ -139,31 +141,20 @@ target_link_libraries(uvcfd
     ${LIBJPEG_TURBO_LIBRARIES}
 )
 
-# if (WIN32)
+add_executable(
+    oldmanandsea
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
+    ${DEVELOPE_PHOTO_SOURCES}
+)
 
-# if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-# set(GUI_LIBRARIES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib
-# )
-# set(LIBJPEGTURBO_LIBRARIES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg-static.lib
-# )
+target_link_libraries(oldmanandsea
+      ${LIBJPEG_TURBO_LIBRARIES}
+)
 
-# elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
-# set(GUI_LIBRARIES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glfw3.lib
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/glew32s.lib
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/lib/OpenGL32.lib
-# )
-
-# set(LIBJPEGTURBO_LIBRARIES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/lib/turbojpeg-static.lib
-# )
-
-# endif()
-# elseif (UNIX)
+if (UNIX)
 # set(LIBUSB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/libusb-1.0)
 # set(LIBUSB_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/library/libusb-1.0.so.0.4.0)
 # set(PCAP_LIBRARIES
@@ -179,30 +170,6 @@ target_link_libraries(uvcfd
 #     ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/libturbojpeg.a
 # )
 
-# endif()
-
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/include)
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui)
-
-# if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
-# elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/include)
-# endif()
-
-# set(IMGUI_SOURCES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_draw.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_widgets.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_demo.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_tables.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_glfw.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/gui/imgui/imgui_impl_opengl3.cpp
-# )
-
-
-
-# if(UNIX)
 # add_executable(
 #     uvc_frame_detector
 #     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapler.cpp
@@ -219,43 +186,7 @@ target_link_libraries(uvcfd
 #         ${PCAP_LIBRARIES}
 #         ${LIBJPEGTURBO_LIBRARIES}
 # )
-# endif(UNIX)
 
-# add_executable(
-#     oldmanandsea
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapwer.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
-#     ${DEVELOPE_PHOTO_SOURCES}
-# )
-
-# target_link_libraries(oldmanandsea
-#     ${LIBJPEGTURBO_LIBRARIES}
-# )
-
-# if(WIN32)
-# set(CMAKE_BUILD_TYPE Release)
-
-# add_executable(
-#     oldmanandsea_t
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapwer.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui/tui_win.cpp
-#     ${DEVELOPE_PHOTO_SOURCES}
-# )
-
-# target_link_libraries(
-#     oldmanandsea_t
-#     PRIVATE
-#         ${LIBJPEGTURBO_LIBRARIES}
-# )
-# target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
-# endif(WIN32)
-
-# if (UNIX)
 # add_executable(
 #     uvcperf
 #     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvc_stream.cpp
@@ -277,7 +208,29 @@ target_link_libraries(uvcfd
 #         ${LIBJPEGTURBO_LIBRARIES}
 
 # )
-# endif(UNIX)
 
+endif(UNIX)
+
+
+if(WIN32)
+# set(CMAKE_BUILD_TYPE Release)
+
+# add_executable(
+#     oldmanandsea_t
+#     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/source/tui/tui_win.cpp
+#     ${DEVELOPE_PHOTO_SOURCES}
+# )
+
+# target_link_libraries(
+#     oldmanandsea_t
+#     PRIVATE
+#           ${LIBJPEG_TURBO_LIBRARIES}
+#     )
+# target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
+endif(WIN32)
 
 # add_subdirectory(tests)
