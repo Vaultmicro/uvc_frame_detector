@@ -7,7 +7,6 @@ project(
     LANGUAGES CXX C
 )
 
-add_compile_options(/utf-8)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -15,6 +14,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 if (WIN32)
+    add_compile_options(/utf-8)
+
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
     add_compile_definitions(
         $<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=2>
@@ -149,6 +150,8 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )
+
+target_compile_definitions(oldmanandsea PUBLIC CLI_SET)
 
 target_link_libraries(oldmanandsea
       ${LIBJPEG_TURBO_LIBRARIES}
