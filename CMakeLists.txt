@@ -118,7 +118,7 @@ set(DEVELOPE_PHOTO_SOURCES
 
 add_executable(
     uvcfd
-    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/moncapwer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
