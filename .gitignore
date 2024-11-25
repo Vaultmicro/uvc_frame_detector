@@ -2,6 +2,7 @@ build
 .vscode/
 .vs/
 log/
+CMakefiles/
 gui/build/
 documents/release.md
 tests/change_shark/whole_brav_bulk.txt

@@ -1,8 +1,8 @@
 #include "gui/dearimgui.hpp"
 #include <GL/glew.h>
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 #include <iostream>
 #include <stb_image/stb_image.h>
 #include <GLFW/glfw3.h>

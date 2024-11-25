@@ -125,11 +125,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     #endif
     #ifdef TUI_SET
             window_number = 1;
-    // #elif GUI_SET
-    //         WindowManager& manager = WindowManager::getInstance();
-    //         GraphData& data = manager.getGraphData(0);
-    //         data.addGraphData(0.0f);
-    //         gui_window_number = 5;
     #endif
     #if defined(TUI_SET) || defined(GUI_SET)
             print_stats();
@@ -157,9 +152,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
     window_number = 1;
 #elif GUI_SET
-//   WindowManager& manager = WindowManager::getInstance();
-//   GraphData& data = manager.getGraphData(0);
-//   data.addGraphData(static_cast<float>(throughput * 8));
   gui_window_number = 5;
 #endif
 
@@ -238,6 +230,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             manager.pushbackButtonLogText(8);
           }
           frame_error_flag = 0;
+#elif CLI_SET 
+          print_frame_data(*last_frame);
+          print_summary(*last_frame);
+          plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+          print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #else
           plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
@@ -477,6 +474,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
         // develope frame image here
 
+#elif CLI_SET
+        print_frame_data(*last_frame);
+        print_summary(*last_frame);
+        plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+        print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #else
         plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
@@ -547,8 +549,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
     }
 #ifdef GUI_SET
+{
         WindowManager& manager = WindowManager::getInstance();
         GraphData& data = manager.getGraphData(0);
+        
 
         int graph_time_gap_insec = graph_time_gap / 1000;
         if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>()) {
@@ -578,7 +582,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
                 data.addGraphData(0.0f);
             }
         }
-
+}
         // data.addGraphData(static_cast<float>(0));
 #endif
 
