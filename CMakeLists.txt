@@ -154,7 +154,7 @@ target_link_libraries(oldmanandsea
       ${LIBJPEG_TURBO_LIBRARIES}
 )
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
 # set(LIBUSB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/libusb-1.0)
 # set(LIBUSB_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/library/libusb-1.0.so.0.4.0)
 # set(PCAP_LIBRARIES
@@ -209,7 +209,7 @@ if (UNIX)
 
 # )
 
-endif(UNIX)
+endif(UNIX AND NOT APPLE)
 
 
 if(WIN32)
