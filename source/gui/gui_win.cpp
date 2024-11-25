@@ -780,7 +780,9 @@ void screen(){
 
             if (show_error_log && selected_error_frame < data.error_log_graph_data.size()) {
                 data.custom_text = "E [ " + error_frame_log_button[selected_error_frame] + " ]";
-                ImGui::Text("%s T-put_size: %i", data.custom_text.c_str(), data.error_graph_height_history[selected_error_frame]);
+                const auto& selected_data = data.error_graph_height_history[selected_error_frame];
+                float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
+                ImGui::Text("%s Max: %i Min: %i Mean: %f", data.custom_text.c_str(), selected_data[0], selected_data[1], mean_value);
                 ImGui::PlotHistogram(
                     "Throughput Data", 
                     data.error_log_graph_data[selected_error_frame].data(),
@@ -791,7 +793,9 @@ void screen(){
                 );
             } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_graph_data.size()) {
                 data.custom_text = "S [ " + suspicious_frame_log_button[selected_suspicious_frame] + " ]";
-                ImGui::Text("%s T-put_size: %i", data.custom_text.c_str(), data.suspicious_graph_height_history[selected_suspicious_frame]);
+                const auto& selected_data = data.error_graph_height_history[selected_error_frame];
+                float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
+                ImGui::Text("%s Max: %i Min: %i Mean: %f", data.custom_text.c_str(), selected_data[0], selected_data[1], mean_value);
                 ImGui::PlotHistogram(
                     "Throughput Data",
                     data.suspicious_log_graph_data[selected_suspicious_frame].data(),
@@ -801,7 +805,8 @@ void screen(){
                     ImVec2(960, 270)
                 );
             } else {
-                ImGui::Text("%s T-put_size: %i", data.custom_text.c_str(), data.current_graph_height);
+                float mean_value = (data.count_non_zero_graph > 0) ? static_cast<float>(data.all_graph_height) / data.count_non_zero_graph : 0.0f;
+                ImGui::Text("%s Max: %i Min: %i Mean: %f", data.custom_text.c_str(), data.max_graph_height, data.min_graph_height, mean_value);
                 ImGui::PlotHistogram(
                     "Throughput Data",
                     data.graph_data.data(),

@@ -24,9 +24,12 @@ struct GraphData {
     bool stop_flag;
     std::vector<std::array<float, 10000>> error_log_graph_data;
     std::vector<std::array<float, 10000>> suspicious_log_graph_data;
-    int current_graph_height = 0;
-    std::vector<int> error_graph_height_history = {};
-    std::vector<int> suspicious_graph_height_history = {};
+    int max_graph_height = 0;
+    int min_graph_height = 32767;
+    int all_graph_height = 0;
+    int count_non_zero_graph = 0;
+    std::vector<std::array<int, 4>> error_graph_height_history = {};
+    std::vector<std::array<int, 4>> suspicious_graph_height_history = {};
 
     GraphData(){
         graph_data.fill(0.0f);
@@ -38,25 +41,35 @@ struct GraphData {
         if (index >= graph_data.size()) {
             graph_reset();
         }
-        if (new_value > current_graph_height){
-            current_graph_height = new_value;
+        if(new_value != 0.0f){
+            if (new_value > max_graph_height){
+                max_graph_height = new_value;
+            }
+            if (new_value < min_graph_height){
+                min_graph_height = new_value;
+            }
+            all_graph_height += new_value;
+            count_non_zero_graph++;
         }
     }
 
     void addErrorGraphData(){
         error_log_graph_data.push_back(graph_data);
-        error_graph_height_history.push_back(current_graph_height);
+        error_graph_height_history.push_back(std::array<int,4>{max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
     }
 
     void addSuspiciousGraphData(){
         suspicious_log_graph_data.push_back(graph_data);
-        suspicious_graph_height_history.push_back(current_graph_height);
+        suspicious_graph_height_history.push_back(std::array<int,4>{max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
     }
 
     void graph_reset() {
         graph_data.fill(0.0f);
         index = 0;
-        current_graph_height = 0;
+        max_graph_height = 0;
+        min_graph_height = 32767;
+        all_graph_height = 0;
+        count_non_zero_graph = 0;
     }
 
     int check_if_last(){
