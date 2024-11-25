@@ -349,8 +349,8 @@ class UVCPHeaderChecker {
 
         uint32_t frame_average_size;
 
-        void update_payload_error_stat(UVCError error) {
-            switch (error) {
+        void update_payload_error_stat(UVCError perror) {
+            switch (perror) {
                 case ERR_NO_ERROR: payload_stats.count_no_error++; break;
                 case ERR_EMPTY_PAYLOAD: payload_stats.count_empty_payload++; break;
                 case ERR_MAX_PAYLAOD_OVERFLOW: payload_stats.count_max_payload_overflow++; break;
@@ -368,8 +368,8 @@ class UVCPHeaderChecker {
             }
         }
 
-        void update_frame_error_stat(FrameError error) {
-            switch (error) {
+        void update_frame_error_stat(FrameError ferror) {
+            switch (ferror) {
                 case ERR_FRAME_NO_ERROR: frame_stats.count_no_error++; break;
                 case ERR_FRAME_DROP: frame_stats.count_frame_drop++; break;
                 case ERR_FRAME_ERROR: frame_stats.count_frame_error++; break;

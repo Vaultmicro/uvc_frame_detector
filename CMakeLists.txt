@@ -7,14 +7,14 @@ project(
     LANGUAGES CXX C
 )
 
-add_compile_options(/utf-8)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 if (WIN32)
+    add_compile_options(/utf-8)
+
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
     add_compile_definitions(
         $<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=2>
@@ -25,21 +25,23 @@ endif()
 include(FetchContent)
 
 if (UNIX)
-# # Fetch libusb
-# FetchContent_Declare(
-#   libusb
-#   URL https://github.com/libusb/libusb/archive/refs/tags/v1.0.26.zip
-#   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-# )
-# FetchContent_MakeAvailable(libusb)
+# Fetch libusb
+FetchContent_Declare(
+  libusb
+  GIT_REPOSITORY https://github.com/libusb/libusb
+  GIT_TAG v1.0.27
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(libusb)
 
-# # Fetch libpcap
-# FetchContent_Declare(
-#   libpcap
-#   URL https://www.tcpdump.org/release/libpcap-1.10.4.tar.gz
-#   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-# )
-# FetchContent_MakeAvailable(libpcap)
+# Fetch libpcap
+FetchContent_Declare(
+  libpcap
+  GIT_REPOSITORY https://github.com/the-tcpdump-group/libpcap
+  GIT_TAG libpcap-1.10.5
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(libpcap)
 endif(UNIX)
 
 # Fetch ImGui
@@ -62,6 +64,7 @@ set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
+if(WIN32)
 # Fetch GLEW
 FetchContent_Declare(
   glew_prebuilt
@@ -76,6 +79,24 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/x64/glew32s.lib)
 elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
 set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/Win32/glew32s.lib)
+endif()
+
+else()
+# # Fetch GLEW
+# FetchContent_Declare(
+#   glew
+#     GIT_REPOSITORY https://github.com/nigels-com/glew.git
+#     GIT_TAG glew-2.2.0
+#     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+# )
+# FetchContent_MakeAvailable(glew)
+find_package(X11 REQUIRED)
+include_directories(${X11_INCLUDE_DIR})
+
+set(GLEW_LIBRARIES_STATIC ${CMAKE_SOURCE_DIR}/library/libGLEW.a)
+
+include_directories(${glew_SOURCE_DIR}/include)
+
 endif()
 
 # Fetch GLFW
@@ -93,18 +114,28 @@ include(ExternalProject)
 # Fetch libjpeg-turbo
 ExternalProject_Add(
   libjpeg-turbo
-  PREFIX ${CMAKE_BINARY_DIR}/libjpeg-turbo
   GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
   GIT_TAG 3.0.4
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-             -DENABLE_SHARED=OFF
-             -DENABLE_STATIC=ON
-             -DWITH_SIMD=ON
+  SOURCE_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-src
+  BINARY_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-build
+  INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-install
+  CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DENABLE_SHARED=ON
+    -DENABLE_STATIC=ON
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+
 )
 ExternalProject_Get_Property(libjpeg-turbo install_dir)
 
 set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
+
+if(WIN32)
 set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
+else()
+set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/libturbojpeg.a)
+endif()
 
 include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
 
@@ -139,6 +170,7 @@ target_link_libraries(uvcfd
     glfw
     OpenGL::GL
     ${LIBJPEG_TURBO_LIBRARIES}
+    ${X11_LIBRARIES}
 )
 
 add_executable(
