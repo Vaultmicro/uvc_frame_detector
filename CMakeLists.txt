@@ -112,34 +112,79 @@ FetchContent_MakeAvailable(glfw)
 
 include_directories(${glfw_SOURCE_DIR}/include)
 
-include(ExternalProject)
-# Fetch libjpeg-turbo
-ExternalProject_Add(
-  libjpeg-turbo
-  GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  GIT_TAG 3.0.4
-  SOURCE_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-src
-  BINARY_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-build
-  INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-install
-  CMAKE_ARGS
-    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DENABLE_SHARED=ON
-    -DENABLE_STATIC=ON
-    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+set(WIN_LIB_FOUND TRUE)
 
-)
-ExternalProject_Get_Property(libjpeg-turbo install_dir)
+if (WIN32)
 
-set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
+  if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg-static.lib")
+    set(LIBJPEG_TURBO_LIBRARIES
+        ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg-static.lib
+    )
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
+    else()
+    message(WARNING "64-bit libjpeg-turbo library not found. Falling back to external project.")
+    set(WIN_LIB_FOUND FALSE)
+    endif()
 
-if(WIN32)
-set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
+  elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
+
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/lib/turbojpeg-static.lib")
+    set(LIBJPEG_TURBO_LIBRARIES
+        ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/lib/turbojpeg-static.lib
+    )
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/include)
+
+    else()
+    message(WARNING "32-bit libjpeg-turbo library not found. Falling back to external project.")
+    set(WIN_LIB_FOUND FALSE)
+    endif()
+
+  else()
+    set(WIN_LIB_FOUND FALSE)
+  endif()
+
+  # elseif (UNIX)
+  # set(LIBJPEG_TURBO_LIBRARIES
+  #     ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/libturbojpeg.a
+  # )
+
 else()
-set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/libturbojpeg.a)
+  set(WIN_LIB_FOUND FALSE)
 endif()
 
-include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
+if (NOT WIN_LIB_FOUND)
+
+# include(ExternalProject)
+# # Fetch libjpeg-turbo
+# ExternalProject_Add(
+#   libjpeg-turbo
+#   GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
+#   GIT_TAG 3.0.4
+#   SOURCE_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-src
+#   BINARY_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-build
+#   INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-install
+#   CMAKE_ARGS
+#     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+#     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+#     -DENABLE_SHARED=ON
+#     -DENABLE_STATIC=ON
+#     -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+
+# )
+# ExternalProject_Get_Property(libjpeg-turbo install_dir)
+
+# set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
+
+# if(WIN32)
+# set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
+# else()
+# set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/libturbojpeg.a)
+# endif()
+
+# include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
+
+endif()
 
 find_package(OpenGL REQUIRED)
 
