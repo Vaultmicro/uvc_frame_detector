@@ -120,7 +120,7 @@ void screen(){
         ImVec2(0, 330), ImVec2(480, 330), ImVec2(960, 330),
         ImVec2(480, 690), ImVec2(800, 690), ImVec2(1120, 690),
         ImVec2(1440, 330), ImVec2(1600, 330), ImVec2(1760, 330),
-        ImVec2(1440, 690), ImVec2(1680, 690), ImVec2(1440, 0),
+        ImVec2(1440, 690), ImVec2(1680, 690), ImVec2(1440, 690),
         ImVec2(0, 0), ImVec2(0, 690)
     };
 
@@ -128,16 +128,16 @@ void screen(){
         ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
         ImVec2(320, 360), ImVec2(320, 360), ImVec2(320, 360),
         ImVec2(160, 360), ImVec2(160, 360), ImVec2(160, 360),
-        ImVec2(240, 360), ImVec2(240, 360), ImVec2(480, 330), 
+        ImVec2(240, 360), ImVec2(240, 360), ImVec2(480, 360), 
         ImVec2(480, 330), ImVec2(480, 360)
     };
 
     const ImVec2 initial_positions_graph[1] = {
-        ImVec2(480, 0)
+        ImVec2(0, 0)
     };
 
     const ImVec2 window_sizes_graph[1] = {
-        ImVec2(960, 330)
+        ImVec2(1920, 330)
     };
 
     while (!glfwWindowShouldClose(window)) {
@@ -148,13 +148,12 @@ void screen(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-
         // **Window 11  **
         {
             ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
 
-            ImGui::Begin("Error log buttons", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Error log buttons", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
             if (!error_frame_log_button.empty()) {
 
@@ -536,7 +535,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[0], ImGuiCond_Always);
 
-            ImGui::Begin("Error Frame Data", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Error Frame Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
             if (show_error_log && selected_error_frame < manager.getErrorLogText(0).size()) {
                 ImGui::Text("%s", manager.getErrorLogText(0)[selected_error_frame].c_str());
@@ -562,7 +561,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[1], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[1], ImGuiCond_Always);
 
-            ImGui::Begin("Error Frame: Time & Payload Size Data", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Error Frame: Time & Payload Size Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             // ImGui::Text("Custom Text:");
             if (show_error_log && selected_error_frame < manager.getErrorLogText(1).size()) {
                 ImGui::Text("%s", manager.getErrorLogText(1)[selected_error_frame].c_str());
@@ -588,7 +587,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[2], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[2], ImGuiCond_Always);
 
-            ImGui::Begin("Summary", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Summary", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             if (show_error_log && selected_error_frame < manager.getErrorLogText(2).size()) {
                 ImGui::Text("%s", manager.getErrorLogText(2)[selected_error_frame].c_str());
             } else if(show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(2).size()) {
@@ -607,7 +606,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[3], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[3], ImGuiCond_Always);
 
-            ImGui::Begin("Control Config", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Control Config", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             ImGui::Text("Current Defined Configs:");
             ImGui::Text("%s", manager.getCustomText(3).c_str());
 
@@ -627,7 +626,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[4], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[4], ImGuiCond_Always);
 
-            ImGui::Begin("Statistics", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Statistics", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             // ImGui::Text("Counting:");
             ImGui::Text("%s", manager.getCustomText(4).c_str());
             ImGui::End();
@@ -640,7 +639,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[5], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[5], ImGuiCond_Always);
 
-            ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             ImGui::Text("%s", manager.getCustomText(5).c_str());
             
             float current_scroll_y = ImGui::GetScrollY();
@@ -659,7 +658,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[6], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[6], ImGuiCond_Always);
 
-            ImGui::Begin("Previous Valid Data", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Previous Valid Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             // ImGui::Text("Counting:");
             if (show_error_log && selected_error_frame < manager.getButtonLogText(6).size()) {
                 if (selected_error_payload < manager.getButtonLogText(6)[selected_error_frame].size()) {
@@ -682,7 +681,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[7], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[7], ImGuiCond_Always);
 
-            ImGui::Begin("Lost Inbetween Error Data", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Lost Inbetween Error Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             // ImGui::Text("Counting:");
             if (show_error_log && selected_error_frame < manager.getButtonLogText(7).size()) {
                 if (selected_error_payload < manager.getButtonLogText(7)[selected_error_frame].size()) {
@@ -705,7 +704,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[8], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[8], ImGuiCond_Always);
 
-            ImGui::Begin("Current Error Data", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Current Error Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoResize);
             // ImGui::Text("Counting:");
             if (show_error_log && selected_error_frame < manager.getButtonLogText(8).size()) {
                 if (selected_error_payload < manager.getButtonLogText(8)[selected_error_frame].size()) {
@@ -721,45 +720,45 @@ void screen(){
             ImGui::End();
         }
 
-        // **Window 9 - **
-        {
-            std::lock_guard<std::mutex> lock(manager.getMutex(9));
+        // // **Window 9 - **
+        // {
+        //     std::lock_guard<std::mutex> lock(manager.getMutex(9));
 
-            ImGui::SetNextWindowPos(initial_positions[9], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[9], ImGuiCond_Always);
+        //     ImGui::SetNextWindowPos(initial_positions[9], ImGuiCond_Always);
+        //     ImGui::SetNextWindowSize(window_sizes[9], ImGuiCond_Always);
 
-            ImGui::Begin("FPS & Lost Frames", nullptr, ImGuiWindowFlags_NoCollapse);
-            // ImGui::Text("Counting:");
-            ImGui::Text("%s", manager.getCustomText(9).c_str());
+        //     ImGui::Begin("FPS & Lost Frames", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+        //     // ImGui::Text("Counting:");
+        //     ImGui::Text("%s", manager.getCustomText(9).c_str());
             
-            float current_scroll_y = ImGui::GetScrollY();
-            float max_scroll_y = ImGui::GetScrollMaxY();
-            if (current_scroll_y >= max_scroll_y) {
-                ImGui::SetScrollHereY(1.0f);
-            }
+        //     float current_scroll_y = ImGui::GetScrollY();
+        //     float max_scroll_y = ImGui::GetScrollMaxY();
+        //     if (current_scroll_y >= max_scroll_y) {
+        //         ImGui::SetScrollHereY(1.0f);
+        //     }
 
-            ImGui::End();
-        }
+        //     ImGui::End();
+        // }
 
-        // **Window 10 - **
-        {
-            std::lock_guard<std::mutex> lock(manager.getMutex(10));
+        // // **Window 10 - **
+        // {
+        //     std::lock_guard<std::mutex> lock(manager.getMutex(10));
 
-            ImGui::SetNextWindowPos(initial_positions[10], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[10], ImGuiCond_Always);
+        //     ImGui::SetNextWindowPos(initial_positions[10], ImGuiCond_Always);
+        //     ImGui::SetNextWindowSize(window_sizes[10], ImGuiCond_Always);
 
-            ImGui::Begin("Throughput", nullptr, ImGuiWindowFlags_NoCollapse);
-            // ImGui::Text("Counting:");
-            ImGui::Text("%s", manager.getCustomText(10).c_str());
+        //     ImGui::Begin("Throughput", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+        //     // ImGui::Text("Counting:");
+        //     ImGui::Text("%s", manager.getCustomText(10).c_str());
             
-            float current_scroll_y = ImGui::GetScrollY();
-            float max_scroll_y = ImGui::GetScrollMaxY();
-            if (current_scroll_y >= max_scroll_y) {
-                ImGui::SetScrollHereY(1.0f);
-            }
+        //     float current_scroll_y = ImGui::GetScrollY();
+        //     float max_scroll_y = ImGui::GetScrollMaxY();
+        //     if (current_scroll_y >= max_scroll_y) {
+        //         ImGui::SetScrollHereY(1.0f);
+        //     }
 
-            ImGui::End();
-        }
+        //     ImGui::End();
+        // }
         
         // **Graph 0 - Histogram **
         {
@@ -769,7 +768,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions_graph[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes_graph[0], ImGuiCond_Always);
 
-            ImGui::Begin("Histogram", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Histogram", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
 
             static float max_value = 0.0f;
@@ -789,7 +788,7 @@ void screen(){
                     static_cast<int>(data.error_log_graph_data[selected_error_frame].size()),
                     0, nullptr,
                     0.0f, max_value,  
-                    ImVec2(960, 270)
+                    ImVec2(1920, 120)
                 );
             } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_graph_data.size()) {
                 data.custom_text = "S [ " + suspicious_frame_log_button[selected_suspicious_frame] + " ]";
@@ -802,7 +801,7 @@ void screen(){
                     static_cast<int>(data.suspicious_log_graph_data[selected_suspicious_frame].size()),
                     0, nullptr,
                     0.0f, max_value,  
-                    ImVec2(960, 270)
+                    ImVec2(1920, 120)
                 );
             } else {
                 float mean_value = (data.count_non_zero_graph > 0) ? static_cast<float>(data.all_graph_height) / data.count_non_zero_graph : 0.0f;
@@ -813,7 +812,16 @@ void screen(){
                     static_cast<int>(data.graph_data.size()),
                     0, nullptr,
                     0.0f, max_value,  
-                    ImVec2(960, 270)
+                    ImVec2(1920, 120)
+                );
+
+                ImGui::PlotHistogram(
+                    "PTS Data", 
+                    data.graph_data.data(),
+                    static_cast<int>(data.graph_data.size()),
+                    0, nullptr,
+                    0.0f, max_value,  
+                    ImVec2(1920, 120)
                 );
             }
 
@@ -821,27 +829,27 @@ void screen(){
         }
 
         // **Window 12 - Photo **
-        {
-            std::lock_guard<std::mutex> lock(manager.getMutex(12));
+        // {
+        //     std::lock_guard<std::mutex> lock(manager.getMutex(12));
 
-            ImGui::SetNextWindowPos(initial_positions[12], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
+        //     ImGui::SetNextWindowPos(initial_positions[12], ImGuiCond_Always);
+        //     ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
 
-            ImGui::Begin("Image", nullptr, ImGuiWindowFlags_NoCollapse);
+        //     ImGui::Begin("Image", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
-            if (show_image) {
-                ImGui::Text("Image:");
+        //     if (show_image) {
+        //         ImGui::Text("Image:");
 
-                if (texture_id) {
-                    ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(480, 271));
-                } else {
-                    ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
-                }
-            }
+        //         if (texture_id) {
+        //             ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(480, 271));
+        //         } else {
+        //             ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
+        //         }
+        //     }
 
 
-            ImGui::End();
-        }
+        //     ImGui::End();
+        // }
 
         // **Window 13  **
         {
@@ -850,7 +858,7 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[13], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[13], ImGuiCond_Always);
 
-            ImGui::Begin("Valid Frame Data", nullptr, ImGuiWindowFlags_NoCollapse);
+            ImGui::Begin("Valid Frame Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             ImGui::Text("%s", manager.getCustomText(13).c_str());
             
             float current_scroll_y = ImGui::GetScrollY();

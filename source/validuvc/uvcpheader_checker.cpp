@@ -113,17 +113,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             received_frames_count++;
     #ifdef TUI_SET
             window_number = 2;
-    #elif GUI_SET
-            temp_window_number = gui_window_number;
-            gui_window_number = 9;
+    // #elif GUI_SET
+    //         temp_window_number = gui_window_number;
+    //         gui_window_number = 9;
     #endif
-            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS" <<std::endl;
-    #ifdef GUI_SET
-            gui_window_number = 10;
-    #endif
-    #ifndef TUI_SET
-            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps" << std::endl;
-    #endif
+            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
+            << throughput * 8 / 1000000 << " mbps" << std::endl;
     #ifdef TUI_SET
             window_number = 1;
     #endif
@@ -136,19 +131,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 #ifdef TUI_SET
   window_number = 2;
-#elif GUI_SET
-  temp_window_number = gui_window_number;
-  gui_window_number = 9;
+// #elif GUI_SET
+//   temp_window_number = gui_window_number;
+//   gui_window_number = 9;
 #endif
-    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS" <<std::endl;
-
-#ifdef GUI_SET
-  gui_window_number = 10;
-#endif
-
-#ifndef TUI_SET
-    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " << throughput * 8 / 1000000 << " mbps" << std::endl;
-#endif
+    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
+    << throughput * 8 / 1000000 << " mbps" << std::endl;
 
 #ifdef TUI_SET
     window_number = 1;
@@ -630,7 +618,7 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
               std::cout << "frame_format: " << ControlConfig::get_frame_format() << "   ";
               std::cout << "fps: " << ControlConfig::get_fps() << "   ";
               std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "   ";
-              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   ";
+              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   "; 
               std::cout << std::endl;
               
 #endif
@@ -967,6 +955,7 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
 }
 
 void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
+  //fid error invalid
 #ifdef GUI_SET
     gui_window_number = 1;
 #endif

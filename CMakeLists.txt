@@ -67,37 +67,37 @@ set(IMGUI_SOURCES
 )
 
 if(WIN32)
-# Fetch GLEW
-FetchContent_Declare(
-  glew_prebuilt
-  URL https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0-win32.zip
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(glew_prebuilt)
+  # Fetch GLEW
+  FetchContent_Declare(
+    glew_prebuilt
+    URL https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0-win32.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  )
+  FetchContent_MakeAvailable(glew_prebuilt)
 
-include_directories(${glew_prebuilt_SOURCE_DIR}/include)
+  include_directories(${glew_prebuilt_SOURCE_DIR}/include)
 
-if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/x64/glew32s.lib)
-elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
-set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/Win32/glew32s.lib)
-endif()
+  if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/x64/glew32s.lib)
+  elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(GLEW_LIBRARIES_STATIC ${glew_prebuilt_SOURCE_DIR}/lib/Release/Win32/glew32s.lib)
+  endif()
 
 else()
-# # Fetch GLEW
-# FetchContent_Declare(
-#   glew
-#     GIT_REPOSITORY https://github.com/nigels-com/glew.git
-#     GIT_TAG glew-2.2.0
-#     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-# )
-# FetchContent_MakeAvailable(glew)
-find_package(X11 REQUIRED)
-include_directories(${X11_INCLUDE_DIR})
+  # # Fetch GLEW
+  # FetchContent_Declare(
+  #   glew
+  #     GIT_REPOSITORY https://github.com/nigels-com/glew.git
+  #     GIT_TAG glew-2.2.0
+  #     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  # )
+  # FetchContent_MakeAvailable(glew)
+  find_package(X11 REQUIRED)
+  include_directories(${X11_INCLUDE_DIR})
 
-set(GLEW_LIBRARIES_STATIC ${CMAKE_SOURCE_DIR}/library/libGLEW.a)
+  set(GLEW_LIBRARIES_STATIC ${CMAKE_SOURCE_DIR}/library/libGLEW.a)
 
-include_directories(${glew_SOURCE_DIR}/include)
+  include_directories(${glew_SOURCE_DIR}/include)
 
 endif()
 
@@ -118,26 +118,26 @@ if (WIN32)
 
   if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg-static.lib")
-    set(LIBJPEG_TURBO_LIBRARIES
-        ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg-static.lib
-    )
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
+      set(LIBJPEG_TURBO_LIBRARIES
+          ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/lib/turbojpeg-static.lib
+      )
+      include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo64/include)
     else()
-    message(WARNING "64-bit libjpeg-turbo library not found. Falling back to external project.")
-    set(WIN_LIB_FOUND FALSE)
+      message(WARNING "64-bit libjpeg-turbo library not found. Falling back to external project.")
+      set(WIN_LIB_FOUND FALSE)
     endif()
 
   elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
 
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/lib/turbojpeg-static.lib")
-    set(LIBJPEG_TURBO_LIBRARIES
-        ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/lib/turbojpeg-static.lib
-    )
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/include)
+      set(LIBJPEG_TURBO_LIBRARIES
+          ${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/lib/turbojpeg-static.lib
+      )
+      include_directories(${CMAKE_CURRENT_SOURCE_DIR}/library/libjpeg-turbo/include)
 
     else()
-    message(WARNING "32-bit libjpeg-turbo library not found. Falling back to external project.")
-    set(WIN_LIB_FOUND FALSE)
+      message(WARNING "32-bit libjpeg-turbo library not found. Falling back to external project.")
+      set(WIN_LIB_FOUND FALSE)
     endif()
 
   else()
@@ -155,34 +155,34 @@ endif()
 
 if (NOT WIN_LIB_FOUND)
 
-include(ExternalProject)
-# Fetch libjpeg-turbo
-ExternalProject_Add(
-  libjpeg-turbo
-  GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
-  GIT_TAG 3.0.4
-  SOURCE_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-src
-  BINARY_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-build
-  INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-install
-  CMAKE_ARGS
-    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DENABLE_SHARED=ON
-    -DENABLE_STATIC=ON
-    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+  include(ExternalProject)
+  # Fetch libjpeg-turbo
+  ExternalProject_Add(
+    libjpeg-turbo
+    GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
+    GIT_TAG 3.0.4
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-src
+    BINARY_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-build
+    INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-install
+    CMAKE_ARGS
+      -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+      -DENABLE_SHARED=ON
+      -DENABLE_STATIC=ON
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 
-)
-ExternalProject_Get_Property(libjpeg-turbo install_dir)
+  )
+  ExternalProject_Get_Property(libjpeg-turbo install_dir)
 
-set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
+  set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
 
-if(WIN32)
-set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
-else()
-set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/libturbojpeg.a)
-endif()
+  if(WIN32)
+    set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
+  else()
+    set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/libturbojpeg.a)
+  endif()
 
-include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
+  include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
 
 endif()
 
@@ -211,6 +211,15 @@ add_executable(
 
 target_compile_definitions(uvcfd PUBLIC GUI_SET GLEW_STATIC)
 
+if (WIN32)
+target_link_libraries(uvcfd
+    PRIVATE
+    ${GLEW_LIBRARIES_STATIC}
+    glfw
+    OpenGL::GL
+    ${LIBJPEG_TURBO_LIBRARIES}
+)
+else()
 target_link_libraries(uvcfd
     PRIVATE
     ${GLEW_LIBRARIES_STATIC}
@@ -219,6 +228,7 @@ target_link_libraries(uvcfd
     ${LIBJPEG_TURBO_LIBRARIES}
     ${X11_LIBRARIES}
 )
+endif()
 
 add_executable(
     oldmanandsea
