@@ -6,10 +6,13 @@
 #include <array>
 #include <vector>
 
+#define GRAPH_DATA_SIZE 10000
+
 struct WindowData {
+    std::mutex mutex;
     int counter;
     std::string custom_text;
-    std::mutex mutex;
+
     bool stop_flag;
     std::vector<std::string> error_log_text;
     std::vector<std::vector<std::string>> button_log_text;
@@ -18,14 +21,14 @@ struct WindowData {
 
 struct GraphData {
     std::mutex mutex;
-    std::array<float, 10000> graph_data = {};
-    int index = 0;
+    std::array<float, GRAPH_DATA_SIZE> graph_data = {};
+    int graph_x_index = 0;
     std::string custom_text;
     bool stop_flag;
-    std::vector<std::array<float, 10000>> error_log_graph_data;
-    std::vector<std::array<float, 10000>> suspicious_log_graph_data;
+    std::vector<std::array<float, GRAPH_DATA_SIZE>> error_log_graph_data;
+    std::vector<std::array<float, GRAPH_DATA_SIZE>> suspicious_log_graph_data;
     int max_graph_height = 0;
-    int min_graph_height = 32767;
+    int min_graph_height = 2000000000;
     int all_graph_height = 0;
     int count_non_zero_graph = 0;
     std::vector<std::array<int, 4>> error_graph_height_history = {};
@@ -34,57 +37,13 @@ struct GraphData {
     GraphData(){
         graph_data.fill(0.0f);
     }
-
-    void addGraphData(float new_value) {
-        graph_data[index] = new_value;
-        index++;
-        if (index >= graph_data.size()) {
-            graph_reset();
-        }
-        if(new_value != 0.0f){
-            if (new_value > max_graph_height){
-                max_graph_height = new_value;
-            }
-            if (new_value < min_graph_height){
-                min_graph_height = new_value;
-            }
-            all_graph_height += new_value;
-            count_non_zero_graph++;
-        }
-    }
-
-    void addErrorGraphData(){
-        error_log_graph_data.push_back(graph_data);
-        error_graph_height_history.push_back(std::array<int,4>{max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
-    }
-
-    void addSuspiciousGraphData(){
-        suspicious_log_graph_data.push_back(graph_data);
-        suspicious_graph_height_history.push_back(std::array<int,4>{max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
-    }
-
-    void graph_reset() {
-        graph_data.fill(0.0f);
-        index = 0;
-        max_graph_height = 0;
-        min_graph_height = 32767;
-        all_graph_height = 0;
-        count_non_zero_graph = 0;
-    }
-
-    int check_if_last(){
-        if (index >= graph_data.size() - 1) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
 };
 
 class WindowManager {
 public:
     static WindowManager& getInstance();
 
+    // Window Data
     void setCustomText(int index, const std::string& text);
     void setmoveCustomText(int index, const std::string& text);
     void addCustomText(int index, const std::string& text);
@@ -100,11 +59,26 @@ public:
     const std::vector<std::string>& getSuspiciousLogText(int index) const;
     const std::vector<std::vector<std::string>>& getButtonLogText(int index) const;
 
+    // Graph Data
+    void setGraphCustomText(int index, const std::string& text);
+    void setmoveGraphCustomText(int index, const std::string& text);
+
+    const int getGraphCurrentXIndex(int index);
+
+
+
+    void addGraphData(int index, float new_value);
+    void addErrorGraphData(int index);
+    void addSuspiciousGraphData(int index);
+    void graph_reset(int index);
+    int check_if_last(int index);
+
+
     std::mutex& getMutex(int index);
+    std::mutex& getGraphMutex(int index);
 
     // WindowData& getWindowData(int index);
     size_t getWindowCount() const;
-
     GraphData& getGraphData(int index);
     size_t getGraphCount() const;
 

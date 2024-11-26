@@ -763,8 +763,8 @@ void screen(){
         
         // **Graph 0 - Histogram **
         {
+            std::lock_guard<std::mutex> lock(manager.getGraphMutex(0));
             GraphData& data = manager.getGraphData(0);
-            std::lock_guard<std::mutex> lock(data.mutex);
 
             ImGui::SetNextWindowPos(initial_positions_graph[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes_graph[0], ImGuiCond_Always);

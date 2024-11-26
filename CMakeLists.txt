@@ -155,34 +155,34 @@ endif()
 
 if (NOT WIN_LIB_FOUND)
 
-# include(ExternalProject)
-# # Fetch libjpeg-turbo
-# ExternalProject_Add(
-#   libjpeg-turbo
-#   GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
-#   GIT_TAG 3.0.4
-#   SOURCE_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-src
-#   BINARY_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-build
-#   INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-install
-#   CMAKE_ARGS
-#     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-#     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-#     -DENABLE_SHARED=ON
-#     -DENABLE_STATIC=ON
-#     -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+include(ExternalProject)
+# Fetch libjpeg-turbo
+ExternalProject_Add(
+  libjpeg-turbo
+  GIT_REPOSITORY https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  GIT_TAG 3.0.4
+  SOURCE_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-src
+  BINARY_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-build
+  INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo-install
+  CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DENABLE_SHARED=ON
+    -DENABLE_STATIC=ON
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 
-# )
-# ExternalProject_Get_Property(libjpeg-turbo install_dir)
+)
+ExternalProject_Get_Property(libjpeg-turbo install_dir)
 
-# set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
+set(LIBJPEG_TURBO_INCLUDE_DIRS ${install_dir}/include)
 
-# if(WIN32)
-# set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
-# else()
-# set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/libturbojpeg.a)
-# endif()
+if(WIN32)
+set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/turbojpeg-static.lib)
+else()
+set(LIBJPEG_TURBO_LIBRARIES ${install_dir}/lib/libturbojpeg.a)
+endif()
 
-# include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
+include_directories(${LIBJPEG_TURBO_INCLUDE_DIRS})
 
 endif()
 
@@ -289,7 +289,6 @@ if (UNIX AND NOT APPLE)
 #         ${LIBJPEGTURBO_LIBRARIES}
 
 # )
-
 endif(UNIX AND NOT APPLE)
 
 
