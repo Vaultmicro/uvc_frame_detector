@@ -810,6 +810,15 @@ void screen(){
                     0.0f, max_value,  
                     ImVec2(1920, 120)
                 );
+                ImGui::PlotHistogram(
+                    "PTS Data", 
+                    data1.error_log_graph_data[selected_error_frame].data(),
+                    static_cast<int>(data1.error_log_graph_data[selected_error_frame].size()),
+                    0, nullptr,
+                    0.0f, max_value,  
+                    ImVec2(1920, 120)
+                );
+
             } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_graph_data.size()) {
                 data.custom_text = "S [ " + suspicious_frame_log_button[selected_suspicious_frame] + " ]";
                 const auto& selected_data = data.error_graph_height_history[selected_error_frame];
@@ -823,6 +832,15 @@ void screen(){
                     0.0f, max_value,  
                     ImVec2(1920, 120)
                 );
+                ImGui::PlotHistogram(
+                    "PTS Data",
+                    data1.suspicious_log_graph_data[selected_suspicious_frame].data(),
+                    static_cast<int>(data1.suspicious_log_graph_data[selected_suspicious_frame].size()),
+                    0, nullptr,
+                    0.0f, max_value,  
+                    ImVec2(1920, 120)
+                );
+
             } else {
                 float mean_value = (data.count_non_zero_graph > 0) ? static_cast<float>(data.all_graph_height) / data.count_non_zero_graph : 0.0f;
                 ImGui::Text("%s Max: %i Min: %i Mean: %f", data.custom_text.c_str(), data.max_graph_height, data.min_graph_height, mean_value);
@@ -834,7 +852,6 @@ void screen(){
                     0.0f, max_value,  
                     ImVec2(1920, 120)
                 );
-
                 ImGui::PlotHistogram(
                     "PTS Data", 
                     data1.graph_data.data(),

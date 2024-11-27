@@ -66,9 +66,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
   static std::chrono::time_point<std::chrono::steady_clock> temp_r_graph_time;
+  static std::chrono::milliseconds temp_pts_time = std::chrono::milliseconds(0);
   auto pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
   auto graph_time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(received_time - temp_r_graph_time).count();
-
+  std::chrono::milliseconds current_pts_chrono;
+  std::chrono::milliseconds::rep pts_time_gap;
+  
   static uint64_t received_frames_count = 0;
   static uint64_t received_throughput = 0;  
 
@@ -184,6 +187,20 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   static uint32_t previous_frame_pts = 0;
 
+  if (payload_header.PTS) {
+    if (temp_pts_time > std::chrono::milliseconds(0x00000000FFFFFFFF / ControlConfig::get_dwTimeFrequency() * 1000)) {
+      temp_pts_time = temp_pts_time - std::chrono::milliseconds(0x00000000FFFFFFFF / ControlConfig::get_dwTimeFrequency() * 1000);
+    }
+
+    current_pts_chrono = std::chrono::milliseconds(
+        static_cast<int64_t>(static_cast<double>(payload_header.PTS) / ControlConfig::get_dwTimeFrequency() * 1000));
+    if (current_pts_chrono < temp_pts_time) {
+      // pts value overflow
+      current_pts_chrono = current_pts_chrono + std::chrono::milliseconds(0x00000000FFFFFFFF / ControlConfig::get_dwTimeFrequency() * 1000);
+    }
+    pts_time_gap = (current_pts_chrono - temp_pts_time).count();
+  }
+
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF || payload_header_valid_return == ERR_FID_MISMATCH) {
 
     //Process the last frame when EOF is missing
@@ -254,12 +271,74 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             }
           }
 
+#ifdef GUI_SET
+        manager.setmoveGraphCustomText(0, "[ " + std::to_string(current_frame_number) + " ]"
+            + std::to_string(ControlConfig::get_width()) + "x" 
+            + std::to_string(ControlConfig::get_height()) + " " 
+            + ControlConfig::get_frame_format());
+        
+        int graph_time_gap_insec = graph_time_gap / 1000;
+        if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>()) {
+            temp_r_graph_time = received_time;
+        } else if (graph_time_gap_insec >= 1) {
+          if (graph_time_gap_insec >= 2) {
+            for (int i = 0; i < (graph_time_gap_insec - 1); ++i) {
+                manager.graph_reset(0);
+                temp_r_graph_time += std::chrono::seconds(1);
+            }
+          }
+          manager.graph_reset(0);
+          for (int i = 0; i < manager.getGraphCurrentXIndex(0); ++i) {
+              manager.addGraphData(0, 0.0f);
+          }
+          temp_r_graph_time += std::chrono::seconds(1);
+          graph_time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(received_time - temp_r_graph_time).count();
+        }
+
+        if (graph_time_gap >= 0 && graph_time_gap < 1000) {
+            if (graph_time_gap * 10 <= manager.getGraphCurrentXIndex(0)) {
+                manager.addGraphData(0, static_cast<float>(uvc_payload.size()-payload_header.HLE));
+            } else {
+                for (int i = manager.getGraphCurrentXIndex(0); i < graph_time_gap * 10; ++i) {
+                    manager.addGraphData(0, 0.0f);
+                }
+                manager.addGraphData(0, static_cast<float>(uvc_payload.size()-payload_header.HLE));
+            }
+        }
+
+        if (payload_header.PTS){
+          if (temp_pts_time == std::chrono::milliseconds(0)) {
+              temp_pts_time = current_pts_chrono;
+          } else if (pts_time_gap >= 1000) {
+            if (pts_time_gap >= 2000) {
+              for (int i = 0; i < (pts_time_gap - 1000); i += 1000) {
+                  manager.graph_reset(1);
+                  temp_pts_time += std::chrono::milliseconds(1000);
+              }
+            }
+            manager.graph_reset(1);
+            for (int i = 0; i < manager.getGraphCurrentXIndex(1); ++i) {
+                manager.addGraphData(1, 0.0f);
+            }
+            temp_pts_time += std::chrono::milliseconds(1000);
+            pts_time_gap = (current_pts_chrono - temp_pts_time).count();
+          }
+
+          if (pts_time_gap >= 0 && pts_time_gap < 1000) {
+            if (pts_time_gap * 10 <= manager.getGraphCurrentXIndex(1)) {
+                manager.addGraphData(1, static_cast<float>(uvc_payload.size()-payload_header.HLE));
+            } else {
+                for (int i = manager.getGraphCurrentXIndex(1); i < pts_time_gap * 10; ++i) {
+                    manager.addGraphData(1, 0.0f);
+                }
+                manager.addGraphData(1, static_cast<float>(uvc_payload.size()-payload_header.HLE));
+            }
+          }
+        }
+#endif
+
           frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
           frame->add_received_chrono_time(received_time);
-
-  #ifdef GUI_SET
-          manager.addGraphData(0, static_cast<float>(uvc_payload.size()-payload_header.HLE));
-  #endif
 
           size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
           if (total_payload_size > ControlConfig::get_dwMaxVideoFrameSize()) {
@@ -313,12 +392,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>()) {
             temp_r_graph_time = received_time;
         } else if (graph_time_gap_insec >= 1) {
-            if (graph_time_gap_insec >= 2) {
-              for (int i = 0; i < (graph_time_gap_insec - 1); ++i) {
-                  manager.graph_reset(0);
-                  temp_r_graph_time += std::chrono::seconds(1);
-              }
+          if (graph_time_gap_insec >= 2) {
+            for (int i = 0; i < (graph_time_gap_insec - 1); ++i) {
+                manager.graph_reset(0);
+                temp_r_graph_time += std::chrono::seconds(1);
             }
+          }
           manager.graph_reset(0);
           for (int i = 0; i < manager.getGraphCurrentXIndex(0); ++i) {
               manager.addGraphData(0, 0.0f);
@@ -336,6 +415,36 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
                 }
                 manager.addGraphData(0, static_cast<float>(uvc_payload.size()-payload_header.HLE));
             }
+        }
+
+        if (payload_header.PTS){
+          if (temp_pts_time == std::chrono::milliseconds(0)) {
+              temp_pts_time = current_pts_chrono;
+          } else if (pts_time_gap >= 1000) {
+            if (pts_time_gap >= 2000) {
+              for (int i = 0; i < (pts_time_gap - 1000); i += 1000) {
+                  manager.graph_reset(1);
+                  temp_pts_time += std::chrono::milliseconds(1000);
+              }
+            }
+            manager.graph_reset(1);
+            for (int i = 0; i < manager.getGraphCurrentXIndex(1); ++i) {
+                manager.addGraphData(1, 0.0f);
+            }
+            temp_pts_time += std::chrono::milliseconds(1000);
+            pts_time_gap = (current_pts_chrono - temp_pts_time).count();
+          }
+
+          if (pts_time_gap >= 0 && pts_time_gap < 1000) {
+            if (pts_time_gap * 10 <= manager.getGraphCurrentXIndex(1)) {
+                manager.addGraphData(1, static_cast<float>(uvc_payload.size()-payload_header.HLE));
+            } else {
+                for (int i = manager.getGraphCurrentXIndex(1); i < pts_time_gap * 10; ++i) {
+                    manager.addGraphData(1, 0.0f);
+                }
+                manager.addGraphData(1, static_cast<float>(uvc_payload.size()-payload_header.HLE));
+            }
+          }
         }
 #endif
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
@@ -889,12 +998,12 @@ if (!e_formatted_time.empty()) {
 #endif
 }
 
-uint32_t to_little_endian(uint32_t value) {
-    return ((value & 0xFF000000) >> 24) |
-           ((value & 0x00FF0000) >> 8)  |
-           ((value & 0x0000FF00) << 8)  |
-           ((value & 0x000000FF) << 24);
-}
+// uint32_t to_little_endian(uint32_t value) {
+//     return ((value & 0xFF000000) >> 24) |
+//            ((value & 0x00FF0000) >> 8)  |
+//            ((value & 0x0000FF00) << 8)  |
+//            ((value & 0x000000FF) << 24);
+// }
 
 std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "HLE: " << static_cast<int>(header.HLE) << "\n";
@@ -909,8 +1018,8 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "  BFH_ERR: " << static_cast<int>(header.bmBFH.BFH_ERR) << "\n";
     os << "  BFH_EOH: " << static_cast<int>(header.bmBFH.BFH_EOH) << "\n";
 
-    uint32_t l_pts = to_little_endian(header.PTS);
-    uint32_t l_scr_stc = to_little_endian(header.bmSCR.SCR_STC);
+    // uint32_t l_pts = to_little_endian(header.PTS);
+    // uint32_t l_scr_stc = to_little_endian(header.bmSCR.SCR_STC);
 
     os << "PTS: 0x" << std::setw(8) << std::setfill('0') << std::hex << header.PTS 
        << " \n    (" << std::dec << header.PTS << ")\n";
