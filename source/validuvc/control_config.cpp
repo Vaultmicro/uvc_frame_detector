@@ -39,6 +39,7 @@ int ControlConfig::fps = 1;
 std::string ControlConfig::frame_format = "mjpeg";
 uint64_t ControlConfig::dwMaxVideoFrameSize = 1;
 uint64_t ControlConfig::dwMaxPayloadTransferSize = 1;
+uint64_t ControlConfig::dwTimeFrequency = 1;
 
 
 void ControlConfig::set_width(int w) { width = w; }
@@ -72,6 +73,11 @@ uint64_t ControlConfig::set_dwMaxPayloadTransferSize(uint64_t max_payload_transf
   return 0;
 }
 
+uint64_t ControlConfig::set_dwTimeFrequency(uint64_t time_frequency) {
+  dwTimeFrequency = time_frequency;
+  return 0;
+}
+
 int ControlConfig::get_width() { return width; }
 
 int ControlConfig::get_height() { return height; }
@@ -83,5 +89,7 @@ std::string ControlConfig::get_frame_format() { return frame_format; }
 uint64_t ControlConfig::get_dwMaxVideoFrameSize() { return dwMaxVideoFrameSize; }
 
 uint64_t ControlConfig::get_dwMaxPayloadTransferSize() { return dwMaxPayloadTransferSize; }
+
+uint64_t ControlConfig::get_dwTimeFrequency() { return dwTimeFrequency; }
 
 

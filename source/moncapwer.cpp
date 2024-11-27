@@ -28,7 +28,7 @@ std::queue<std::vector<u_char>> packet_queue;
 std::mutex queue_mutex;
 std::condition_variable queue_cv;
 bool stop_processing = false;
-std::queue<std::tuple<int, int, int, std::string, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>>> set_control_queue;
+std::queue<std::tuple<int, int, int, std::string, uint64_t, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>>> set_control_queue;
 
 
 struct FrameInfo{
@@ -171,6 +171,7 @@ void capture_packets() {
         std::string max_frame_size = (tokens.size() > 11 && !tokens[11].empty()) ? tokens[11] : "N/A";
         std::string max_payload_size = (tokens.size() > 12 && !tokens[12].empty()) ? tokens[12] : "N/A";
         std::string num_frame_descriptor = (tokens.size() > 13 && !tokens[13].empty()) ? tokens[13] : "N/A";
+        std::string time_frequency = (tokens.size() > 14 && !tokens[14].empty()) ? tokens[14] : "N/A";
 
         auto time_point_d = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
@@ -234,6 +235,7 @@ void capture_packets() {
             std::vector<std::string> num_frame_descriptor_list = split(num_frame_descriptor, ',');
              
             static std::map<int, std::map<int, FrameInfo>> format_map;
+            static uint64_t time_frequency_ = 0;
 
             if (frame_widths != "N/A" && frame_heights != "N/A") {
 
@@ -274,6 +276,8 @@ void capture_packets() {
 
                 count ++;
               }
+
+              time_frequency_ = (time_frequency != "N/A") ? std::stoull(time_frequency) : 0;
 
               // for (const auto& format_pair : format_map) {
               //     int format_key = format_pair.first;
@@ -327,8 +331,9 @@ void capture_packets() {
                           break;
                   }
 
-                    std::tuple<int, int, int, std::string, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>> control_data = 
-                        std::make_tuple(width, height, 10000000 / std::stoi(frame_interval_fps), frame_format, std::stoi(max_frame_size), std::stoi(max_payload_size), time_point_d);
+                    std::tuple<int, int, int, std::string, uint64_t, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>> control_data = 
+                        std::make_tuple(width, height, 10000000 / std::stoi(frame_interval_fps), frame_format, std::stoi(max_frame_size), std::stoi(max_payload_size), 
+                        time_frequency_, time_point_d);
                   {
                       std::lock_guard<std::mutex> lock(queue_mutex);
                       set_control_queue.push(std::move(control_data));
@@ -416,12 +421,12 @@ void process_packets() {
 
         int width, height, fps;
         std::string frame_format;
-        uint64_t max_frame_size, max_payload_size;
+        uint64_t max_frame_size, max_payload_size, time_frequency;
         std::chrono::time_point<std::chrono::steady_clock> received_time;
-        std::tie(width, height, fps, frame_format, max_frame_size, max_payload_size, received_time) = control_data;
+        std::tie(width, height, fps, frame_format, max_frame_size, max_payload_size, time_frequency, received_time) = control_data;
 
         CtrlPrint::v_cout_3 << "Processing control configuration" << std::endl;
-        header_checker.control_configuration_ctrl(width, height, fps, frame_format, max_frame_size, max_payload_size, received_time);
+        header_checker.control_configuration_ctrl(width, height, fps, frame_format, max_frame_size, max_payload_size, time_frequency, received_time);
 
     }else if (!packet_queue.empty()) {
 

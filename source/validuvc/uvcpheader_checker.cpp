@@ -88,7 +88,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     update_payload_error_stat(ERR_EMPTY_PAYLOAD);
     return ERR_EMPTY_PAYLOAD;
   }
-  if (uvc_payload.size() > ControlConfig::dwMaxPayloadTransferSize) {
+  if (uvc_payload.size() > ControlConfig::get_dwMaxPayloadTransferSize()) {
 
     CtrlPrint::v_cerr_2 << "["<< formatted_time << "]" << " Payload size exceeds maximum transfer size." << std::endl;
 
@@ -105,8 +105,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             frame_count = 0;
             throughput = 0;
 
-            int fps_difference = ControlConfig::fps - frame_count;
-            if (frame_count != ControlConfig::fps) {
+            int fps_difference = ControlConfig::get_fps() - frame_count;
+            if (frame_count != ControlConfig::get_fps()) {
                 frame_stats.count_frame_drop += fps_difference;
             }
             average_frame_rate = (average_frame_rate * received_frames_count + frame_count) / (received_frames_count + 1);
@@ -144,8 +144,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   gui_window_number = 5;
 #endif
 
-    int fps_difference = ControlConfig::fps - frame_count;
-    if (frame_count != ControlConfig::fps){
+    int fps_difference = ControlConfig::get_fps() - frame_count;
+    if (frame_count != ControlConfig::get_fps()){
       frame_stats.count_frame_drop += fps_difference;
     }
 
@@ -202,6 +202,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
           addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
           manager.addErrorGraphData(0);
+          manager.addErrorGraphData(1);
           frame_error_flag = 1;
           print_received_times(*last_frame);
           print_frame_data(*last_frame);
@@ -261,7 +262,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   #endif
 
           size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
-          if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
+          if (total_payload_size > ControlConfig::get_dwMaxVideoFrameSize()) {
             frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
           }
 
@@ -367,7 +368,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       // Check the Frame width x height in here
       // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
       // the headerlength If not then there is a problem with the frame
-      if (ControlConfig::frame_format == "yuyv") {
+      if (ControlConfig::get_frame_format() == "yuyv") {
         // Calculate the expected size for the YUYV frame
         size_t expected_frame_size =
             ControlConfig::get_width() * ControlConfig::get_height() * 2;
@@ -392,7 +393,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 
       if (filter_on_off_flag && irregular_define_flag){
-        if (ControlConfig::frame_format == "mjpeg"){
+        if (ControlConfig::get_frame_format() == "mjpeg"){
           size_t total_size_sum = 0;
           size_t total_payload_count_sum = 0;
           for (const auto& frame : processed_frames) {
@@ -431,6 +432,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
         manager.addErrorGraphData(0);
+        manager.addErrorGraphData(1);
         frame_error_flag = 1;
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
@@ -460,6 +462,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         addSuspiciousFrameLog("Suspicious " + std::to_string(last_frame->frame_number));
         manager.addSuspiciousGraphData(0);
+        manager.addSuspiciousGraphData(1);
         frame_suspicious_flag = 1;
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
@@ -568,13 +571,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 
 
-void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint64_t max_frame_size, uint64_t max_payload_size, std::chrono::time_point<std::chrono::steady_clock> received_time) {
+void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint64_t max_frame_size, uint64_t max_payload_size, uint64_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time) {
   ControlConfig::set_width(width);
   ControlConfig::set_height(height);
   ControlConfig::set_fps(fps);
   ControlConfig::set_frame_format(frame_format);
   ControlConfig::set_dwMaxVideoFrameSize(max_frame_size);
   ControlConfig::set_dwMaxPayloadTransferSize(max_payload_size);
+  ControlConfig::set_dwTimeFrequency(time_frequency);
 
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
@@ -590,12 +594,12 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
 #ifdef TUI_SET
               setCursorPosition (2, 1);
               setColor(WHITE);
-              std::cout << "  Frame Width: " << ControlConfig::width 
-                    << "     Frame Height: " << ControlConfig::height 
-                    << "     FPS: " << ControlConfig::fps 
-                    << "     Frame Format: " << ControlConfig::frame_format 
-                    << "     Max Frame Size: " << ControlConfig::dwMaxVideoFrameSize 
-                    << "     Max Transfer Size: " << ControlConfig::dwMaxPayloadTransferSize 
+              std::cout << "  Frame Width: " << ControlConfig::get_width()
+                    << "     Frame Height: " << ControlConfig::get_height()
+                    << "     FPS: " << ControlConfig::get_fps() 
+                    << "     Frame Format: " << ControlConfig::get_frame_format()
+                    << "     Max Frame Size: " << ControlConfig::get_dwMaxVideoFrameSize()
+                    << "     Max Transfer Size: " << ControlConfig::get_dwMaxPayloadTransferSize()
                     << std::endl;
 #elif GUI_SET
             std::ostringstream logStream;
@@ -607,6 +611,7 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
             logStream << "fps: " << ControlConfig::get_fps() << "\n";
             logStream << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
             logStream << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
+            logStream << "time_frequency: " << ControlConfig::get_dwTimeFrequency() << "\n";
             logStream << "\n";
 {
             WindowManager& manager = WindowManager::getInstance();
@@ -619,6 +624,7 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
               std::cout << "fps: " << ControlConfig::get_fps() << "   ";
               std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "   ";
               std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   "; 
+              std::cout << "time_frequency: " << ControlConfig::get_dwTimeFrequency() << "   ";
               std::cout << std::endl;
               
 #endif
@@ -883,6 +889,13 @@ if (!e_formatted_time.empty()) {
 #endif
 }
 
+uint32_t to_little_endian(uint32_t value) {
+    return ((value & 0xFF000000) >> 24) |
+           ((value & 0x00FF0000) >> 8)  |
+           ((value & 0x0000FF00) << 8)  |
+           ((value & 0x000000FF) << 24);
+}
+
 std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "HLE: " << static_cast<int>(header.HLE) << "\n";
     
@@ -895,6 +908,9 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "  BFH_STI: " << static_cast<int>(header.bmBFH.BFH_STI) << "\n";
     os << "  BFH_ERR: " << static_cast<int>(header.bmBFH.BFH_ERR) << "\n";
     os << "  BFH_EOH: " << static_cast<int>(header.bmBFH.BFH_EOH) << "\n";
+
+    uint32_t l_pts = to_little_endian(header.PTS);
+    uint32_t l_scr_stc = to_little_endian(header.bmSCR.SCR_STC);
 
     os << "PTS: 0x" << std::setw(8) << std::setfill('0') << std::hex << header.PTS 
        << " \n    (" << std::dec << header.PTS << ")\n";
@@ -920,8 +936,8 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
 
     const int zoom = 4;
     const int cut = 20;
-    const int total_markers = ControlConfig::fps * zoom;         
-    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::fps) / (zoom *cut)));
+    const int total_markers = ControlConfig::get_fps() * zoom;         
+    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::get_fps()) / (zoom *cut)));
 
 
     auto base_time = received_chrono_times[0];
@@ -1216,9 +1232,9 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
         auto final_end = (error_end > valid_end) ? error_end : valid_end;
         auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
 
-        if (time_taken > (1000.0 / (ControlConfig::fps)) + 20){
+        if (time_taken > (1000.0 / (ControlConfig::get_fps())) + 20){
           CtrlPrint::v_cout_2 << "Frame Drop May Cause because of Time Taken (Valid Start to Last Event): \n"
-          << "Should be " << (1000.0 / (ControlConfig::fps)) << " ms, but " << time_taken << " ms \n"
+          << "Should be " << (1000.0 / (ControlConfig::get_fps())) << " ms, but " << time_taken << " ms \n"
           << "Or two frames could be overlapped \n";
         }
     }

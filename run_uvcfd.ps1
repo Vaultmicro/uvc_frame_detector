@@ -13,7 +13,7 @@ $command = '"C:\Program Files\Wireshark\tshark" -i \\.\USBPcap1 -s 0 -T fields '
     '-e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index ' +
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
     '-e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval ' +
-    '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors ' +
+    '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors -e usbvideo.probe.clockFrequency ' +
     '-E separator=; -Y "(usb.device_address == ' + $devadd + ') && (' +
     'usb.endpoint_address == 0x80 || usb.endpoint_address == 0x8' + $endpointadd + ')" -Q | .\build\release\uvcfd.exe"'
 

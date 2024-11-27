@@ -108,7 +108,7 @@ private:
     WindowManager();
 
     std::array<WindowData, 14> windows;
-    std::array<GraphData, 1> graphs;
+    std::array<GraphData, 2> graphs;
 
     WindowManager(const WindowManager&) = delete;
     WindowManager& operator=(const WindowManager&) = delete;

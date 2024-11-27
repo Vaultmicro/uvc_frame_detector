@@ -7,7 +7,7 @@ $find_dev_num = '"C:\Program Files\Wireshark\tshark.exe" -r '+ $filepath +' -s 0
 '-e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata -e usb.iso.data -e usbvideo.format.index '+
 '-e usbvideo.frame.index -e usbvideo.frame.width -e usbvideo.frame.height -e usbvideo.streaming.descriptorSubType ' +
 '-e usbvideo.frame.interval -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize ' +
-'-e usb.device_address -e usbvideo.format.numFrameDescriptors -e usb.idVendor -e usb.idProduct -E separator=; -Y "usb.transfer_type == 2"'
+'-e usb.device_address -e usbvideo.format.numFrameDescriptors -e usb.idVendor -e usb.idProduct -e usbvideo.probe.clockFrequency -E separator=; -Y "usb.transfer_type == 2"'
 
 Write-Output $find_dev_num
 cmd /c $find_dev_num
@@ -21,7 +21,7 @@ $command = '"C:\Program Files\Wireshark\tshark.exe" -r '+ $filepath +' -s 0 -T f
     '-e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index ' +
     '-e usbvideo.frame.width -e usbvideo.frame.height ' +
     '-e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval ' +
-    '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors ' +
+    '-e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors -e usbvideo.probe.clockFrequency ' +
     '-E separator=; -Y "(usb.device_address == ' + $devadd + ') && (' +
     'usb.endpoint_address == 0x80 || usb.endpoint_address == 0x8' + $endpointadd + ')" -Q | .\build\release\uvcfd.exe"'
 

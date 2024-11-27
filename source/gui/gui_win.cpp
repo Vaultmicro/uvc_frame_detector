@@ -132,12 +132,12 @@ void screen(){
         ImVec2(480, 330), ImVec2(480, 360)
     };
 
-    const ImVec2 initial_positions_graph[1] = {
-        ImVec2(0, 0)
+    const ImVec2 initial_positions_graph[2] = {
+        ImVec2(0, 0), ImVec2(0, 0)
     };
 
-    const ImVec2 window_sizes_graph[1] = {
-        ImVec2(1920, 330)
+    const ImVec2 window_sizes_graph[2] = {
+        ImVec2(1920, 330), ImVec2(1920, 330)
     };
 
     while (!glfwWindowShouldClose(window)) {
@@ -284,14 +284,14 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            ImVec2 window_pos = ImGui::GetWindowPos();
-            draw_list->AddRectFilled(
-                ImVec2(window_pos.x + 134, window_pos.y + 112),
-                ImVec2(window_pos.x + 456, window_pos.y + 158),
-                IM_COL32(70, 120, 200, 70),
-                0.0f
-            );
+            // ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            // ImVec2 window_pos = ImGui::GetWindowPos();
+            // draw_list->AddRectFilled(
+            //     ImVec2(window_pos.x + 134, window_pos.y + 112),
+            //     ImVec2(window_pos.x + 456, window_pos.y + 158),
+            //     IM_COL32(70, 120, 200, 70),
+            //     0.0f
+            // );
 
             ImGui::SetCursorPos(ImVec2(137, 115));
             if (show_error_log) {
@@ -300,7 +300,7 @@ void screen(){
             } else {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 0.40f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.80f)); 
-            }
+            } 
             if (ImGui::Button(show_error_log ? "Error Log" : "Error Log", ImVec2(96, 40))) {
                 if (!error_frame_log_button.empty()) {
                     show_suspicious_log = false;
@@ -345,12 +345,12 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            draw_list->AddRectFilled(
-                ImVec2(window_pos.x + 24, window_pos.y + 167),
-                ImVec2(window_pos.x + 456, window_pos.y + 213),
-                IM_COL32(70, 120, 200, 70),
-                0.0f
-            );
+            // draw_list->AddRectFilled(
+            //     ImVec2(window_pos.x + 24, window_pos.y + 167),
+            //     ImVec2(window_pos.x + 456, window_pos.y + 213),
+            //     IM_COL32(70, 120, 200, 70),
+            //     0.0f
+            // );
 
             ImGui::SetCursorPos(ImVec2(27, 170));
             if (UVCPHeaderChecker::capture_image_flag) {
@@ -423,12 +423,12 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            draw_list->AddRectFilled(
-                ImVec2(window_pos.x + 24, window_pos.y + 222),
-                ImVec2(window_pos.x + 456, window_pos.y + 268),
-                IM_COL32(70, 120, 200, 70),
-                0.0f
-            );
+            // draw_list->AddRectFilled(
+            //     ImVec2(window_pos.x + 24, window_pos.y + 222),
+            //     ImVec2(window_pos.x + 456, window_pos.y + 268),
+            //     IM_COL32(70, 120, 200, 70),
+            //     0.0f
+            // );
 
             ImGui::SetCursorPos(ImVec2(27, 225));
             if (UVCPHeaderChecker::filter_on_off_flag) {
@@ -522,7 +522,7 @@ void screen(){
                 exit(0);
             }
 
-            ImGui::SetCursorPos(ImVec2(34, 295));
+            ImGui::SetCursorPos(ImVec2(9, 295));
             ImGui::Text("%s", manager.getCustomText(11).c_str());
 
             ImGui::End();
@@ -539,8 +539,26 @@ void screen(){
 
             if (show_error_log && selected_error_frame < manager.getErrorLogText(0).size()) {
                 ImGui::Text("%s", manager.getErrorLogText(0)[selected_error_frame].c_str());
+                if (show_image) {
+                    ImGui::Text("Image:");
+
+                    if (texture_id) {
+                        ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(288, 162));
+                    } else {
+                        ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
+                    }
+                }
             } else if (show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(0).size()) {
                 ImGui::Text("%s", manager.getSuspiciousLogText(0)[selected_suspicious_frame].c_str());
+                if (show_image) {
+                    ImGui::Text("Image:");
+
+                    if (texture_id) {
+                        ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(288, 162));
+                    } else {
+                        ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
+                    }
+                }
             } else {
                 ImGui::Text("%s", manager.getCustomText(0).c_str());
             }
@@ -763,7 +781,9 @@ void screen(){
         // **Graph 0 - Histogram **
         {
             std::lock_guard<std::mutex> lock(manager.getGraphMutex(0));
+            std::lock_guard<std::mutex> lock1(manager.getGraphMutex(1));
             GraphData& data = manager.getGraphData(0);
+            GraphData& data1 = manager.getGraphData(1);
 
             ImGui::SetNextWindowPos(initial_positions_graph[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes_graph[0], ImGuiCond_Always);
@@ -817,8 +837,8 @@ void screen(){
 
                 ImGui::PlotHistogram(
                     "PTS Data", 
-                    data.graph_data.data(),
-                    static_cast<int>(data.graph_data.size()),
+                    data1.graph_data.data(),
+                    static_cast<int>(data1.graph_data.size()),
                     0, nullptr,
                     0.0f, max_value,  
                     ImVec2(1920, 120)

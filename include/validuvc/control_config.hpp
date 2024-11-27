@@ -34,6 +34,7 @@ public:
     static std::string frame_format;
     static uint64_t dwMaxVideoFrameSize;
     static uint64_t dwMaxPayloadTransferSize;
+    static uint64_t dwTimeFrequency;
 
     static void set_width(int w);
     static void set_height(int h);
@@ -41,6 +42,7 @@ public:
     static void set_frame_format(const std::string& format);
     static uint64_t set_dwMaxVideoFrameSize(uint64_t max_video_frame_size);
     static uint64_t set_dwMaxPayloadTransferSize(uint64_t max_payload_transfer_size);
+    static uint64_t set_dwTimeFrequency(uint64_t time_frequency);
 
     static int get_width();
     static int get_height();
@@ -48,6 +50,7 @@ public:
     static std::string get_frame_format();
     static uint64_t get_dwMaxVideoFrameSize();
     static uint64_t get_dwMaxPayloadTransferSize();
+    static uint64_t get_dwTimeFrequency();
 };
 
 #endif // CONTROL_CONFIG_HPP

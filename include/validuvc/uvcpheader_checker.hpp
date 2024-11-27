@@ -469,7 +469,7 @@ class UVCPHeaderChecker {
             const std::vector<u_char>& uvc_payload,
             std::chrono::time_point<std::chrono::steady_clock> received_time);
         
-        void control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint64_t max_frame_size, uint64_t max_payload_size, std::chrono::time_point<std::chrono::steady_clock> received_time);
+        void control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint64_t max_frame_size, uint64_t max_payload_size, uint64_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time);
 
         void print_stats() const;
 };
