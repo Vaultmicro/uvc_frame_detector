@@ -159,19 +159,19 @@ void screen(){
                 if (ImGui::BeginMenu("Type")) {
                     if (ImGui::BeginMenu("Payload Error")) {
                         ImGui::TextWrapped("Payload Error Information:");
-                        ImGui::BulletText("ERR_NO_ERROR = 0");
-                        ImGui::BulletText("ERR_EMPTY_PAYLOAD = 1");
-                        ImGui::BulletText("ERR_MAX_PAYLOAD_OVERFLOW = 2");
-                        ImGui::BulletText("ERR_ERR_BIT_SET = 3");
-                        ImGui::BulletText("ERR_LENGTH_OUT_OF_RANGE = 4");
-                        ImGui::BulletText("ERR_LENGTH_INVALID = 5");
-                        ImGui::BulletText("ERR_RESERVED_BIT_SET = 6");
-                        ImGui::BulletText("ERR_EOH_BIT = 7");
-                        ImGui::BulletText("ERR_TOGGLE_BIT_OVERLAPPED = 8");
-                        ImGui::BulletText("ERR_FID_MISMATCH = 9");
-                        ImGui::BulletText("ERR_SWAP = 10");
-                        ImGui::BulletText("ERR_MISSING_EOF = 11");
-                        ImGui::BulletText("ERR_UNKNOWN = 99");
+                        ImGui::BulletText("ERR_NO_ERROR = 0: No error detected in the payload.");
+                        ImGui::BulletText("ERR_EMPTY_PAYLOAD = 1: UVCPayload is empty, including the header.");
+                        ImGui::BulletText("ERR_MAX_PAYLOAD_OVERFLOW = 2: Payload size exceeds maximum transfer size.");
+                        ImGui::BulletText("ERR_ERR_BIT_SET = 3: BFH Error bit is set. Payload is invalid.");
+                        ImGui::BulletText("ERR_LENGTH_OUT_OF_RANGE = 4: HLE (Header Length Extension) is out of the valid range (2 to 12).");
+                        ImGui::BulletText("ERR_LENGTH_INVALID = 5: HLE length does not match with PTS (Presentation Time Stamp) or SCR (Source Clock Reference) settings.");
+                        ImGui::BulletText("ERR_RESERVED_BIT_SET = 6: Reserved bit (RES) set to 1 when EOF (End of Frame) is 0.");
+                        ImGui::BulletText("ERR_EOH_BIT = 7: -deleted logic.");
+                        ImGui::BulletText("ERR_TOGGLE_BIT_OVERLAPPED = 8: -deleted logic.");
+                        ImGui::BulletText("ERR_FID_MISMATCH = 9: PTS matches the previous payload with the same FID, indicating a toggle bit error.");
+                        ImGui::BulletText("ERR_SWAP = 10: Payload data is swapped or corrupted.");
+                        ImGui::BulletText("ERR_MISSING_EOF = 11: Missing EOF in the previous frame's payload.");
+                        ImGui::BulletText("ERR_UNKNOWN = 99: Unknown error.");
                         ImGui::EndMenu();
                     }
                     if (ImGui::BeginMenu("Frame Error")) {
@@ -181,7 +181,7 @@ void screen(){
                         ImGui::BulletText("ERR_FRAME_ERROR = 2: Missing EOF or payload validation error.");
                         ImGui::BulletText("ERR_FRAME_MAX_FRAME_OVERFLOW = 3: Frame size exceeds maximum defined size.");
                         ImGui::BulletText("ERR_FRAME_INVALID_YUYV_RAW_SIZE = 4: YUYV frame size mismatch.");
-                        ImGui::BulletText("ERR_FRAME_SAME_DIFFERENT_PTS = 5: FID matches previous frame, toggle bit error.");
+                        ImGui::BulletText("ERR_FRAME_SAME_DIFFERENT_PTS = 5: -deleted logic.");
                         ImGui::BulletText("ERR_FRAME_MISSING_EOF = 6: Missing EOF in the frame.");
                         ImGui::BulletText("ERR_FRAME_FID_MISMATCH = 7: FID matches previous frame while EOF is set.");
                         ImGui::BulletText("ERR_FRAME_UNKNOWN = 99: Unknown error.");
