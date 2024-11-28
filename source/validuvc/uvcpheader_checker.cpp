@@ -68,6 +68,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   if (!play_pause_flag) {
     temp_r_graph_time = std::chrono::time_point<std::chrono::steady_clock>();
     temp_pts_time = std::chrono::milliseconds(0);
+    
     return 0;
   }
 
@@ -88,6 +89,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   window_number = 1;
 #elif GUI_SET
   WindowManager& manager = WindowManager::getInstance();
+  if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>() && temp_pts_time == std::chrono::milliseconds(0)) {
+    manager.graph_reset(0);
+    manager.graph_reset(1);
+  }
   temp_window_number = gui_window_number;
   gui_window_number = 5;
 #endif
