@@ -422,30 +422,17 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           for (int i = 0; i < manager.getGraphCurrentXIndex(0); ++i) {
               manager.addGraphData(0, 0.0f);
           }
-
-          // if (checkpts) {
-          //   std::cout << "update graph time gap" << std::endl;
-          // }
-
           graph_time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(received_time - temp_r_graph_time).count();
         }
 
         if (graph_time_gap >= 0 && graph_time_gap < 1000) {
             if (graph_time_gap * 10 <= manager.getGraphCurrentXIndex(0)) {
                 manager.addGraphData(0, static_cast<float>(uvc_payload.size()-payload_header.HLE));
-              // if (checkpts) {
-              //   int b = manager.getGraphCurrentXIndex(0);
-              //   std::cout << "0 graph time gap: " << graph_time_gap << "current index: " << b << std::endl;
-              // }
             } else {
                 for (int i = manager.getGraphCurrentXIndex(0); i < graph_time_gap * 10; ++i) {
                     manager.addGraphData(0, 0.0f);
                 }
                 manager.addGraphData(0, static_cast<float>(uvc_payload.size()-payload_header.HLE));
-                // if (checkpts) {
-                //   int b = manager.getGraphCurrentXIndex(0);
-                //   std::cout << "1 graph time gap: " << graph_time_gap << "current index: " << b << std::endl;
-                // }
 
             }
         }

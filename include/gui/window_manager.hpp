@@ -28,7 +28,9 @@
 #include <array>
 #include <vector>
 
-#define GRAPH_DATA_SIZE 10000
+#define GRAPH_PERIOD_SECOND 4
+#define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 10
+#define GRAPH_DATA_SIZE (GRAPH_PERIOD_SECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND * 1000)
 
 struct WindowData {
     std::mutex mutex;
