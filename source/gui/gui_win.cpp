@@ -153,11 +153,157 @@ void screen(){
             ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
 
-            ImGui::Begin("Error log buttons", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+            ImGui::Begin("Error log buttons", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar);
+
+            if (ImGui::BeginMenuBar()) {
+                if (ImGui::BeginMenu("Type")) {
+                    if (ImGui::BeginMenu("Payload Error")) {
+                        ImGui::TextWrapped("Payload Error Information:");
+                        ImGui::BulletText("ERR_NO_ERROR = 0");
+                        ImGui::BulletText("ERR_EMPTY_PAYLOAD = 1");
+                        ImGui::BulletText("ERR_MAX_PAYLOAD_OVERFLOW = 2");
+                        ImGui::BulletText("ERR_ERR_BIT_SET = 3");
+                        ImGui::BulletText("ERR_LENGTH_OUT_OF_RANGE = 4");
+                        ImGui::BulletText("ERR_LENGTH_INVALID = 5");
+                        ImGui::BulletText("ERR_RESERVED_BIT_SET = 6");
+                        ImGui::BulletText("ERR_EOH_BIT = 7");
+                        ImGui::BulletText("ERR_TOGGLE_BIT_OVERLAPPED = 8");
+                        ImGui::BulletText("ERR_FID_MISMATCH = 9");
+                        ImGui::BulletText("ERR_SWAP = 10");
+                        ImGui::BulletText("ERR_MISSING_EOF = 11");
+                        ImGui::BulletText("ERR_UNKNOWN = 99");
+                        ImGui::EndMenu();
+                    }
+                    if (ImGui::BeginMenu("Frame Error")) {
+                        ImGui::TextWrapped("Frame Error Information:");
+                        ImGui::BulletText("ERR_FRAME_NO_ERROR = 0: No error detected in the payload, valid.");
+                        ImGui::BulletText("ERR_FRAME_DROP = 1: FPS lower than expected, classified as dropped frames.");
+                        ImGui::BulletText("ERR_FRAME_ERROR = 2: Missing EOF or payload validation error.");
+                        ImGui::BulletText("ERR_FRAME_MAX_FRAME_OVERFLOW = 3: Frame size exceeds maximum defined size.");
+                        ImGui::BulletText("ERR_FRAME_INVALID_YUYV_RAW_SIZE = 4: YUYV frame size mismatch.");
+                        ImGui::BulletText("ERR_FRAME_SAME_DIFFERENT_PTS = 5: FID matches previous frame, toggle bit error.");
+                        ImGui::BulletText("ERR_FRAME_MISSING_EOF = 6: Missing EOF in the frame.");
+                        ImGui::BulletText("ERR_FRAME_FID_MISMATCH = 7: FID matches previous frame while EOF is set.");
+                        ImGui::BulletText("ERR_FRAME_UNKNOWN = 99: Unknown error.");
+                        ImGui::EndMenu();
+                    }
+                    if (ImGui::BeginMenu("Frame Suspicious")) {
+                        ImGui::TextWrapped("Frame Suspicious Information:");
+                        ImGui::BulletText("SUSPICIOUS_NO_SUSPICIOUS = 0: No suspicious behavior detected.");
+                        ImGui::BulletText("SUSPICIOUS_PAYLOAD_TIME_INCONSISTENT = 1: Payload timestamps are inconsistent.");
+                        ImGui::BulletText("SUSPICIOUS_FRAME_SIZE_INCONSISTENT = 2: Frame sizes are inconsistent.");
+                        ImGui::BulletText("SUSPICIOUS_PAYLOAD_COUNT_INCONSISTENT = 3: Payload counts are inconsistent.");
+                        ImGui::BulletText("SUSPICIOUS_PTS_DECREASE = 4: PTS decreased unexpectedly, excluding overflow.");
+                        ImGui::BulletText("SUSPICIOUS_SCR_STC_DECREASE = 5: SCR STC decreased unexpectedly, excluding overflow.");
+                        ImGui::BulletText("SUSPICIOUS_OVERCOMPRESSED = 6: MJPEG frame size smaller than 5% of raw data.");
+                        ImGui::BulletText("SUSPICIOUS_ERROR_CHECKED = 97: It is already defined as an error.");
+                        ImGui::BulletText("SUSPICIOUS_UNKNOWN = 98: Unknown suspicious behavior.");
+                        ImGui::BulletText("SUSPICIOUS_UNCHECKED = 99: Suspicion is not checked.");
+                        ImGui::EndMenu();
+                    }
+                    ImGui::EndMenu();
+                }
+                if (ImGui::BeginMenu("Help")) {
+                    if (ImGui::BeginMenu("Usage")) {
+                        ImGui::TextWrapped("Error Frame Drop Down Combo Box:");
+                        ImGui::BulletText("When Error Frame is created, a drop-down combo box for frame and payload is generated.");
+                        ImGui::BulletText("Users can select a specific Error Frame to view its data in the following windows:");
+                        ImGui::BulletText("- Error Frame Data");
+                        ImGui::BulletText("- Error Frame: Time & Payload Size Data");
+                        ImGui::BulletText("- Summary");
+                        ImGui::BulletText("- Payload Header Info");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Error Payload Drop Down Combo Box:");
+                        ImGui::BulletText("Shows payload header information when errors occur.");
+                        ImGui::BulletText("Shows payload errors for selected frames.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Suspicious Frame Drop Down Combo Box:");
+                        ImGui::BulletText("Enables users to select a specific Frame to view related data in the same windows.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Show Image:");
+                        ImGui::BulletText("When Error Log or Suspicious Log button is pressed and a Frame is selected, it shows the saved image.");
+                        ImGui::BulletText("To view saved log data, press Error Log button to switch screens.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Suspicious Log:");
+                        ImGui::BulletText("To view saved log data, press Suspicious Log button to switch screens.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Streaming Log:");
+                        ImGui::BulletText("To view currently streaming data information, press Streaming Log button to switch screens.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Capture On/Off:");
+                        ImGui::BulletText("Switch off all three save image buttons or recall previous options.");
+                        ImGui::BulletText("Capture Error Frames.");
+                        ImGui::BulletText("Capture Suspicious Frames.");
+                        ImGui::BulletText("Capture Valid Frames.");
+                        ImGui::BulletText("Switch off all three capture filter buttons or recall previous options.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Irregular:");
+                        ImGui::BulletText("Detect frame size drop below 10% for last three frames, over 95% compressed frame, or payload count is smaller than the last three frames average.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("PTS Decrease:");
+                        ImGui::BulletText("Detect PTS field decrease, excluding overflow.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("SCRSTCDecrease:");
+                        ImGui::BulletText("Detect SCR STC field decreases, excluding overflow.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Play/Pause:");
+                        ImGui::BulletText("Play button to start receiving data, Pause to discard streaming data.");
+
+                        ImGui::Separator();
+
+                        ImGui::TextWrapped("Quit:");
+                        ImGui::BulletText("Press to exit the application.");
+
+                        ImGui::EndMenu();
+                    }
+
+                    if (ImGui::BeginMenu("Application Info")) {
+                        ImGui::Text("Used Libraries:");
+                        ImGui::BulletText("libjpeg-turbo 3.0.4");
+                        ImGui::BulletText("stb_image");
+                        ImGui::BulletText("imgui 1.91.5");
+                        ImGui::BulletText("glew 2.1.0");
+                        ImGui::BulletText("glfw 3.4");
+
+                        ImGui::Separator();
+                        ImGui::Text("Versions:");
+                        ImGui::BulletText("Wireshark, Tshark Version 4.4.0");
+                        ImGui::BulletText("USBPcapCMD version 1.5.4.0");
+
+                        ImGui::Separator();
+                        ImGui::Text("Application Version:");
+                        ImGui::BulletText("Version 0.3.5");
+
+                        ImGui::EndMenu();
+                    }
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenuBar();
+            }
 
             if (!error_frame_log_button.empty()) {
 
-                ImGui::SetCursorPos(ImVec2(9, 30));
+                ImGui::SetCursorPos(ImVec2(9, 45));
                 if (ImGui::BeginCombo(":: Select Error Frame", error_frame_log_button[selected_error_frame].c_str())) {
                     for (int n = 0; n < error_frame_log_button.size(); n++) {
                         bool is_selected = (selected_error_frame == n);
@@ -177,7 +323,7 @@ void screen(){
                     manager.setButtonLogText(11, manager.getButtonLogText(8));
                 }
 
-                ImGui::SetCursorPos(ImVec2(9, 60));
+                ImGui::SetCursorPos(ImVec2(9, 75));
                 if (selected_error_frame < manager.getButtonLogText(11).size()) {
                     std::string current_error_label = "Error " + std::to_string(selected_error_payload);
                     if (ImGui::BeginCombo(":: Error Payload", current_error_label.c_str())) {
@@ -198,13 +344,13 @@ void screen(){
                 }
 
             } else {
-                ImGui::SetCursorPos(ImVec2(9, 60));
+                ImGui::SetCursorPos(ImVec2(9, 75));
                 ImGui::Text("    No Error Log Available");
             }
 
             if (!suspicious_frame_log_button.empty()){
 
-                ImGui::SetCursorPos(ImVec2(9, 90));
+                ImGui::SetCursorPos(ImVec2(9, 105));
                 if (ImGui::BeginCombo(":: Select Suspicious", suspicious_frame_log_button[selected_suspicious_frame].c_str())) {
                     for (int n = 0; n < suspicious_frame_log_button.size(); n++) {
                         bool is_selected = (selected_suspicious_frame == n);
@@ -220,11 +366,11 @@ void screen(){
                 }
 
             } else {
-                ImGui::SetCursorPos(ImVec2(9, 90));
+                ImGui::SetCursorPos(ImVec2(9, 105));
                 ImGui::Text("    No suspicious Log Available");
             }
 
-            ImGui::SetCursorPos(ImVec2(27, 115));
+            ImGui::SetCursorPos(ImVec2(27, 130));
             if (show_image) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -293,7 +439,7 @@ void screen(){
             //     0.0f
             // );
 
-            ImGui::SetCursorPos(ImVec2(137, 115));
+            ImGui::SetCursorPos(ImVec2(137, 130));
             if (show_error_log) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -312,7 +458,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(247, 115));
+            ImGui::SetCursorPos(ImVec2(247, 130));
             if (show_suspicious_log) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -329,7 +475,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(357, 115));
+            ImGui::SetCursorPos(ImVec2(357, 130));
             if (!show_error_log && !show_suspicious_log) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -352,7 +498,7 @@ void screen(){
             //     0.0f
             // );
 
-            ImGui::SetCursorPos(ImVec2(27, 170));
+            ImGui::SetCursorPos(ImVec2(27, 185));
             if (UVCPHeaderChecker::capture_image_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -378,7 +524,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(137, 170));
+            ImGui::SetCursorPos(ImVec2(137, 185));
             if (UVCPHeaderChecker::capture_error_flag && UVCPHeaderChecker::capture_image_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -393,7 +539,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(247, 170));
+            ImGui::SetCursorPos(ImVec2(247, 185));
             if (UVCPHeaderChecker::capture_suspicious_flag && UVCPHeaderChecker::capture_image_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -408,7 +554,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(357, 170));
+            ImGui::SetCursorPos(ImVec2(357, 185));
             if (UVCPHeaderChecker::capture_valid_flag && UVCPHeaderChecker::capture_image_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -430,7 +576,7 @@ void screen(){
             //     0.0f
             // );
 
-            ImGui::SetCursorPos(ImVec2(27, 225));
+            ImGui::SetCursorPos(ImVec2(27, 240));
             if (UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -458,7 +604,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(137, 225));
+            ImGui::SetCursorPos(ImVec2(137, 240));
             if (UVCPHeaderChecker::irregular_define_flag && UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -473,7 +619,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(247, 225));
+            ImGui::SetCursorPos(ImVec2(247, 240));
             if (UVCPHeaderChecker::pts_decrease_filter_flag && UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -488,7 +634,7 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(357, 225));
+            ImGui::SetCursorPos(ImVec2(357, 240));
             if (UVCPHeaderChecker::stc_decrease_filter_flag && UVCPHeaderChecker::filter_on_off_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f)); 
@@ -504,7 +650,7 @@ void screen(){
             ImGui::PopStyleColor(2);
 
 
-            ImGui::SetCursorPos(ImVec2(247, 280));
+            ImGui::SetCursorPos(ImVec2(247, 295));
             if (UVCPHeaderChecker::play_pause_flag) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.26f, 0.59f, 0.98f, 0.60f));
@@ -517,12 +663,12 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            ImGui::SetCursorPos(ImVec2(357, 280));
+            ImGui::SetCursorPos(ImVec2(357, 295));
             if (ImGui::Button("Quit", ImVec2(96, 40))) {
                 exit(0);
             }
 
-            ImGui::SetCursorPos(ImVec2(9, 295));
+            ImGui::SetCursorPos(ImVec2(9, 310));
             ImGui::Text("%s", manager.getCustomText(11).c_str());
 
             ImGui::End();

@@ -302,7 +302,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         } else if (graph_time_gap_insec >= GRAPH_PERIOD_SECOND) {
           if (graph_time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
             for (int i = 0; i < (graph_time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
-                // manager.graph_reset(0);
+                manager.graph_reset(0);
                 temp_r_graph_time += std::chrono::seconds(GRAPH_PERIOD_SECOND);
             }
           }
@@ -334,7 +334,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           } else if (pts_time_gap_in_sec >= GRAPH_PERIOD_SECOND) {
             if (pts_time_gap_in_sec >= GRAPH_PERIOD_SECOND*2) {
               for (int i = 0; i < (pts_time_gap_in_sec - 1); i+=GRAPH_PERIOD_SECOND) {
-                  // manager.graph_reset(1);
+                  manager.graph_reset(1);
                   temp_pts_time += std::chrono::seconds(GRAPH_PERIOD_SECOND);
               }
             }
@@ -417,7 +417,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         } else if (graph_time_gap_insec >= GRAPH_PERIOD_SECOND) {
           if (graph_time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
             for (int i = 0; i < (graph_time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
-                // manager.graph_reset(0);
+                manager.graph_reset(0);
                 temp_r_graph_time += std::chrono::seconds(GRAPH_PERIOD_SECOND);
             }
           }
@@ -449,7 +449,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           } else if (pts_time_gap_in_sec >= GRAPH_PERIOD_SECOND) {
             if (pts_time_gap_in_sec >= GRAPH_PERIOD_SECOND*2) {
               for (int i = 0; i < (pts_time_gap_in_sec - 1); i+=GRAPH_PERIOD_SECOND) {
-                  // manager.graph_reset(1);
+                  manager.graph_reset(1);
                   temp_pts_time += std::chrono::seconds(GRAPH_PERIOD_SECOND);
               }
             }
@@ -662,7 +662,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         } else if (graph_time_gap_insec >= GRAPH_PERIOD_SECOND) {
           if (graph_time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
             for (int i = 0; i < (graph_time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
-                // manager.graph_reset(0);
+                manager.graph_reset(0);
                 temp_r_graph_time += std::chrono::seconds(GRAPH_PERIOD_SECOND);
             }
           }
@@ -694,7 +694,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           } else if (pts_time_gap_in_sec >= GRAPH_PERIOD_SECOND) {
             if (pts_time_gap_in_sec >= GRAPH_PERIOD_SECOND*2) {
               for (int i = 0; i < (pts_time_gap_in_sec - 1); i+=GRAPH_PERIOD_SECOND) {
-                  // manager.graph_reset(1);
+                  manager.graph_reset(1);
                   temp_pts_time += std::chrono::seconds(GRAPH_PERIOD_SECOND);
               }
             }
