@@ -28,7 +28,7 @@ std::queue<std::vector<u_char>> packet_queue;
 std::mutex queue_mutex;
 std::condition_variable queue_cv;
 bool stop_processing = false;
-std::queue<std::tuple<int, int, int, std::string, uint64_t, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>>> set_control_queue;
+std::queue<std::tuple<int, int, int, std::string, uint32_t, uint32_t, uint32_t, std::chrono::time_point<std::chrono::steady_clock>>> set_control_queue;
 
 
 struct FrameInfo{
@@ -235,7 +235,7 @@ void capture_packets() {
             std::vector<std::string> num_frame_descriptor_list = split(num_frame_descriptor, ',');
              
             static std::map<int, std::map<int, FrameInfo>> format_map;
-            static uint64_t time_frequency_ = 0;
+            static uint32_t time_frequency_ = 0;
 
             if (frame_widths != "N/A" && frame_heights != "N/A") {
 
@@ -277,7 +277,7 @@ void capture_packets() {
                 count ++;
               }
 
-              time_frequency_ = (time_frequency != "N/A") ? std::stoull(time_frequency) : 0;
+              time_frequency_ = (time_frequency != "N/A") ? std::stol(time_frequency) : 0;
 
               // for (const auto& format_pair : format_map) {
               //     int format_key = format_pair.first;
@@ -331,7 +331,7 @@ void capture_packets() {
                           break;
                   }
 
-                    std::tuple<int, int, int, std::string, uint64_t, uint64_t, uint64_t, std::chrono::time_point<std::chrono::steady_clock>> control_data = 
+                    std::tuple<int, int, int, std::string, uint32_t, uint32_t, uint32_t, std::chrono::time_point<std::chrono::steady_clock>> control_data = 
                         std::make_tuple(width, height, 10000000 / std::stoi(frame_interval_fps), frame_format, std::stoi(max_frame_size), std::stoi(max_payload_size), 
                         time_frequency_, time_point_d);
                   {

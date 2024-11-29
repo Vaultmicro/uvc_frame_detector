@@ -32,25 +32,25 @@ public:
     static int height;
     static int fps;
     static std::string frame_format;
-    static uint64_t dwMaxVideoFrameSize;
-    static uint64_t dwMaxPayloadTransferSize;
-    static uint64_t dwTimeFrequency;
+    static uint32_t dwMaxVideoFrameSize;
+    static uint32_t dwMaxPayloadTransferSize;
+    static uint32_t dwTimeFrequency;
 
     static void set_width(int w);
     static void set_height(int h);
     static void set_fps(int f);
     static void set_frame_format(const std::string& format);
-    static uint64_t set_dwMaxVideoFrameSize(uint64_t max_video_frame_size);
-    static uint64_t set_dwMaxPayloadTransferSize(uint64_t max_payload_transfer_size);
-    static uint64_t set_dwTimeFrequency(uint64_t time_frequency);
+    static uint32_t set_dwMaxVideoFrameSize(uint32_t max_video_frame_size);
+    static uint32_t set_dwMaxPayloadTransferSize(uint32_t max_payload_transfer_size);
+    static uint32_t set_dwTimeFrequency(uint32_t time_frequency);
 
     static int get_width();
     static int get_height();
     static int get_fps();
     static std::string get_frame_format();
-    static uint64_t get_dwMaxVideoFrameSize();
-    static uint64_t get_dwMaxPayloadTransferSize();
-    static uint64_t get_dwTimeFrequency();
+    static uint32_t get_dwMaxVideoFrameSize();
+    static uint32_t get_dwMaxPayloadTransferSize();
+    static uint32_t get_dwTimeFrequency();
 };
 
 #endif // CONTROL_CONFIG_HPP

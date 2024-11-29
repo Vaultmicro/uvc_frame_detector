@@ -341,9 +341,7 @@ class ValidFrame{
 class UVCPHeaderChecker {
     private:  
 
-        UVC_Payload_Header parse_uvc_payload_header(
-            const std::vector<u_char>& uvc_payload,
-            std::chrono::time_point<std::chrono::steady_clock> received_time);
+        UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
 
         std::chrono::milliseconds::rep received_time_clock; 
 
@@ -437,6 +435,10 @@ class UVCPHeaderChecker {
         std::string formatTime(std::chrono::milliseconds ms);
         void print_summary(const ValidFrame& frame);
 
+        std::chrono::time_point<std::chrono::steady_clock> plot_gui_graph(int window_number, std::chrono::milliseconds::rep time_gap, 
+                            std::chrono::time_point<std::chrono::steady_clock> current_time,
+                            size_t y_size, std::chrono::time_point<std::chrono::steady_clock> temp_time);
+
     public:
         uint32_t frame_count;
         uint64_t throughput;
@@ -469,7 +471,7 @@ class UVCPHeaderChecker {
             const std::vector<u_char>& uvc_payload,
             std::chrono::time_point<std::chrono::steady_clock> received_time);
         
-        void control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint64_t max_frame_size, uint64_t max_payload_size, uint64_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time);
+        void control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint32_t max_frame_size, uint32_t max_payload_size, uint32_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time);
 
         void print_stats() const;
 };

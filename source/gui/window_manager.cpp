@@ -135,7 +135,33 @@ const int WindowManager::getGraphCurrentXIndex(int index) {
     return 0;
 }
 
-
+void WindowManager::setGraphData(int index, int x, int y){
+    if (index >= 0 && index < graphs.size()) {
+        std::lock_guard<std::mutex> lock(graphs[index].mutex);
+        
+        graphs[index].graph_data[x] = y;
+        graphs[index].graph_x_index++;
+        if (graphs[index].graph_x_index >= graphs[index].graph_data.size()) {
+            // Reset the graph data
+            graphs[index].graph_data.fill(0.0f);
+            graphs[index].graph_x_index = 0;
+            graphs[index].max_graph_height = 0;
+            graphs[index].min_graph_height = 2000000000;
+            graphs[index].all_graph_height = 0;
+            graphs[index].count_non_zero_graph = 0;
+        }
+        if (y != 0.0f) {
+            if (y > graphs[index].max_graph_height) {
+                graphs[index].max_graph_height = y;
+            }
+            if (y < graphs[index].min_graph_height) {
+                graphs[index].min_graph_height = y;
+            }
+            graphs[index].all_graph_height += y;
+            graphs[index].count_non_zero_graph++;
+        }
+    }
+}
 
 void WindowManager::addGraphData(int index, float new_value) {
     if (index >= 0 && index < graphs.size()) {

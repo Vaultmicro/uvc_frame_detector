@@ -90,7 +90,7 @@ public:
     const int getGraphCurrentXIndex(int index);
 
  
-
+    void setGraphData(int index, int x, int y);
     void addGraphData(int index, float new_value);
     void addErrorGraphData(int index);
     void addSuspiciousGraphData(int index);
