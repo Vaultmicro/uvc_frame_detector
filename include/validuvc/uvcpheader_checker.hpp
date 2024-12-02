@@ -276,7 +276,8 @@ class ValidFrame{
         std::vector<std::vector<u_char>> payload_datas;  // To store the uvc_payloads
         std::vector<std::vector<u_char>> error_payload_datas;
         
-        std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_chrono_times;  // Packet reception times
+        std::vector<std::tuple<std::chrono::time_point<std::chrono::steady_clock>,bool>> received_chrono_times;  // Packet reception times
+        std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_valid_times;  // Packet reception times
         std::vector<std::chrono::time_point<std::chrono::steady_clock>> received_error_times;  // Packet reception times
 
         std::vector<UVCError> payload_errors;
@@ -313,12 +314,18 @@ class ValidFrame{
             eof_reached = 1;
         }
 
-        void add_received_chrono_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
-            received_chrono_times.push_back(time_point);
+        // void add_received_chrono_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
+        //     received_chrono_times.push_back(time_point);
+        // }
+
+        void add_received_valid_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
+            received_valid_times.push_back(time_point);
+            received_chrono_times.push_back(std::make_tuple(time_point, true));
         }
 
         void add_received_error_time(std::chrono::time_point<std::chrono::steady_clock> time_point) {
             received_error_times.push_back(time_point);
+            received_chrono_times.push_back(std::make_tuple(time_point, false));
         }
 
         void push_queue() {
@@ -424,7 +431,7 @@ class UVCPHeaderChecker {
             const UVC_Payload_Header& payload_header,
             std::chrono::time_point<std::chrono::steady_clock> received_time);
 
-        void plot_received_chrono_times(const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_chrono_times, 
+        void plot_received_chrono_times(const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_valid_times, 
                                         const std::vector<std::chrono::time_point<std::chrono::steady_clock>>& received_error_times);
 
         void print_received_times(const ValidFrame& frame);

@@ -249,10 +249,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #elif CLI_SET 
           print_frame_data(*last_frame);
           print_summary(*last_frame);
-          plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+          plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #else
-          plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+          plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
         }
@@ -304,7 +304,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
 
           frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
-          frame->add_received_chrono_time(received_time);
+          frame->add_received_valid_time(received_time);
 
           size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
           if (total_payload_size > ControlConfig::get_dwMaxVideoFrameSize()) {
@@ -344,7 +344,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         new_frame->add_received_error_time(received_time);
         new_frame->frame_error = ERR_FRAME_FID_MISMATCH;
       } else {
-        new_frame->add_received_chrono_time(received_time);
+        new_frame->add_received_valid_time(received_time);
       }
       new_frame->set_frame_format(ControlConfig::get_width(), ControlConfig::get_height(), ControlConfig::get_frame_format());
 
@@ -473,10 +473,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #elif CLI_SET
         print_frame_data(*last_frame);
         print_summary(*last_frame);
-        plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+        plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #else
-        plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+        plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
         if (capture_error_flag && capture_image_flag){
@@ -540,7 +540,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->packet_number++;
 
 #ifndef GUI_SET
-      plot_received_chrono_times(last_frame->received_chrono_times, last_frame->received_error_times);
+      plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
 #endif
     }
 #ifdef GUI_SET
@@ -871,8 +871,8 @@ void UVCPHeaderChecker::save_frames_to_log(
     const UVC_Payload_Header& header = current_frame->payload_headers[i];
     size_t payload_size = current_frame->payload_sizes[i];
 
-    // Get the time point from received_chrono_times
-    auto time_point = current_frame->received_chrono_times[i];
+    // Get the time point from received_valid_times
+    auto time_point = current_frame->received_valid_times[i];
     auto duration_since_epoch = time_point.time_since_epoch();
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
                             duration_since_epoch)
@@ -972,10 +972,10 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     return os;
 }
 
-void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono::steady_clock::time_point>& received_chrono_times, 
+void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono::steady_clock::time_point>& received_valid_times, 
                                                     const std::vector<std::chrono::steady_clock::time_point>& received_error_times) {
                                                       
-    if (received_chrono_times.empty() && received_error_times.empty()) return;
+    if (received_valid_times.empty() && received_error_times.empty()) return;
 
 #ifdef TUI_SET
   window_number = 7;
@@ -987,11 +987,11 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
     const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::get_fps()) / (zoom *cut)));
 
 
-    auto base_time = received_chrono_times[0];
+    auto base_time = received_valid_times[0];
 
     std::string graph(total_markers, '_');
 
-    for (const auto& time_point : received_chrono_times) {
+    for (const auto& time_point : received_valid_times) {
         auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
 
         int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
@@ -1018,34 +1018,27 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
 }
 
 void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
-  //fid error invalid
 #ifdef GUI_SET
     gui_window_number = 1;
 #endif
-    // Vector to store all times and labels
-    std::vector<std::pair<std::chrono::time_point<std::chrono::steady_clock>, std::string>> all_times;
 
-    // Populate vector with both chrono times and error times along with labels
-    for (const auto& time_point : frame.received_chrono_times) {
-        all_times.emplace_back(time_point, "[Valid]");
-    }
-    for (const auto& error_time : frame.received_error_times) {
-        all_times.emplace_back(error_time, "[Error]");
-    }
-
-    // Sort all times in ascending order
-    std::sort(all_times.begin(), all_times.end(), [](const auto& a, const auto& b) {
-        return a.first < b.first;
+    // Sort received_chrono_times in ascending order
+    auto sorted_times = frame.received_chrono_times;
+    std::sort(sorted_times.begin(), sorted_times.end(), [](const auto& a, const auto& b) {
+        return std::get<0>(a) < std::get<0>(b);
     });
 
     // Print sorted times with labels and matching payload sizes
     CtrlPrint::v_cout_2 << "[ " << frame.frame_number << " ] \n";
-    
-    for (size_t i = 0; i < all_times.size(); ++i) {
 
-        auto formatted_time = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(all_times[i].first.time_since_epoch()));
+    for (size_t i = 0; i < sorted_times.size(); ++i) {
+        auto time_point = std::get<0>(sorted_times[i]);
+        bool is_valid = std::get<1>(sorted_times[i]);
 
-        CtrlPrint::v_cout_2 << "[" << formatted_time << "] " << all_times[i].second;
+        auto formatted_time = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(time_point.time_since_epoch()));
+
+        CtrlPrint::v_cout_2 << "[" << formatted_time << "] " 
+                            << (is_valid ? "[Valid]" : "[Error]");
 
         // Match with payload size if available
         if (i < frame.payload_sizes.size()) {
@@ -1055,9 +1048,9 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
         CtrlPrint::v_cout_2 << "\n";
     }
 
-    if (!all_times.empty()) {
-        auto first_time = all_times.front().first;
-        auto last_time = all_times.back().first;
+    if (!sorted_times.empty()) {
+        auto first_time = std::get<0>(sorted_times.front());
+        auto last_time = std::get<0>(sorted_times.back());
         auto time_diff = std::chrono::duration_cast<std::chrono::milliseconds>(last_time - first_time).count();
         CtrlPrint::v_cout_2 << "Time Taken: " << time_diff << " ms" << "\n";
     }
@@ -1071,6 +1064,7 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
     gui_window_number = 5;
 #endif
 }
+
 
 
 void UVCPHeaderChecker::print_stats() const {
@@ -1107,9 +1101,9 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "[ " << frame.frame_number << " ]"<< "\n";
 
     // Calculate time taken from valid start to the last of error or valid times
-    if (!frame.received_chrono_times.empty()) {
-        auto valid_start = frame.received_chrono_times.front();
-        auto valid_end = frame.received_chrono_times.back();
+    if (!frame.received_valid_times.empty()) {
+        auto valid_start = frame.received_valid_times.front();
+        auto valid_end = frame.received_valid_times.back();
         auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
 
         // Choose the later of valid_end and error_end as the end point
@@ -1215,9 +1209,9 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "Frame Number: " << frame.frame_number << "\n";
 
     // Calculate time taken from valid start to the last of error or valid times
-    if (!frame.received_chrono_times.empty()) {
-        auto valid_start = frame.received_chrono_times.front();
-        auto valid_end = frame.received_chrono_times.back();
+    if (!frame.received_valid_times.empty()) {
+        auto valid_start = frame.received_valid_times.front();
+        auto valid_end = frame.received_valid_times.back();
         auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
 
         // Choose the later of valid_end and error_end as the end point
@@ -1270,9 +1264,9 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
     }
 
     // Calculate time taken from valid start to the last of error or valid times
-    if (!frame.received_chrono_times.empty()) {
-        auto valid_start = frame.received_chrono_times.front();
-        auto valid_end = frame.received_chrono_times.back();
+    if (!frame.received_valid_times.empty()) {
+        auto valid_start = frame.received_valid_times.front();
+        auto valid_end = frame.received_valid_times.back();
         auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
 
         // Choose the later of valid_end and error_end as the end point
