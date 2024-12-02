@@ -64,11 +64,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
   static std::chrono::time_point<std::chrono::steady_clock> temp_r_graph_time;
   static std::chrono::time_point<std::chrono::steady_clock> temp_pts_time;
-  // static std::chrono::milliseconds temp_pts_time = std::chrono::milliseconds(0);
 
   if (!play_pause_flag) {
     temp_r_graph_time = std::chrono::time_point<std::chrono::steady_clock>();
-    // temp_pts_time = std::chrono::milliseconds(0);
     temp_pts_time = std::chrono::time_point<std::chrono::steady_clock>();
     return 0;
   }
@@ -194,10 +192,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>() && temp_pts_time == std::chrono::time_point<std::chrono::steady_clock>()) {
     manager.graph_reset(0);
     manager.graph_reset(1);
-    // graph_time_gap = 0;
-    // pts_time_gap = 0;
-    // std::cout << "Graph Reset" << std::endl;    
-  } else if (payload_header.PTS) {
+  } 
+
+  if (payload_header.PTS && uvc_payload.size() > payload_header.HLE) {
     current_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(payload_header.PTS / (ControlConfig::get_dwTimeFrequency() / 1000)));
 
@@ -296,11 +293,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             + std::to_string(ControlConfig::get_width()) + "x" 
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
-        
-        temp_r_graph_time = plot_gui_graph(0, graph_time_gap, received_time, uvc_payload.size()-payload_header.HLE, temp_r_graph_time);
+        if (uvc_payload.size() > payload_header.HLE){
 
-        if (payload_header.PTS){
-          temp_pts_time = plot_gui_graph(1, pts_time_gap, current_pts_chrono, uvc_payload.size()-payload_header.HLE, temp_pts_time);
+          temp_r_graph_time = plot_gui_graph(0, graph_time_gap, received_time, uvc_payload.size()-payload_header.HLE, temp_r_graph_time);
+
+          if (payload_header.PTS){
+            temp_pts_time = plot_gui_graph(1, pts_time_gap, current_pts_chrono, uvc_payload.size()-payload_header.HLE, temp_pts_time);
+          }
         }
 #endif
 
@@ -355,10 +354,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
 
-        temp_r_graph_time = plot_gui_graph(0, graph_time_gap, received_time, uvc_payload.size(), temp_r_graph_time);
+        if (uvc_payload.size() > payload_header.HLE){
 
-        if (payload_header.PTS){
-          temp_pts_time = plot_gui_graph(1, pts_time_gap, current_pts_chrono, uvc_payload.size(), temp_pts_time);
+          temp_r_graph_time = plot_gui_graph(0, graph_time_gap, received_time, uvc_payload.size(), temp_r_graph_time);
+
+          if (payload_header.PTS){
+            temp_pts_time = plot_gui_graph(1, pts_time_gap, current_pts_chrono, uvc_payload.size(), temp_pts_time);
+          }
         }
 #endif
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
@@ -542,10 +544,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
     }
 #ifdef GUI_SET
-        temp_r_graph_time = plot_gui_graph(0, graph_time_gap, received_time, 0, temp_r_graph_time);
+        if (uvc_payload.size() > payload_header.HLE){
+          temp_r_graph_time = plot_gui_graph(0, graph_time_gap, received_time, 0, temp_r_graph_time);
 
-        if (payload_header.PTS){
-          temp_pts_time = plot_gui_graph(1, pts_time_gap, current_pts_chrono, 0, temp_pts_time);
+          if (payload_header.PTS){
+            temp_pts_time = plot_gui_graph(1, pts_time_gap, current_pts_chrono, 0, temp_pts_time);
+          }
         }
 #endif
 
@@ -573,9 +577,12 @@ std::chrono::time_point<std::chrono::steady_clock> UVCPHeaderChecker::plot_gui_g
                                                                                     size_t y_size, std::chrono::time_point<std::chrono::steady_clock> temp_time) {
     WindowManager& manager = WindowManager::getInstance();
 
+
+
     int time_gap_insec = time_gap / 1000;
     if (temp_time == std::chrono::time_point<std::chrono::steady_clock>()) {
         temp_time = current_time ;
+        time_gap = 0;
     } else if (time_gap_insec >= GRAPH_PERIOD_SECOND) {
       if (time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
         for (int i = 0; i < (time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
@@ -591,13 +598,7 @@ std::chrono::time_point<std::chrono::steady_clock> UVCPHeaderChecker::plot_gui_g
       }
 
       time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - temp_time).count();
-    }
-
-    static int i = 0;
-    if (i < 10 ){
-    std::cout << "time_gap: " << time_gap << std::endl;
-    i++;
-    }
+    }    
 
     if (time_gap >= 0 && time_gap < GRAPH_PERIOD_SECOND * 1000) {
         if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= manager.getGraphCurrentXIndex(window_number)) {
@@ -608,6 +609,8 @@ std::chrono::time_point<std::chrono::steady_clock> UVCPHeaderChecker::plot_gui_g
             }
             manager.addGraphData(window_number, static_cast<float>(y_size));
         }
+    } else {
+
     }
 
     return temp_time;
