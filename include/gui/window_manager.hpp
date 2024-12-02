@@ -28,8 +28,8 @@
 #include <array>
 #include <vector>
 
-#define GRAPH_PERIOD_SECOND 9
-#define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 10
+#define GRAPH_PERIOD_SECOND 4
+#define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8 //125 microseconds for each plotting
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_SECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND * 1000)
 
 struct WindowData {
