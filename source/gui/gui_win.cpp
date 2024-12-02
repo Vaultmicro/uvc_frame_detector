@@ -676,7 +676,7 @@ void screen(){
 
         // **Window 0 - Frame Data**
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(0));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(0));
 
             ImGui::SetNextWindowPos(initial_positions[0], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[0], ImGuiCond_Always);
@@ -720,7 +720,7 @@ void screen(){
 
         // **Window 1 - Time Data**
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(1));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(1));
 
             ImGui::SetNextWindowPos(initial_positions[1], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[1], ImGuiCond_Always);
@@ -746,7 +746,7 @@ void screen(){
 
         // **Window 2 - Summary**
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(2));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(2));
 
             ImGui::SetNextWindowPos(initial_positions[2], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[2], ImGuiCond_Always);
@@ -765,7 +765,7 @@ void screen(){
 
         // **Window 3 - Control**
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(3));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(3));
 
             ImGui::SetNextWindowPos(initial_positions[3], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[3], ImGuiCond_Always);
@@ -785,7 +785,7 @@ void screen(){
 
         // **Window 4 - Statistics**
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(4));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(4));
 
             ImGui::SetNextWindowPos(initial_positions[4], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[4], ImGuiCond_Always);
@@ -798,7 +798,7 @@ void screen(){
 
         // **Window 5 - Debug**
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(5));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(5));
 
             ImGui::SetNextWindowPos(initial_positions[5], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[5], ImGuiCond_Always);
@@ -817,7 +817,7 @@ void screen(){
 
         // **Window 6 - prev **
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(6));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(6));
 
             ImGui::SetNextWindowPos(initial_positions[6], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[6], ImGuiCond_Always);
@@ -840,7 +840,7 @@ void screen(){
 
         // **Window 7 - inbetween error **
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(7));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(7));
 
             ImGui::SetNextWindowPos(initial_positions[7], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[7], ImGuiCond_Always);
@@ -863,7 +863,7 @@ void screen(){
 
         // **Window 8 - current **
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(8));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(8));
 
             ImGui::SetNextWindowPos(initial_positions[8], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[8], ImGuiCond_Always);
@@ -886,7 +886,7 @@ void screen(){
 
         // // **Window 9 - **
         // {
-        //     std::lock_guard<std::mutex> lock(manager.getMutex(9));
+        //     std::lock_guard<std::mutex> lock(*manager.getMutex(9));
 
         //     ImGui::SetNextWindowPos(initial_positions[9], ImGuiCond_Always);
         //     ImGui::SetNextWindowSize(window_sizes[9], ImGuiCond_Always);
@@ -906,7 +906,7 @@ void screen(){
 
         // // **Window 10 - **
         // {
-        //     std::lock_guard<std::mutex> lock(manager.getMutex(10));
+        //     std::lock_guard<std::mutex> lock(*manager.getMutex(10));
 
         //     ImGui::SetNextWindowPos(initial_positions[10], ImGuiCond_Always);
         //     ImGui::SetNextWindowSize(window_sizes[10], ImGuiCond_Always);
@@ -926,8 +926,8 @@ void screen(){
         
         // **Graph 0 - Histogram **
         {
-            std::lock_guard<std::mutex> lock(manager.getGraphMutex(0));
-            std::lock_guard<std::mutex> lock1(manager.getGraphMutex(1));
+            std::lock_guard<std::mutex> lock(*manager.getGraphMutex(0));
+            std::lock_guard<std::mutex> lock1(*manager.getGraphMutex(1));
             GraphData& data = manager.getGraphData(0);
             GraphData& data1 = manager.getGraphData(1);
 
@@ -1013,7 +1013,7 @@ void screen(){
 
         // **Window 12 - Photo **
         // {
-        //     std::lock_guard<std::mutex> lock(manager.getMutex(12));
+        //     std::lock_guard<std::mutex> lock(*manager.getMutex(12));
 
         //     ImGui::SetNextWindowPos(initial_positions[12], ImGuiCond_Always);
         //     ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
@@ -1036,7 +1036,7 @@ void screen(){
 
         // **Window 13  **
         {
-            std::lock_guard<std::mutex> lock(manager.getMutex(13));
+            std::lock_guard<std::mutex> lock(*manager.getMutex(13));
 
             ImGui::SetNextWindowPos(initial_positions[13], ImGuiCond_Always);
             ImGui::SetNextWindowSize(window_sizes[13], ImGuiCond_Always);
@@ -1070,7 +1070,7 @@ void end_screen(){
     WindowManager& manager = WindowManager::getInstance();
 
     for (int i = 0; i < manager.getWindowCount(); ++i) {
-        std::lock_guard<std::mutex> lock(manager.getMutex(i));
+        std::lock_guard<std::mutex> lock(*manager.getMutex(i));
     }
 
     for (int i = 0; i < manager.getGraphCount(); ++i) {

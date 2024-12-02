@@ -98,8 +98,8 @@ public:
     int check_if_last(int index);
 
 
-    std::mutex& getMutex(int index);
-    std::mutex& getGraphMutex(int index);
+    std::mutex* getMutex(int index);
+    std::mutex* getGraphMutex(int index);
 
     // WindowData& getWindowData(int index);
     size_t getWindowCount() const;

@@ -234,21 +234,20 @@ int WindowManager::check_if_last(int index){
     return 0;
 }
 
-std::mutex& WindowManager::getMutex(int index) {
+std::mutex* WindowManager::getMutex(int index) {
     if (index >= 0 && index < windows.size()) {
-        return windows[index].mutex;
+        return &windows[index].mutex;
     }
-    static std::mutex dummy_mutex;
-    return dummy_mutex;
+    return nullptr;
 }
 
-std::mutex& WindowManager::getGraphMutex(int index) {
+std::mutex* WindowManager::getGraphMutex(int index) {
     if (index >= 0 && index < graphs.size()) {
-        return graphs[index].mutex;
+        return &graphs[index].mutex;
     }
-    static std::mutex dummy_mutex;
-    return dummy_mutex;
+    return nullptr;
 }
+
 
 size_t WindowManager::getWindowCount() const {
     return windows.size();
