@@ -1,11 +1,13 @@
 import usb.core
 import usb.util
+import usb.backend.libusb1
 import subprocess
 import sys
 
 def find_uvc_video_stream_interfaces():
     # 모든 USB 디바이스 열거
-    devices = usb.core.find(find_all=True)
+    backend = usb.backend.libusb1.get_backend(find_library=lambda x: r"./libusb-1.0.dll")
+    devices = usb.core.find(find_all=True, backend=backend)
     uvc_devices = []  # 디바이스 주소와 엔드포인트 정보를 저장할 리스트
 
     for device in devices:
@@ -74,7 +76,7 @@ def create_and_run_tshark_command(uvc_devices):
         f' -e usb.iso.data -e usbvideo.format.index -e usbvideo.frame.index '
         f' -e usbvideo.frame.width -e usbvideo.frame.height '
         f' -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval '
-        f' -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors '
+        f' -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors -e usbvideo.probe.clockFrequency '
         f' -E separator=; '
         f' -Y "{filter_expression}" -Q'
     )
