@@ -85,7 +85,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef TUI_SET
   window_number = 1;
 #elif GUI_SET
-  WindowManager& manager = WindowManager::getInstance();
+  WindowManager& uvcfd_win = WindowManager::getInstance();
+  GraphManager& uvcfd_graph = GraphManager::getInstance();
 
   temp_window_number = gui_window_number;
   gui_window_number = 5;
@@ -190,8 +191,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
   //Calculate PTS time gap and check for overflow
   if (temp_r_graph_time == std::chrono::time_point<std::chrono::steady_clock>() && temp_pts_time == std::chrono::time_point<std::chrono::steady_clock>()) {
-    manager.graph_reset(0);
-    manager.graph_reset(1);
+    // manager.graph_reset(0);
+    // manager.graph_reset(1);
   } 
 
   if (payload_header.PTS && uvc_payload.size() > payload_header.HLE) {
@@ -235,16 +236,24 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         if (last_frame->frame_error) {
 #ifdef GUI_SET
           addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
-          manager.addErrorGraphData(0);
-          manager.addErrorGraphData(1);
+
+          uvcfd_graph.getWin_URBGraph().add_error_log_graph();
+          uvcfd_graph.getWin_PTSGraph().add_error_log_graph();
+
+          // manager.addErrorGraphData(0);
+          // manager.addErrorGraphData(1);
           frame_error_flag = 1;
           print_received_times(*last_frame);
           print_frame_data(*last_frame);
           print_summary(*last_frame);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
-          manager.pushbackButtonLogText(6);
-          manager.pushbackButtonLogText(7);
-          manager.pushbackButtonLogText(8);
+          uvcfd_win.getWin_PreviousValid().pushback_e3plog();
+          uvcfd_win.getWin_LostInbetweenError().pushback_e3plog();
+          uvcfd_win.getWin_CurrentError().pushback_e3plog();
+
+          // manager.pushbackButtonLogText(6);
+          // manager.pushbackButtonLogText(7);
+          // manager.pushbackButtonLogText(8);
           frame_error_flag = 0;
 #elif CLI_SET 
           print_frame_data(*last_frame);
@@ -289,10 +298,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           }
 
 #ifdef GUI_SET
-        manager.setmoveGraphCustomText(0, "[ " + std::to_string(current_frame_number) + " ]"
+        uvcfd_graph.getWin_URBGraph().set_move_graph_custom_text("[ " + std::to_string(frame->frame_number) + " ]"
             + std::to_string(ControlConfig::get_width()) + "x" 
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
+        // manager.setmoveGraphCustomText(0, "[ " + std::to_string(current_frame_number) + " ]"
+        //     + std::to_string(ControlConfig::get_width()) + "x" 
+        //     + std::to_string(ControlConfig::get_height()) + " " 
+        //     + ControlConfig::get_frame_format());
         if (uvc_payload.size() > payload_header.HLE){
 
           temp_r_graph_time = plot_gui_graph(0, graph_time_gap, received_time, uvc_payload.size()-payload_header.HLE, temp_r_graph_time);
@@ -349,10 +362,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       new_frame->set_frame_format(ControlConfig::get_width(), ControlConfig::get_height(), ControlConfig::get_frame_format());
 
 #ifdef GUI_SET
-        manager.setmoveGraphCustomText(0, "[ " + std::to_string(current_frame_number) + " ]"
+        uvcfd_graph.getWin_URBGraph().set_move_graph_custom_text("[ " + std::to_string(new_frame->frame_number) + " ]"
             + std::to_string(ControlConfig::get_width()) + "x" 
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
+        // manager.setmoveGraphCustomText(0, "[ " + std::to_string(current_frame_number) + " ]"
+        //     + std::to_string(ControlConfig::get_width()) + "x" 
+        //     + std::to_string(ControlConfig::get_height()) + " " 
+        //     + ControlConfig::get_frame_format());
 
         if (uvc_payload.size() > payload_header.HLE){
 
@@ -456,16 +473,23 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
         addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
-        manager.addErrorGraphData(0);
-        manager.addErrorGraphData(1);
+
+          uvcfd_graph.getWin_URBGraph().add_error_log_graph();
+          uvcfd_graph.getWin_PTSGraph().add_error_log_graph();
+        // manager.addErrorGraphData(0);
+        // manager.addErrorGraphData(1);
         frame_error_flag = 1;
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
-        manager.pushbackButtonLogText(6);
-        manager.pushbackButtonLogText(7);
-        manager.pushbackButtonLogText(8);
+        // manager.pushbackButtonLogText(6);
+        // manager.pushbackButtonLogText(7);
+        // manager.pushbackButtonLogText(8);
+          uvcfd_win.getWin_PreviousValid().pushback_e3plog();
+          uvcfd_win.getWin_LostInbetweenError().pushback_e3plog();
+          uvcfd_win.getWin_CurrentError().pushback_e3plog();
+
         frame_error_flag = 0;
 
         // develope frame image here
@@ -486,8 +510,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
         addSuspiciousFrameLog("Suspicious " + std::to_string(last_frame->frame_number));
-        manager.addSuspiciousGraphData(0);
-        manager.addSuspiciousGraphData(1);
+          uvcfd_graph.getWin_URBGraph().add_suspicious_log_graph();
+          uvcfd_graph.getWin_PTSGraph().add_suspicious_log_graph();
+
+        // manager.addSuspiciousGraphData(0);
+        // manager.addSuspiciousGraphData(1);
         frame_suspicious_flag = 1;
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
@@ -586,6 +613,7 @@ std::chrono::time_point<std::chrono::steady_clock> UVCPHeaderChecker::plot_gui_g
     } else if (time_gap_insec >= GRAPH_PERIOD_SECOND) {
       if (time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
         for (int i = 0; i < (time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
+
             manager.graph_reset(window_number);
             temp_time += std::chrono::seconds(GRAPH_PERIOD_SECOND);
         }
@@ -660,10 +688,11 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
             logStream << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
             logStream << "time_frequency: " << ControlConfig::get_dwTimeFrequency() << "\n";
             logStream << "\n";
-{
-            WindowManager& manager = WindowManager::getInstance();
-            manager.addCustomText(3, logStream.str());
-}
+
+            WindowManager& uvcfd_win = WindowManager::getInstance();
+            // manager.addCustomText(3, logStream.str());
+            uvcfd_win.getWin_ControlConfig().add_customtext(logStream.str());
+
 #else
               std::cout << "width: " << ControlConfig::get_width() << "   ";
               std::cout << "height: " << ControlConfig::get_height() << "   ";
