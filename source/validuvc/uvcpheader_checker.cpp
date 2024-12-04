@@ -237,8 +237,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
           addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
 
-          uvcfd_graph.getWin_URBGraph().add_error_log_graph();
-          uvcfd_graph.getWin_PTSGraph().add_error_log_graph();
+          uvcfd_graph.getGraph_URBGraph().add_error_log_graph();
+          uvcfd_graph.getGraph_PTSGraph().add_error_log_graph();
 
           // manager.addErrorGraphData(0);
           // manager.addErrorGraphData(1);
@@ -298,7 +298,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           }
 
 #ifdef GUI_SET
-        uvcfd_graph.getWin_URBGraph().set_move_graph_custom_text("[ " + std::to_string(frame->frame_number) + " ]"
+        uvcfd_graph.getGraph_URBGraph().set_move_graph_custom_text("[ " + std::to_string(frame->frame_number) + " ]"
             + std::to_string(ControlConfig::get_width()) + "x" 
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
@@ -362,7 +362,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       new_frame->set_frame_format(ControlConfig::get_width(), ControlConfig::get_height(), ControlConfig::get_frame_format());
 
 #ifdef GUI_SET
-        uvcfd_graph.getWin_URBGraph().set_move_graph_custom_text("[ " + std::to_string(new_frame->frame_number) + " ]"
+        uvcfd_graph.getGraph_URBGraph().set_move_graph_custom_text("[ " + std::to_string(new_frame->frame_number) + " ]"
             + std::to_string(ControlConfig::get_width()) + "x" 
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
@@ -474,8 +474,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
 
-          uvcfd_graph.getWin_URBGraph().add_error_log_graph();
-          uvcfd_graph.getWin_PTSGraph().add_error_log_graph();
+          uvcfd_graph.getGraph_URBGraph().add_error_log_graph();
+          uvcfd_graph.getGraph_PTSGraph().add_error_log_graph();
         // manager.addErrorGraphData(0);
         // manager.addErrorGraphData(1);
         frame_error_flag = 1;
@@ -510,8 +510,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
         addSuspiciousFrameLog("Suspicious " + std::to_string(last_frame->frame_number));
-          uvcfd_graph.getWin_URBGraph().add_suspicious_log_graph();
-          uvcfd_graph.getWin_PTSGraph().add_suspicious_log_graph();
+          uvcfd_graph.getGraph_URBGraph().add_suspicious_log_graph();
+          uvcfd_graph.getGraph_PTSGraph().add_suspicious_log_graph();
 
         // manager.addSuspiciousGraphData(0);
         // manager.addSuspiciousGraphData(1);
@@ -873,50 +873,6 @@ FrameSuspicious UVCPHeaderChecker::frame_suspicious_check(const UVC_Payload_Head
   }
 
   return SUSPICIOUS_NO_SUSPICIOUS;
-}
-
-
-void UVCPHeaderChecker::save_frames_to_log(
-    std::unique_ptr<ValidFrame>& current_frame) {
-  std::ofstream log_file("../log/frames_log.txt", std::ios::app);
-
-  if (!log_file.is_open()) {
-    CtrlPrint::v_cerr_5 << "Error opening log file." << std::endl;
-    return;
-  }
-
-  std::stringstream frame_info;
-  frame_info << "Frame Number: " << current_frame->frame_number << "\n"
-             << "Toggle Bit (FID): " << static_cast<int>(current_frame->toggle_bit) << "\n"
-             << "Packet Number: " << current_frame->packet_number << "\n"
-             << "Frame PTS: " << current_frame->frame_pts << "\n"
-             << "Frame Error: " << static_cast<int>(current_frame->frame_error)
-             << "\n"
-             << "EOF Reached: " << static_cast<int>(current_frame->eof_reached)
-             << "\n"
-             << "Payloads:\n";
-
-  for (size_t i = 0; i < current_frame->payload_headers.size(); ++i) {
-    const UVC_Payload_Header& header = current_frame->payload_headers[i];
-    size_t payload_size = current_frame->payload_sizes[i];
-
-    // Get the time point from received_valid_times
-    auto time_point = current_frame->received_valid_times[i];
-    auto duration_since_epoch = time_point.time_since_epoch();
-    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
-                            duration_since_epoch)
-                            .count();
-
-    frame_info
-        << "  Payload " << i + 1 << ":\n"
-        << "    Payload Size: " << payload_size << " bytes\n"
-        << "    Received Time: " << milliseconds
-        << " ms since epoch\n";  // Logging the received time in milliseconds
-  }
-
-  log_file << frame_info.str() << "\n---\n";
-
-  log_file.close();
 }
 
 
@@ -1437,6 +1393,7 @@ std::string UVCPHeaderChecker::formatTime(std::chrono::milliseconds ms) {
     return oss.str();
 }
 
+// saving log, not used
 void UVCPHeaderChecker::save_payload_header_to_log(
     const UVC_Payload_Header& payload_header,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
@@ -1485,3 +1442,50 @@ void UVCPHeaderChecker::save_payload_header_to_log(
 
   log_file.close();
 }
+void UVCPHeaderChecker::save_frames_to_log(
+    std::unique_ptr<ValidFrame>& current_frame) {
+#ifdef __linux__
+  std::ofstream log_file("../log/frames_log.txt", std::ios::app);
+#elif _WIN32
+  std::ofstream log_file("..\\..\\log\\frames_log.txt", std::ios::app);
+#endif
+
+  if (!log_file.is_open()) {
+    CtrlPrint::v_cerr_5 << "Error opening log file." << std::endl;
+    return;
+  }
+
+  std::stringstream frame_info;
+  frame_info << "Frame Number: " << current_frame->frame_number << "\n"
+             << "Toggle Bit (FID): " << static_cast<int>(current_frame->toggle_bit) << "\n"
+             << "Packet Number: " << current_frame->packet_number << "\n"
+             << "Frame PTS: " << current_frame->frame_pts << "\n"
+             << "Frame Error: " << static_cast<int>(current_frame->frame_error)
+             << "\n"
+             << "EOF Reached: " << static_cast<int>(current_frame->eof_reached)
+             << "\n"
+             << "Payloads:\n";
+
+  for (size_t i = 0; i < current_frame->payload_headers.size(); ++i) {
+    const UVC_Payload_Header& header = current_frame->payload_headers[i];
+    size_t payload_size = current_frame->payload_sizes[i];
+
+    // Get the time point from received_valid_times
+    auto time_point = current_frame->received_valid_times[i];
+    auto duration_since_epoch = time_point.time_since_epoch();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            duration_since_epoch)
+                            .count();
+
+    frame_info
+        << "  Payload " << i + 1 << ":\n"
+        << "    Payload Size: " << payload_size << " bytes\n"
+        << "    Received Time: " << milliseconds
+        << " ms since epoch\n";  // Logging the received time in milliseconds
+  }
+
+  log_file << frame_info.str() << "\n---\n";
+
+  log_file.close();
+}
+

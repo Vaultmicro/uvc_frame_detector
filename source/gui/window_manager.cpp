@@ -22,9 +22,12 @@
 
 #include "gui/window_manager.hpp"
 
+
 // WindowData Implementation
 
-WindowData::WindowData() : counter(0), stop_flag(false) {}
+WindowData::WindowData(const ImVec2& initial_pos, const ImVec2& window_sz) : 
+            counter(0), stop_flag(false),
+            initial_position(initial_pos), window_size(window_sz) {}
 
 // Setters
 void WindowData::set_customtext(const std::string& text) {
@@ -69,6 +72,16 @@ void WindowData::pushback_e3plog() {
 }
 
 // Getters
+
+const ImVec2& WindowData::get_initial_position() const { 
+    return initial_position;
+}
+
+const ImVec2& WindowData::get_window_size() const { 
+    return window_size;
+}
+
+
 size_t WindowData::errorlogtext_size() {
     std::lock_guard<std::mutex> lock(mutex);
     return error_log_text.size();
@@ -134,35 +147,23 @@ WindowManager& WindowManager::getInstance() {
     return instance;
 }
 
-WindowManager::WindowManager()
-    : ValidFrame_initial_position(ImVec2(0, 690)),
-      ErrorFrame_initial_position(ImVec2(0, 330)),
-      ErrorFrameTime_initial_position(ImVec2(480, 330)),
-      Summary_initial_position(ImVec2(960, 330)),
-      PreviousValid_initial_position(ImVec2(1440, 330)),
-      LostInbetweenError_initial_position(ImVec2(1600, 690)),
-      CurrentError_initial_position(ImVec2(1760, 330)),
-      ControlConfig_initial_position(ImVec2(480, 690)),
-      Statistics_initial_position(ImVec2(800, 690)),
-      Debug_initial_position(ImVec2(1120, 690)),
-      LogButtons_initial_position(ImVec2(1440, 690)),
-      ValidFrame_window_size(ImVec2(480, 360)),
-      ErrorFrame_window_size(ImVec2(480, 360)),
-      ErrorFrameTime_window_size(ImVec2(480, 360)),
-      Summary_window_size(ImVec2(480, 360)),
-      PreviousValid_window_size(ImVec2(160, 360)),
-      LostInbetweenError_window_size(ImVec2(160, 360)),
-      CurrentError_window_size(ImVec2(160, 360)),
-      ControlConfig_window_size(ImVec2(320, 360)),
-      Statistics_window_size(ImVec2(320, 360)),
-      Debug_window_size(ImVec2(320, 360)),
-      LogButtons_window_size(ImVec2(480, 360))
+WindowManager::WindowManager(): 
+    ValidFrameData(ImVec2(0, 690), ImVec2(480, 360)),
+    ErrorFrameData(ImVec2(0, 330), ImVec2(480, 360)),
+    ErrorFrameTimeData(ImVec2(480, 330), ImVec2(480, 360)),
+    SummaryData(ImVec2(960, 330), ImVec2(480, 360)),
+    PreviousValidData(ImVec2(1440, 330), ImVec2(160, 360)),
+    LostInbetweenErrorData(ImVec2(1600, 330), ImVec2(160, 360)),
+    CurrentErrorData(ImVec2(1760, 330), ImVec2(160, 360)),
+    ControlConfigData(ImVec2(480, 690), ImVec2(320, 360)),
+    StatisticsData(ImVec2(800, 690), ImVec2(320, 360)),
+    DebugData(ImVec2(1120, 690), ImVec2(320, 360)),
+    LogButtonsData(ImVec2(1440, 690), ImVec2(480, 360)),
+    GraphWindowData(ImVec2(0, 0), ImVec2(1920, 330))
 {
-    // 추가 초기화가 필요하면 여기에 작성하세요.
 }
 
 WindowManager::~WindowManager() {
-    // 필요한 정리 작업을 여기에 작성하세요.
 }
 
 // Getter Implementations
@@ -177,16 +178,15 @@ WindowData& WindowManager::getWin_ControlConfig() { return ControlConfigData; }
 WindowData& WindowManager::getWin_Statistics() { return StatisticsData; }
 WindowData& WindowManager::getWin_Debug() { return DebugData; }
 WindowData& WindowManager::getWin_LogButtons() { return LogButtonsData; }
-WindowData& WindowManager::getDummyData() { return DummyData; }
+WindowData& WindowManager::getWin_GraphWindow() { return GraphWindowData; }
 
 // GraphData Implementation
 
-GraphData::GraphData()
-    : graph_x_index(0), custom_text(""), stop_flag(false),
-      max_graph_height(0), min_graph_height(2000000000),
-      all_graph_height(0), count_non_zero_graph(0),
-      initial_positions_for_both(ImVec2(0, 0)),
-      window_sizes_graph_for_both(ImVec2(1920, 330))
+GraphData::GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz) : 
+    graph_x_index(0), custom_text(""), stop_flag(false),
+    max_graph_height(0), min_graph_height(2000000000),
+    all_graph_height(0), count_non_zero_graph(0), max_graph_height_of_all_time(0),
+    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz)
 {
     graph_data.fill(0);
 }
@@ -260,6 +260,80 @@ bool GraphData::is_last_index() {
     return graph_x_index >= GRAPH_DATA_SIZE - 1;
 }
 
+void GraphData::update_max_graph_height_of_all_time() {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (max_graph_height > max_graph_height_of_all_time) {
+        max_graph_height_of_all_time = max_graph_height;
+    }
+}
+
+size_t GraphData::get_error_log_graph_data_size() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return error_log_graph_data.size();
+}
+
+size_t GraphData::get_suspicious_log_graph_data_size() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return suspicious_log_graph_data.size();
+}
+
+void GraphData::show_error_graph_data(int selected_error_frame) {
+    std::lock_guard<std::mutex> lock(mutex);
+    
+    const auto &selected_data = error_graph_height_history[selected_error_frame];
+    float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
+    custom_text = "[ " + std::to_string(selected_error_frame) + " ]" 
+        + " Max: " + std::to_string(selected_data[0]) 
+        + " Min: " + std::to_string(selected_data[1]) 
+        + " Mean: " + std::to_string(mean_value);
+    ImGui::Text("%s", custom_text.c_str());
+
+    ImGui::PlotHistogram(
+        graph_box_name.c_str(), 
+        reinterpret_cast<const float*>(error_log_graph_data[selected_error_frame].data()),
+        static_cast<int>(error_log_graph_data[selected_error_frame].size()),
+        0, nullptr,
+        0.0f, static_cast<float>(max_graph_height_of_all_time),  
+        graph_box_size
+    );
+}
+
+void GraphData::show_suspicious_graph_data(int selected_error_frame){
+    std::lock_guard<std::mutex> lock(mutex);
+    
+    const auto &selected_data = suspicious_graph_height_history[selected_error_frame];
+    float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
+    custom_text = "[ " + std::to_string(selected_error_frame) + " ]" 
+        + " Max: " + std::to_string(selected_data[0]) 
+        + " Min: " + std::to_string(selected_data[1]) 
+        + " Mean: " + std::to_string(mean_value);
+    ImGui::Text("%s", custom_text.c_str());
+
+    ImGui::PlotHistogram(
+        graph_box_name.c_str(), 
+        reinterpret_cast<const float*>(error_log_graph_data[selected_error_frame].data()),
+        static_cast<int>(error_log_graph_data[selected_error_frame].size()),
+        0, nullptr,
+        0.0f, static_cast<float>(max_graph_height_of_all_time),  
+        graph_box_size
+    );
+}
+
+void GraphData::show_current_graph_data(){
+    std::lock_guard<std::mutex> lock(mutex);
+    float mean_value = (count_non_zero_graph > 0) ? static_cast<float>(all_graph_height) / count_non_zero_graph : 0.0f;
+    ImGui::Text("%s Max: %i Min: %i Mean: %f", custom_text.c_str(), max_graph_height, min_graph_height, mean_value);
+    
+    ImGui::PlotHistogram(
+        graph_box_name.c_str(),
+        reinterpret_cast<const float*>(graph_data.data()),
+        static_cast<int>(graph_data.size()),
+        0, nullptr,
+        0.0f, static_cast<float>(max_graph_height_of_all_time),  
+        graph_box_size
+    );    
+}
+
 // Private methods
 void GraphData::_update_graph_stats(int value) {
     if (value != 0) {
@@ -286,257 +360,14 @@ GraphManager& GraphManager::getInstance() {
     return instance;
 }
 
-GraphManager::GraphManager() {
-    // 필요한 초기화를 여기에 작성하세요.
+GraphManager::GraphManager():
+    URBTimeGraphData("Received Time Data Graph",ImVec2(1920, 120)),
+    PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 120))
+{
 }
 
 GraphManager::~GraphManager() {
-    // 필요한 정리 작업을 여기에 작성하세요.
 }
 
-GraphData& GraphManager::getWin_URBGraph() { return URBTimeGraphData; }
-GraphData& GraphManager::getWin_PTSGraph() { return PTSTimeGraphData; }
-
-// WindowManager& WindowManager::getInstance() {
-//     static WindowManager instance;
-//     return instance;
-// }
-
-// WindowManager::WindowManager() {
-//     for (auto& window : windows) {
-//         window.counter = 1;
-//         window.stop_flag = false;
-//         window.custom_text = "";
-//     }
-//     for (auto& graph : graphs) {
-//         graph.stop_flag = false;
-//     }
-// }
-
-// void WindowManager::setCustomText(int index, const std::string& text) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].custom_text = text;
-//     }
-// }
-
-// void WindowManager::setmoveCustomText(int index, const std::string& text) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].custom_text = std::move(text);
-//     }
-// }
-
-// void WindowManager::addCustomText(int index, const std::string& text) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].custom_text += text;
-//     }
-// }
-
-// void WindowManager::addmoveCustomText(int index, const std::string& text) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].custom_text += std::move(text);
-//     }
-// }
-
-// void WindowManager::setButtonLogText(int index, const std::vector<std::vector<std::string>>& vector_text) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].button_log_text = vector_text;
-//     }
-// }
-
-// void WindowManager::pushbackErrorLogText(int index, const std::string& text) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].error_log_text.push_back(text);
-//     }
-// }
-
-// void WindowManager::pushbackSuspiciousLogText(int index, const std::string& text) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].suspicious_log_text.push_back(text);
-//     }
-// }
-
-// void WindowManager::pushbackButtonLogText(int index) {
-//     if (index >= 0 && index < windows.size()) {
-//         std::lock_guard<std::mutex> lock(windows[index].mutex);
-//         windows[index].button_log_text.push_back(windows[index].error_log_text);
-//         windows[index].error_log_text.clear();
-//     }
-// }
-
-
-// const std::string& WindowManager::getCustomText(int index) const {
-//     return windows[index].custom_text;
-// }
-
-// const std::vector<std::string>& WindowManager::getErrorLogText(int index) const {
-//     return windows[index].error_log_text;
-// }
-
-// const std::vector<std::string>& WindowManager::getSuspiciousLogText(int index) const {
-//     return windows[index].suspicious_log_text;
-// }
-
-// const std::vector<std::vector<std::string>>& WindowManager::getButtonLogText(int index) const {
-//     return windows[index].button_log_text;
-// }
-
-
-// void WindowManager::setGraphCustomText(int index, const std::string& text) {
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-//         graphs[index].custom_text = text;
-//     }
-// }
-
-// void WindowManager::setmoveGraphCustomText(int index, const std::string& text) {
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-//         graphs[index].custom_text = std::move(text);
-//     }
-// }
-
-// const int WindowManager::getGraphCurrentXIndex(int index) {
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-//         return graphs[index].graph_x_index;
-//     }
-//     return 0;
-// }
-
-// void WindowManager::setGraphData(int index, int x, int y){
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-        
-//         graphs[index].graph_data[x] = y;
-//         graphs[index].graph_x_index++;
-//         if (graphs[index].graph_x_index >= graphs[index].graph_data.size()) {
-//             // Reset the graph data
-//             graphs[index].graph_data.fill(0.0f);
-//             graphs[index].graph_x_index = 0;
-//             graphs[index].max_graph_height = 0;
-//             graphs[index].min_graph_height = 2000000000;
-//             graphs[index].all_graph_height = 0;
-//             graphs[index].count_non_zero_graph = 0;
-//         }
-//         if (y != 0.0f) {
-//             if (y > graphs[index].max_graph_height) {
-//                 graphs[index].max_graph_height = y;
-//             }
-//             if (y < graphs[index].min_graph_height) {
-//                 graphs[index].min_graph_height = y;
-//             }
-//             graphs[index].all_graph_height += y;
-//             graphs[index].count_non_zero_graph++;
-//         }
-//     }
-// }
-
-// void WindowManager::addGraphData(int index, float new_value) {
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-        
-//         graphs[index].graph_data[graphs[index].graph_x_index] = new_value;
-//         graphs[index].graph_x_index++;
-//         if (graphs[index].graph_x_index >= graphs[index].graph_data.size()) {
-//             // Reset the graph data
-//             graphs[index].graph_data.fill(0.0f);
-//             graphs[index].graph_x_index = 0;
-//             graphs[index].max_graph_height = 0;
-//             graphs[index].min_graph_height = 2000000000;
-//             graphs[index].all_graph_height = 0;
-//             graphs[index].count_non_zero_graph = 0;
-//         }
-//         if (new_value != 0.0f) {
-//             if (new_value > graphs[index].max_graph_height) {
-//                 graphs[index].max_graph_height = new_value;
-//             }
-//             if (new_value < graphs[index].min_graph_height) {
-//                 graphs[index].min_graph_height = new_value;
-//             }
-//             graphs[index].all_graph_height += new_value;
-//             graphs[index].count_non_zero_graph++;
-//         }
-//     }
-// }
-
-// void WindowManager::addErrorGraphData(int index) {
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-        
-//         graphs[index].error_log_graph_data.push_back(graphs[index].graph_data);
-//         graphs[index].error_graph_height_history.push_back(std::array<int,4>{graphs[index].max_graph_height, graphs[index].min_graph_height, graphs[index].all_graph_height, graphs[index].count_non_zero_graph});
-//     }
-// }
-
-// void WindowManager::addSuspiciousGraphData(int index) {
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-        
-//         graphs[index].suspicious_log_graph_data.push_back(graphs[index].graph_data);
-//         graphs[index].suspicious_graph_height_history.push_back(std::array<int,4>{graphs[index].max_graph_height, graphs[index].min_graph_height, graphs[index].all_graph_height, graphs[index].count_non_zero_graph});
-//     }
-// }
-
-// void WindowManager::graph_reset(int index) {
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-//         // Reset the graph data
-//         graphs[index].graph_data.fill(0.0f);
-//         graphs[index].graph_x_index = 0;
-//         graphs[index].max_graph_height = 0;
-//         graphs[index].min_graph_height = 2000000000;
-//         graphs[index].all_graph_height = 0;
-//         graphs[index].count_non_zero_graph = 0;
-//     }
-// }
-
-// int WindowManager::check_if_last(int index){
-//     if (index >= 0 && index < graphs.size()) {
-//         std::lock_guard<std::mutex> lock(graphs[index].mutex);
-//         if (graphs[index].graph_x_index >= graphs[index].graph_data.size() - 1) {
-//             return 1;
-//         } else {
-//             return 0;
-//         }
-//     }
-//     return 0;
-// }
-
-// std::mutex& WindowManager::getMutex(int index) {
-//     if (index >= 0 && index < windows.size()) {
-//         return windows[index].mutex;
-//     }
-//     static std::mutex dummy_mutex;
-//     return dummy_mutex;
-// }
-
-// std::mutex& WindowManager::getGraphMutex(int index) {
-//     if (index >= 0 && index < graphs.size()) {
-//         return graphs[index].mutex;
-//     }
-//     static std::mutex dummy_mutex;
-//     return dummy_mutex;
-// }
-
-// size_t WindowManager::getWindowCount() const {
-//     return windows.size();
-// }
-
-// GraphData& WindowManager::getGraphData(int index) {
-//     if (index >= 0 && index < graphs.size()) {
-//         return graphs[index];
-//     }
-//     static GraphData dummy_graph;
-//     return dummy_graph;
-// }
-
-// size_t WindowManager::getGraphCount() const {
-//     return graphs.size();
-// }
+GraphData& GraphManager::getGraph_URBGraph() { return URBTimeGraphData; }
+GraphData& GraphManager::getGraph_PTSGraph() { return PTSTimeGraphData; }
