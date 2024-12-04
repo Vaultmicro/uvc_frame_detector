@@ -63,19 +63,16 @@ void ControlConfig::set_frame_format(const std::string& format) {
   }
 }
 
-uint32_t ControlConfig::set_dwMaxVideoFrameSize(uint32_t max_video_frame_size) {
+void ControlConfig::set_dwMaxVideoFrameSize(uint32_t max_video_frame_size) {
   dwMaxVideoFrameSize = max_video_frame_size;
-  return 0;
 }
 
-uint32_t ControlConfig::set_dwMaxPayloadTransferSize(uint32_t max_payload_transfer_size) {
+void ControlConfig::set_dwMaxPayloadTransferSize(uint32_t max_payload_transfer_size) {
   dwMaxPayloadTransferSize = max_payload_transfer_size;
-  return 0;
 }
 
-uint32_t ControlConfig::set_dwTimeFrequency(uint32_t time_frequency) {
+void ControlConfig::set_dwTimeFrequency(uint32_t time_frequency) {
   dwTimeFrequency = time_frequency;
-  return 0;
 }
 
 int ControlConfig::get_width() { return width; }

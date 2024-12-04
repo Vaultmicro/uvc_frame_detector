@@ -188,13 +188,13 @@ GraphData::GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz)
     all_graph_height(0), count_non_zero_graph(0), max_graph_height_of_all_time(0),
     graph_box_name(graph_box_nm), graph_box_size(graph_box_sz)
 {
-    graph_data.fill(0);
+    graph_data.fill(0.0f);
 }
 
 void GraphData::update_graph_data(int index, float value) {
     if (index < 0 || index >= GRAPH_DATA_SIZE) return;
     std::lock_guard<std::mutex> lock(mutex);
-    graph_data[index] = static_cast<int>(value);
+    graph_data[index] = value;
 }
 
 void GraphData::set_graph_custom_text(const std::string& text) {
@@ -222,7 +222,7 @@ void GraphData::set_graph_data(int x, int y) {
 void GraphData::add_graph_data(int new_value) {
     std::lock_guard<std::mutex> lock(mutex);
     if (graph_x_index >= 0 && graph_x_index < GRAPH_DATA_SIZE) {
-        graph_data[graph_x_index] = new_value;
+        graph_data[graph_x_index] = static_cast<float>(new_value);
         graph_x_index++;
     }
     if (graph_x_index >= GRAPH_DATA_SIZE) {
@@ -277,20 +277,32 @@ size_t GraphData::get_suspicious_log_graph_data_size() {
     return suspicious_log_graph_data.size();
 }
 
-void GraphData::show_error_graph_data(int selected_error_frame) {
+
+
+void GraphData::show_log_info(int selected_error_frame) {
     std::lock_guard<std::mutex> lock(mutex);
-    
     const auto &selected_data = error_graph_height_history[selected_error_frame];
     float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
+    
     custom_text = "[ " + std::to_string(selected_error_frame) + " ]" 
         + " Max: " + std::to_string(selected_data[0]) 
         + " Min: " + std::to_string(selected_data[1]) 
         + " Mean: " + std::to_string(mean_value);
     ImGui::Text("%s", custom_text.c_str());
+}
+
+void GraphData::show_stream_info() {
+    std::lock_guard<std::mutex> lock(mutex);
+    float mean_value = (count_non_zero_graph > 0) ? static_cast<float>(all_graph_height) / count_non_zero_graph : 0.0f;
+    ImGui::Text("%s Max: %i Min: %i Mean: %f", custom_text.c_str(), max_graph_height, min_graph_height, mean_value);
+}
+
+void GraphData::show_error_graph_data(int selected_error_frame) {
+    std::lock_guard<std::mutex> lock(mutex);
 
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
-        reinterpret_cast<const float*>(error_log_graph_data[selected_error_frame].data()),
+        error_log_graph_data[selected_error_frame].data(),
         static_cast<int>(error_log_graph_data[selected_error_frame].size()),
         0, nullptr,
         0.0f, static_cast<float>(max_graph_height_of_all_time),  
@@ -300,18 +312,10 @@ void GraphData::show_error_graph_data(int selected_error_frame) {
 
 void GraphData::show_suspicious_graph_data(int selected_error_frame){
     std::lock_guard<std::mutex> lock(mutex);
-    
-    const auto &selected_data = suspicious_graph_height_history[selected_error_frame];
-    float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
-    custom_text = "[ " + std::to_string(selected_error_frame) + " ]" 
-        + " Max: " + std::to_string(selected_data[0]) 
-        + " Min: " + std::to_string(selected_data[1]) 
-        + " Mean: " + std::to_string(mean_value);
-    ImGui::Text("%s", custom_text.c_str());
 
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
-        reinterpret_cast<const float*>(error_log_graph_data[selected_error_frame].data()),
+        error_log_graph_data[selected_error_frame].data(),
         static_cast<int>(error_log_graph_data[selected_error_frame].size()),
         0, nullptr,
         0.0f, static_cast<float>(max_graph_height_of_all_time),  
@@ -321,12 +325,10 @@ void GraphData::show_suspicious_graph_data(int selected_error_frame){
 
 void GraphData::show_current_graph_data(){
     std::lock_guard<std::mutex> lock(mutex);
-    float mean_value = (count_non_zero_graph > 0) ? static_cast<float>(all_graph_height) / count_non_zero_graph : 0.0f;
-    ImGui::Text("%s Max: %i Min: %i Mean: %f", custom_text.c_str(), max_graph_height, min_graph_height, mean_value);
-    
+
     ImGui::PlotHistogram(
         graph_box_name.c_str(),
-        reinterpret_cast<const float*>(graph_data.data()),
+        graph_data.data(),
         static_cast<int>(graph_data.size()),
         0, nullptr,
         0.0f, static_cast<float>(max_graph_height_of_all_time),  
@@ -345,7 +347,7 @@ void GraphData::_update_graph_stats(int value) {
 }
 
 void GraphData::_reset_graph() {
-    graph_data.fill(0);
+    graph_data.fill(0.0f);
     graph_x_index = 0;
     max_graph_height = 0;
     min_graph_height = 2000000000;

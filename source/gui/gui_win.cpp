@@ -851,14 +851,18 @@ void screen(){
             ImGui::Begin("Histogram", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
             URB_graph_data.update_max_graph_height_of_all_time();
+            PTS_graph_data.update_max_graph_height_of_all_time();
 
             if (show_error_log && selected_error_frame < URB_graph_data.get_error_log_graph_data_size()) {
+                PTS_graph_data.show_log_info(selected_error_frame);
                 URB_graph_data.show_error_graph_data(selected_error_frame);
                 PTS_graph_data.show_error_graph_data(selected_error_frame);
             } else if(show_suspicious_log && selected_suspicious_frame < URB_graph_data.get_suspicious_log_graph_data_size()) {
+                PTS_graph_data.show_log_info(selected_error_frame);
                 URB_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
                 PTS_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
             } else {
+                PTS_graph_data.show_stream_info();
                 URB_graph_data.show_current_graph_data();
                 PTS_graph_data.show_current_graph_data();                
             }

@@ -141,9 +141,13 @@ public:
     int get_graph_current_x_index();
     bool is_last_index();
     void update_max_graph_height_of_all_time();
+    
+    void show_log_info(int selected_error_frame);
+    void show_stream_info();
     void show_error_graph_data(int selected_error_frame);
     void show_suspicious_graph_data(int selected_error_frame);
     void show_current_graph_data();
+
 
 
 private:
@@ -151,12 +155,12 @@ private:
     void _reset_graph();
 
     std::mutex mutex;
-    std::array<int, GRAPH_DATA_SIZE> graph_data;
+    std::array<float, GRAPH_DATA_SIZE> graph_data;
     int graph_x_index;
     std::string custom_text;
     bool stop_flag;
-    std::vector<std::array<int, GRAPH_DATA_SIZE>> error_log_graph_data;
-    std::vector<std::array<int, GRAPH_DATA_SIZE>> suspicious_log_graph_data;
+    std::vector<std::array<float, GRAPH_DATA_SIZE>> error_log_graph_data;
+    std::vector<std::array<float, GRAPH_DATA_SIZE>> suspicious_log_graph_data;
 
     int max_graph_height;
     int min_graph_height;
