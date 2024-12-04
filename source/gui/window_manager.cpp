@@ -22,6 +22,281 @@
 
 #include "gui/window_manager.hpp"
 
+// WindowData Implementation
+
+WindowData::WindowData() : counter(0), stop_flag(false) {}
+
+// Setters
+void WindowData::set_customtext(const std::string& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    custom_text = text;
+}
+
+void WindowData::set_move_customtext(std::string&& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    custom_text = std::move(text);
+}
+
+void WindowData::add_customtext(const std::string& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    custom_text += text;
+}
+
+void WindowData::add_move_customtext(std::string&& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    custom_text += std::move(text);
+}
+
+void WindowData::set_e3plog(const std::vector<std::vector<std::string>>& vector_text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    e3p_log_text = vector_text;
+}
+
+void WindowData::pushback_errorlog(const std::string& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    error_log_text.push_back(text);
+}
+
+void WindowData::pushback_suspiciouslog(const std::string& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    suspicious_log_text.push_back(text);
+}
+
+void WindowData::pushback_e3plog() {
+    std::lock_guard<std::mutex> lock(mutex);
+    e3p_log_text.push_back(error_log_text);
+    error_log_text.clear();
+}
+
+// Getters
+size_t WindowData::errorlogtext_size() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return error_log_text.size();
+}
+
+size_t WindowData::suspiciouslogtext_size() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return suspicious_log_text.size();
+}
+
+size_t WindowData::e3plogtext_size() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return e3p_log_text.size();
+}
+
+size_t WindowData::e3plogtext_frame_size(int selected_error_frame) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (selected_error_frame >= 0 && selected_error_frame < e3p_log_text.size()) {
+        return e3p_log_text[selected_error_frame].size();
+    }
+    return 0;
+}
+
+std::vector<std::vector<std::string>> WindowData::get_e3plogtext() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return e3p_log_text;
+}
+
+// Printing methods
+void WindowData::print_customtext() {
+    std::lock_guard<std::mutex> lock(mutex);
+    ImGui::Text("%s", custom_text.c_str());
+}
+
+void WindowData::print_errorlogtext(int index) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (index >= 0 && index < error_log_text.size()) {
+        ImGui::Text("%s", error_log_text[index].c_str());
+    }
+}
+
+void WindowData::print_suspiciouslogtext(int index) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (index >= 0 && index < suspicious_log_text.size()) {
+        ImGui::Text("%s", suspicious_log_text[index].c_str());
+    }
+}
+
+void WindowData::print_e3p_logtext(int error_frame_index, int error_payload_index) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (error_frame_index >= 0 && error_frame_index < e3p_log_text.size()) {
+        const auto& frame = e3p_log_text[error_frame_index];
+        if (error_payload_index >= 0 && error_payload_index < frame.size()) {
+            ImGui::Text("%s", frame[error_payload_index].c_str());
+        }
+    }
+}
+
+// WindowManager Implementation
+
+WindowManager& WindowManager::getInstance() {
+    static WindowManager instance;
+    return instance;
+}
+
+WindowManager::WindowManager()
+    : ValidFrame_initial_position(ImVec2(0, 690)),
+      ErrorFrame_initial_position(ImVec2(0, 330)),
+      ErrorFrameTime_initial_position(ImVec2(480, 330)),
+      Summary_initial_position(ImVec2(960, 330)),
+      PreviousValid_initial_position(ImVec2(1440, 330)),
+      LostInbetweenError_initial_position(ImVec2(1600, 690)),
+      CurrentError_initial_position(ImVec2(1760, 330)),
+      ControlConfig_initial_position(ImVec2(480, 690)),
+      Statistics_initial_position(ImVec2(800, 690)),
+      Debug_initial_position(ImVec2(1120, 690)),
+      LogButtons_initial_position(ImVec2(1440, 690)),
+      ValidFrame_window_size(ImVec2(480, 360)),
+      ErrorFrame_window_size(ImVec2(480, 360)),
+      ErrorFrameTime_window_size(ImVec2(480, 360)),
+      Summary_window_size(ImVec2(480, 360)),
+      PreviousValid_window_size(ImVec2(160, 360)),
+      LostInbetweenError_window_size(ImVec2(160, 360)),
+      CurrentError_window_size(ImVec2(160, 360)),
+      ControlConfig_window_size(ImVec2(320, 360)),
+      Statistics_window_size(ImVec2(320, 360)),
+      Debug_window_size(ImVec2(320, 360)),
+      LogButtons_window_size(ImVec2(480, 360))
+{
+    // 추가 초기화가 필요하면 여기에 작성하세요.
+}
+
+WindowManager::~WindowManager() {
+    // 필요한 정리 작업을 여기에 작성하세요.
+}
+
+// Getter Implementations
+WindowData& WindowManager::getWin_ValidFrame() { return ValidFrameData; }
+WindowData& WindowManager::getWin_ErrorFrame() { return ErrorFrameData; }
+WindowData& WindowManager::getWin_FrameTime() { return ErrorFrameTimeData; }
+WindowData& WindowManager::getWin_Summary() { return SummaryData; }
+WindowData& WindowManager::getWin_PreviousValid() { return PreviousValidData; }
+WindowData& WindowManager::getWin_LostInbetweenError() { return LostInbetweenErrorData; }
+WindowData& WindowManager::getWin_CurrentError() { return CurrentErrorData; }
+WindowData& WindowManager::getWin_ControlConfig() { return ControlConfigData; }
+WindowData& WindowManager::getWin_Statistics() { return StatisticsData; }
+WindowData& WindowManager::getWin_Debug() { return DebugData; }
+WindowData& WindowManager::getWin_LogButtons() { return LogButtonsData; }
+WindowData& WindowManager::getDummyData() { return DummyData; }
+
+// GraphData Implementation
+
+GraphData::GraphData()
+    : graph_x_index(0), custom_text(""), stop_flag(false),
+      max_graph_height(0), min_graph_height(2000000000),
+      all_graph_height(0), count_non_zero_graph(0),
+      initial_positions_for_both(ImVec2(0, 0)),
+      window_sizes_graph_for_both(ImVec2(1920, 330))
+{
+    graph_data.fill(0);
+}
+
+void GraphData::update_graph_data(int index, float value) {
+    if (index < 0 || index >= GRAPH_DATA_SIZE) return;
+    std::lock_guard<std::mutex> lock(mutex);
+    graph_data[index] = static_cast<int>(value);
+}
+
+void GraphData::set_graph_custom_text(const std::string& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    custom_text = text;
+}
+
+void GraphData::set_move_graph_custom_text(std::string&& text) {
+    std::lock_guard<std::mutex> lock(mutex);
+    custom_text = std::move(text);
+}
+
+void GraphData::set_graph_data(int x, int y) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (x >= 0 && x < GRAPH_DATA_SIZE) {
+        graph_data[x] = y;
+    }
+    graph_x_index = x + 1;
+    if (graph_x_index >= GRAPH_DATA_SIZE) {
+        _reset_graph();
+    }
+    _update_graph_stats(y);
+}
+
+void GraphData::add_graph_data(int new_value) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (graph_x_index >= 0 && graph_x_index < GRAPH_DATA_SIZE) {
+        graph_data[graph_x_index] = new_value;
+        graph_x_index++;
+    }
+    if (graph_x_index >= GRAPH_DATA_SIZE) {
+        _reset_graph();
+    }
+    _update_graph_stats(new_value);
+}
+
+void GraphData::add_error_log_graph() {
+    std::lock_guard<std::mutex> lock(mutex);
+    error_log_graph_data.push_back(graph_data);
+    error_graph_height_history.push_back(
+        {max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
+}
+
+void GraphData::add_suspicious_log_graph() {
+    std::lock_guard<std::mutex> lock(mutex);
+    suspicious_log_graph_data.push_back(graph_data);
+    suspicious_graph_height_history.push_back(
+        {max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
+}
+
+void GraphData::reset_graph() {
+    std::lock_guard<std::mutex> lock(mutex);
+    _reset_graph();
+}
+
+int GraphData::get_graph_current_x_index() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return graph_x_index;
+}
+
+bool GraphData::is_last_index() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return graph_x_index >= GRAPH_DATA_SIZE - 1;
+}
+
+// Private methods
+void GraphData::_update_graph_stats(int value) {
+    if (value != 0) {
+        if (value > max_graph_height) max_graph_height = value;
+        if (value < min_graph_height) min_graph_height = value;
+        all_graph_height += value;
+        count_non_zero_graph++;
+    }
+}
+
+void GraphData::_reset_graph() {
+    graph_data.fill(0);
+    graph_x_index = 0;
+    max_graph_height = 0;
+    min_graph_height = 2000000000;
+    all_graph_height = 0;
+    count_non_zero_graph = 0;
+}
+
+// GraphManager Implementation
+
+GraphManager& GraphManager::getInstance() {
+    static GraphManager instance;
+    return instance;
+}
+
+GraphManager::GraphManager() {
+    // 필요한 초기화를 여기에 작성하세요.
+}
+
+GraphManager::~GraphManager() {
+    // 필요한 정리 작업을 여기에 작성하세요.
+}
+
+GraphData& GraphManager::getWin_URBGraph() { return URBTimeGraphData; }
+GraphData& GraphManager::getWin_PTSGraph() { return PTSTimeGraphData; }
+
 // WindowManager& WindowManager::getInstance() {
 //     static WindowManager instance;
 //     return instance;
