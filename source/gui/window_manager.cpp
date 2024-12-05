@@ -273,19 +273,17 @@ void GraphData::calculate_time_gap() {
 
 void GraphData::calculate_pts_overflow(int y) {
     std::lock_guard<std::mutex> lock(mutex);
-    if (y > 0){
-        const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
-            std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
-        const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
-            0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000));
-        if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
-            reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
-        }
-        if (current_time < reference_timepoint) {
-            reference_timepoint += PTS_OVERFLOW_THRESHOLD_MS;
-        }
-        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+    const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
+        std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
+    const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
+        0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000));
+    if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
+        reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
     }
+    if (current_time < reference_timepoint) {
+        current_time += PTS_OVERFLOW_THRESHOLD_MS;
+    }
+    time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
 }
 
 void GraphData::plot_graph(int y){
