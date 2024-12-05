@@ -345,6 +345,10 @@ private:
 
     UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
 
+    uint64_t received_frames_count;
+    uint64_t received_throughput;
+    uint32_t previous_frame_pts;
+    std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
     std::chrono::milliseconds::rep received_time_clock; 
 
     std::string formatted_time;
@@ -439,7 +443,9 @@ private:
 
 public:
 
-    UVCPHeaderChecker() :  frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0) {
+    UVCPHeaderChecker() :  
+        frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0),
+        received_frames_count(0), received_throughput(0), previous_frame_pts(0), temp_received_time(std::chrono::time_point<std::chrono::steady_clock>()) {
         CtrlPrint::v_cout_1 << "\nUVCPHeaderChecker Constructor\n" << std::endl;
     }
 

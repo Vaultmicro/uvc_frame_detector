@@ -406,9 +406,9 @@ void GraphData::_update(int y){
         _reset_graph();
         reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
 
-        for (int i = 0; i < graph_x_index; ++i) {
-            _add_graph_data(0.0f);
-        }
+        // for (int i = 0; i < graph_x_index; ++i) {
+        //     _add_graph_data(0.0f);
+        // }
 
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
@@ -424,7 +424,6 @@ void GraphData::_update(int y){
     } else {
 
     }
-
 }
 
 // GraphManager Implementation

@@ -60,9 +60,7 @@ bool UVCPHeaderChecker::stc_decrease_filter_flag = 0;
 uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     const std::vector<u_char>& uvc_payload,
     std::chrono::time_point<std::chrono::steady_clock> received_time) {
-
-  static std::chrono::time_point<std::chrono::steady_clock> temp_received_time;
-
+      
 #ifdef GUI_SET
   WindowManager& uvcfd_win = WindowManager::getInstance();
   GraphManager& uvcfd_graph = GraphManager::getInstance(); 
@@ -75,9 +73,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   std::chrono::milliseconds::rep pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
   std::chrono::time_point<std::chrono::steady_clock> current_pts_chrono;
-
-  static uint64_t received_frames_count = 0;
-  static uint64_t received_throughput = 0;  
 
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
@@ -166,8 +161,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   FrameSuspicious suspicious_return = 
       frame_suspicious_check(payload_header, previous_payload_header, previous_previous_payload_header);
 
-  static uint32_t previous_frame_pts = 0;
-
 #ifdef GUI_SET
   if (payload_header.PTS && uvc_payload.size() > payload_header.HLE) {
     current_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
@@ -175,8 +168,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   }
 #endif
 
+
   // Update Frame
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF || payload_header_valid_return == ERR_FID_MISMATCH) {
+
 
     //Process the last frame when EOF is missing
     if (payload_header_valid_return == ERR_MISSING_EOF) {
@@ -231,6 +226,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
     }
 
+
     bool frame_found = false;
 
     if (payload_header_valid_return != ERR_FID_MISMATCH) {
@@ -262,7 +258,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           }
         }
 #endif
-
           frame->add_payload(payload_header, uvc_payload.size(), uvc_payload);
           frame->add_received_valid_time(received_time);
 
@@ -797,43 +792,6 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     return os;
 }
 
-void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono::steady_clock::time_point>& received_valid_times, 
-                                                    const std::vector<std::chrono::steady_clock::time_point>& received_error_times) {
-                                                      
-    if (received_valid_times.empty() && received_error_times.empty()) return;
-
-    const int zoom = 4;
-    const int cut = 20;
-    const int total_markers = ControlConfig::get_fps() * zoom;         
-    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::get_fps()) / (zoom *cut)));
-
-
-    auto base_time = received_valid_times[0];
-
-    std::string graph(total_markers, '_');
-
-    for (const auto& time_point : received_valid_times) {
-        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
-
-        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
-
-        if (position < total_markers) {
-            graph[position] = 'o';
-        }
-    }
-    for (const auto& time_point : received_error_times) {
-        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
-
-        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
-
-        if (position < total_markers) {
-            graph[position] = 'x';
-        }
-    }
-    
-    CtrlPrint::v_cout_2 << graph << formatted_time << std::endl;
-}
-
 void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
 #ifdef GUI_SET
     gui_window_number = 1;
@@ -1315,3 +1273,39 @@ void UVCPHeaderChecker::save_frames_to_log(
   log_file.close();
 }
 
+void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono::steady_clock::time_point>& received_valid_times, 
+                                                    const std::vector<std::chrono::steady_clock::time_point>& received_error_times) {
+// This was made for CLI                                                      
+    if (received_valid_times.empty() && received_error_times.empty()) return;
+
+    const int zoom = 4;
+    const int cut = 20;
+    const int total_markers = ControlConfig::get_fps() * zoom;         
+    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::get_fps()) / (zoom *cut)));
+
+
+    auto base_time = received_valid_times[0];
+
+    std::string graph(total_markers, '_');
+
+    for (const auto& time_point : received_valid_times) {
+        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
+
+        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
+
+        if (position < total_markers) {
+            graph[position] = 'o';
+        }
+    }
+    for (const auto& time_point : received_error_times) {
+        auto time_diff_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_point - base_time);
+
+        int position = static_cast<int>(time_diff_ns.count() / interval_ns.count());
+
+        if (position < total_markers) {
+            graph[position] = 'x';
+        }
+    }
+    
+    CtrlPrint::v_cout_2 << graph << formatted_time << std::endl;
+}
