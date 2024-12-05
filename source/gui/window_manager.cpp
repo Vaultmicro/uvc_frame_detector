@@ -209,30 +209,6 @@ void GraphData::set_move_graph_custom_text(std::string&& text) {
     custom_text = std::move(text);
 }
 
-void GraphData::set_graph_data(int x, int y) {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (x >= 0 && x < GRAPH_DATA_SIZE) {
-        graph_data[x] = y;
-    }
-    graph_x_index = x + 1;
-    if (graph_x_index >= GRAPH_DATA_SIZE) {
-        _reset_graph();
-    }
-    _update_graph_stats(y);
-}
-
-void GraphData::add_graph_data(int new_value) {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (graph_x_index >= 0 && graph_x_index < GRAPH_DATA_SIZE) {
-        graph_data[graph_x_index] = static_cast<float>(new_value);
-        graph_x_index++;
-    }
-    if (graph_x_index >= GRAPH_DATA_SIZE) {
-        _reset_graph();
-    }
-    _update_graph_stats(new_value);
-}
-
 void GraphData::add_error_log_graph() {
     std::lock_guard<std::mutex> lock(mutex);
     error_log_graph_data.push_back(graph_data);

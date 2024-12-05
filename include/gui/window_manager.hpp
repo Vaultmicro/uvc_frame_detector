@@ -122,18 +122,15 @@ private:
 
 class GraphData {
 public:
-    GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz, bool type_pts);
+    GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, bool type_pts);
 
     // Producer interface
-    void update_graph_data(int index, float value);
+    void update_graph_data(int index, float value);         //not used
     void set_graph_custom_text(const std::string& text);
     void set_move_graph_custom_text(std::string&& text);
-    void set_graph_data(int x, int y);
-    void add_graph_data(int new_value);
     void add_error_log_graph();
     void add_suspicious_log_graph();
     void reset_graph();
-    
         //calculation for the graph plotting
     void reset_reference_timepoint();
     void plot_graph(std::chrono::time_point<std::chrono::steady_clock> current_time, int y);
