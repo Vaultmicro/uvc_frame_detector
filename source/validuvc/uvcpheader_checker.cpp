@@ -191,11 +191,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         std::chrono::milliseconds(payload_header.PTS / (ControlConfig::get_dwTimeFrequency() / 1000)));
   }
   
-  uvcfd_graph.getGraph_URBGraph().init_current_time(received_time);
-  uvcfd_graph.getGraph_PTSGraph().init_current_time(current_pts_chrono);
-  uvcfd_graph.getGraph_URBGraph().calculate_time_gap();
-  uvcfd_graph.getGraph_PTSGraph().calculate_time_gap();
-  uvcfd_graph.getGraph_PTSGraph().calculate_pts_overflow(uvc_payload.size()-payload_header.HLE);
+  // uvcfd_graph.getGraph_URBGraph().init_current_time(received_time);
+  // uvcfd_graph.getGraph_PTSGraph().init_current_time(current_pts_chrono);
+  // uvcfd_graph.getGraph_URBGraph().calculate_time_gap();
+  // uvcfd_graph.getGraph_PTSGraph().calculate_time_gap();
+  // uvcfd_graph.getGraph_PTSGraph().calculate_pts_overflow();
 
 #endif
 
@@ -279,10 +279,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
         if (uvc_payload.size() > payload_header.HLE){
-          uvcfd_graph.getGraph_URBGraph().plot_graph(uvc_payload.size()-payload_header.HLE);
+          uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
 
           if (payload_header.PTS){
-            uvcfd_graph.getGraph_PTSGraph().plot_graph(uvc_payload.size()-payload_header.HLE);
+            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
           }
         }
 #endif
@@ -338,13 +338,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             + std::to_string(ControlConfig::get_height()) + " " 
             + ControlConfig::get_frame_format());
 
-        // if (uvc_payload.size() > payload_header.HLE){
-        //   uvcfd_graph.getGraph_URBGraph().plot_graph(uvc_payload.size()-payload_header.HLE);
+        if (uvc_payload.size() > payload_header.HLE){
+          uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
 
-        //   if (payload_header.PTS){
-        //     uvcfd_graph.getGraph_PTSGraph().plot_graph(uvc_payload.size()-payload_header.HLE);
-        //   }
-        // }
+          if (payload_header.PTS){
+            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
+          }
+        }
 #endif
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
       if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
@@ -529,12 +529,12 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
     }
 #ifdef GUI_SET
-        // if (uvc_payload.size() > payload_header.HLE){
-        //   uvcfd_graph.getGraph_URBGraph().plot_graph(0);
-        //   if (payload_header.PTS){
-        //     uvcfd_graph.getGraph_PTSGraph().plot_graph(0);
-        //   }
-        // }
+        if (uvc_payload.size() > payload_header.HLE){
+          uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,0);
+          if (payload_header.PTS){
+            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,0);
+          }
+        }
 #endif
 
     print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);

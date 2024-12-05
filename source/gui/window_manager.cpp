@@ -182,8 +182,8 @@ WindowData& WindowManager::getWin_GraphWindow() { return GraphWindowData; }
 
 // GraphData Implementation
 
-GraphData::GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz) : 
-    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz),
+GraphData::GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz, bool type_pts) : 
+    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz), type_pts(type_pts),
     graph_x_index(0), custom_text(""), stop_flag(false),
     max_graph_height(0), min_graph_height(2000000000),
     all_graph_height(0), count_non_zero_graph(0), max_graph_height_of_all_time(0),
@@ -258,72 +258,16 @@ void GraphData::reset_reference_timepoint() {
     reference_timepoint = std::chrono::time_point<std::chrono::steady_clock>();
 }
 
-void GraphData::init_current_time(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
+void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> current_time, int y) {
     std::lock_guard<std::mutex> lock(mutex);
-    current_time = recieved_time;
+    _init_current_time(current_time);
+    _calculate_time_gap();
+    if (type_pts) {
+        _calculate_pts_overflow();
+    }
+    _update(y);
 }
 
-void GraphData::calculate_time_gap() {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
-        _reset_graph();
-    }
-    time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
-}
-
-void GraphData::calculate_pts_overflow(int y) {
-    std::lock_guard<std::mutex> lock(mutex);
-    const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
-        std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
-    const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
-        0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000));
-    if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
-        reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
-    }
-    if (current_time < reference_timepoint) {
-        current_time += PTS_OVERFLOW_THRESHOLD_MS;
-    }
-    time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
-}
-
-void GraphData::plot_graph(int y){
-    std::lock_guard<std::mutex> lock(mutex);
-
-    int time_gap_insec = time_gap / 1000;
-    if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
-        reference_timepoint = current_time ;
-        time_gap = 0;
-    } else if (time_gap_insec >= GRAPH_PERIOD_SECOND) {
-        if (time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
-            for (int i = 0; i < (time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
-
-                _reset_graph();
-                reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
-            }
-        }
-        _reset_graph();
-        reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
-
-        for (int i = 0; i < graph_x_index; ++i) {
-            _add_graph_data(0.0f);
-        }
-
-        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
-    }
-    if (time_gap >= 0 && time_gap < GRAPH_PERIOD_SECOND * 1000) {
-        if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= graph_x_index) {
-            _add_graph_data(y);
-        } else {
-            for (int i = graph_x_index; i < time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND; ++i) {
-                _add_graph_data(0.0f);
-            }
-            _add_graph_data(y);
-        }
-    } else {
-
-    }
-
-}
 
 // Consumer interface
 
@@ -444,6 +388,69 @@ void GraphData::_add_graph_data(int new_value) {
     _update_graph_stats(new_value);
 }
 
+
+void GraphData::_init_current_time(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
+    current_time = recieved_time;
+}
+
+void GraphData::_calculate_time_gap() {
+    if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
+        _reset_graph();
+    }
+    time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+}
+
+void GraphData::_calculate_pts_overflow() {
+    const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
+        std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
+    const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
+        0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000));
+    if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
+        reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
+    }
+    if (current_time < reference_timepoint) {
+        current_time += PTS_OVERFLOW_THRESHOLD_MS;
+    }
+    time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+}
+
+void GraphData::_update(int y){
+    int time_gap_insec = time_gap / 1000;
+    if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
+        reference_timepoint = current_time ;
+        time_gap = 0;
+    } else if (time_gap_insec >= GRAPH_PERIOD_SECOND) {
+        if (time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
+            for (int i = 0; i < (time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
+
+                _reset_graph();
+                reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+            }
+        }
+        _reset_graph();
+        reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+
+        for (int i = 0; i < graph_x_index; ++i) {
+            _add_graph_data(0.0f);
+        }
+
+        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+    }
+    if (time_gap >= 0 && time_gap < GRAPH_PERIOD_SECOND * 1000) {
+        if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= graph_x_index) {
+            _add_graph_data(y);
+        } else {
+            for (int i = graph_x_index; i < time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND; ++i) {
+                _add_graph_data(0.0f);
+            }
+            _add_graph_data(y);
+        }
+    } else {
+
+    }
+
+}
+
 // GraphManager Implementation
 
 GraphManager& GraphManager::getInstance() {
@@ -452,8 +459,8 @@ GraphManager& GraphManager::getInstance() {
 }
 
 GraphManager::GraphManager():
-    URBTimeGraphData("Received Time Data Graph",ImVec2(1920, 120)),
-    PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 120))
+    URBTimeGraphData("Received Time Data Graph", ImVec2(1920, 120), false),
+    PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 120), true)
 {
 }
 

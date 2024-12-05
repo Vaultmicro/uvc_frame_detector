@@ -122,7 +122,7 @@ private:
 
 class GraphData {
 public:
-    GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz);
+    GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz, bool type_pts);
 
     // Producer interface
     void update_graph_data(int index, float value);
@@ -133,12 +133,10 @@ public:
     void add_error_log_graph();
     void add_suspicious_log_graph();
     void reset_graph();
-
+    
+        //calculation for the graph plotting
     void reset_reference_timepoint();
-    void init_current_time(std::chrono::time_point<std::chrono::steady_clock> current_time);
-    void calculate_time_gap();
-    void calculate_pts_overflow(int y);
-    void plot_graph(int y);
+    void plot_graph(std::chrono::time_point<std::chrono::steady_clock> current_time, int y);
 
 
     // Consumer interface
@@ -158,9 +156,7 @@ public:
     void debug_print();
 
 private:
-    void _update_graph_stats(int value);
-    void _reset_graph();
-    void _add_graph_data(int new_value);
+    std::mutex mutex;
 
     // Graph Info
     int max_graph_height;
@@ -170,13 +166,13 @@ private:
     std::vector<std::array<int, 4>> error_graph_height_history;
     std::vector<std::array<int, 4>> suspicious_graph_height_history;
     int max_graph_height_of_all_time;
+    bool type_pts;
 
     // Box Info
     std::string graph_box_name;
     ImVec2 graph_box_size;
 
     // Drawing Data
-    std::mutex mutex;
     std::array<float, GRAPH_DATA_SIZE> graph_data;
     int graph_x_index;
     std::string custom_text;
@@ -189,6 +185,14 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> reference_timepoint;
     std::chrono::milliseconds::rep time_gap;
     
+    void _update_graph_stats(int value);
+    void _reset_graph();
+    void _add_graph_data(int new_value);
+
+    void _init_current_time(std::chrono::time_point<std::chrono::steady_clock> current_time);
+    void _calculate_time_gap();
+    void _calculate_pts_overflow();
+    void _update(int y);
 
 };
 
