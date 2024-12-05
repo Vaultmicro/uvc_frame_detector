@@ -66,7 +66,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
   WindowManager& uvcfd_win = WindowManager::getInstance();
   GraphManager& uvcfd_graph = GraphManager::getInstance(); 
-
   if (!play_pause_flag) {
     uvcfd_graph.getGraph_URBGraph().reset_reference_timepoint();
     uvcfd_graph.getGraph_PTSGraph().reset_reference_timepoint();
@@ -821,13 +820,6 @@ if (!e_formatted_time.empty()) {
 #endif
 }
 
-// uint32_t to_little_endian(uint32_t value) {
-//     return ((value & 0xFF000000) >> 24) |
-//            ((value & 0x00FF0000) >> 8)  |
-//            ((value & 0x0000FF00) << 8)  |
-//            ((value & 0x000000FF) << 24);
-// }
-
 std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "HLE: " << static_cast<int>(header.HLE) << "\n";
     
@@ -840,9 +832,6 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
     os << "  BFH_STI: " << static_cast<int>(header.bmBFH.BFH_STI) << "\n";
     os << "  BFH_ERR: " << static_cast<int>(header.bmBFH.BFH_ERR) << "\n";
     os << "  BFH_EOH: " << static_cast<int>(header.bmBFH.BFH_EOH) << "\n";
-
-    // uint32_t l_pts = to_little_endian(header.PTS);
-    // uint32_t l_scr_stc = to_little_endian(header.bmSCR.SCR_STC);
 
     os << "PTS: 0x" << std::setw(8) << std::setfill('0') << std::hex << header.PTS 
        << " \n    (" << std::dec << header.PTS << ")\n";
