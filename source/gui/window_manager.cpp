@@ -386,6 +386,7 @@ void GraphData::_calculate_pts_overflow() {
 
 void GraphData::_update(int y){
     int time_gap_insec = time_gap / 1000;
+    // When first data comes in, or the time gap is over the GRAPH_PERIOD_SECOND
     if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
         reference_timepoint = current_time ;
         time_gap = 0;
@@ -397,15 +398,13 @@ void GraphData::_update(int y){
                 reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
             }
         }
+
         _reset_graph();
         reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
-
-        for (int i = 0; i < graph_x_index; ++i) {
-            _add_graph_data(0.0f);
-        }
-
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
+
+    // Drawing
     if (time_gap >= 0 && time_gap < GRAPH_PERIOD_SECOND * 1000) {
         if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= graph_x_index) {
             _add_graph_data(y);
@@ -416,7 +415,7 @@ void GraphData::_update(int y){
             _add_graph_data(y);
         }
     } else {
-
+        // Error
     }
 }
 
