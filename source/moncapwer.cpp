@@ -38,11 +38,6 @@ struct FrameInfo{
 };
 
 void clean_exit(int signum) {
-
-#ifdef TUI_SET
-  handle_sigint(signum);
-#endif
-
   {
     std::lock_guard<std::mutex> lock(queue_mutex);
     stop_processing = true;
@@ -110,49 +105,19 @@ void hex_string_to_bytes_append(const std::string& hex_str, std::vector<u_char>&
 
 void capture_packets() {
 
-    // std::string output_path = "C:\\Users\\gyuho\\uvc_frame_detector\\log\\pipe.txt";
-    // std::ofstream log_file(output_path, std::ios::out | std::ios::app); 
-
-    // if (!log_file.is_open()) {
-    //     std::cerr << "Error: Unable to open log file: " << output_path << std::endl;
-    //     return;
-    // } else {
-    //     CtrlPrint::v_cout_1 << "Log file opened successfully: " << output_path << std::endl;
-    // }
-
-
-
     static std::vector<u_char> temp_buffer;
     static uint32_t bulk_maxlengthsize = 0;
 
     std::string line;
-#ifdef TUI_SET
-    // static int first = 1;
-    // if (first){
-    //     setCursorPosition(2, 28);
-    //     setColor(BLACK | BG_WHITE);
-    //     first = 0;
-    // }
-    window_number = 3;
-    CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
-#elif GUI_SET
+#ifdef GUI_SET
     gui_window_number = 5;
     CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
 #else
     CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
 #endif
     while (std::getline(std::cin, line)) {
-
-// auto start0 = std::chrono::high_resolution_clock::now();
-
         // Split the line by semicolon
         std::vector<std::string> tokens = split(line, ';');
-
-
-// auto end0 = std::chrono::high_resolution_clock::now();   
-// std::chrono::duration<double> elapsed0 = end0 - start0;     
-// std::cout << "Execution time 0 : " << elapsed0.count() << " seconds" << std::endl;
-// auto start2 = std::chrono::high_resolution_clock::now();
 
         // Prepare fields with defaults if they are missing
         // -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata or usb.iso.data
@@ -177,16 +142,6 @@ void capture_packets() {
 
         uint32_t frame_length = (frame_len != "N/A") ? std::stoul(frame_len) : 0;
 
-        // std::vector<uint32_t> format_indices;
-        // std::vector<uint32_t> frame_indices;
-        // std::vector<uint32_t> frame_width_list;
-        // std::vector<uint32_t> frame_height_list;
-
-// auto end2 = std::chrono::high_resolution_clock::now();   
-// std::chrono::duration<double> elapsed2 = end2 - start2;     
-// std::cout << "Execution time 2 : " << elapsed2.count() << " seconds" << std::endl;
-
-
 #ifdef __linux__
         // This for linux urb
         static int start_flag = 0;
@@ -199,14 +154,12 @@ void capture_packets() {
           // Process based on usb_transfer_type
           if (usb_transfer_type == "0x00") {
               std::vector<std::string> capdata_tokens = split(usb_isodata, ',');
-// auto start1 = std::chrono::high_resolution_clock::now();
 
               for (const std::string& token : capdata_tokens) {
                   std::vector<u_char> temp_buffer;
                   temp_buffer.reserve(token.length() / 2);
 
                   hex_string_to_bytes_append(token, temp_buffer);
-                //   std::cout << frame_length << ", " << temp_buffer.size() << std::endl;
 
                   {
                       std::lock_guard<std::mutex> lock(queue_mutex);
@@ -218,10 +171,6 @@ void capture_packets() {
 
                   queue_cv.notify_one();
               }
-
-// auto end1 = std::chrono::high_resolution_clock::now();   
-// std::chrono::duration<double> elapsed1 = end1 - start1;     
-// std::cout << "Execution time 1 : " << elapsed1.count() << " seconds" << std::endl;
 
           } else if (usb_transfer_type == "0x01") {
               // Skip interrupt transfer
@@ -254,10 +203,6 @@ void capture_packets() {
               }
 
               for (size_t i = 0; i < frame_indices.size(); ++i) {
-                // // Check for new format group when encountering "1" in frame_index
-                // if (frame_indices[i] == "1" && i != 0) {
-                //     ++format_index_counter;
-                // }
                 if (count >= std::stoi(num_frame_descriptor_list[format_index_counter])) {
                     ++format_index_counter;
                     count = 0;
@@ -279,14 +224,6 @@ void capture_packets() {
 
               time_frequency_ = (time_frequency != "N/A") ? std::stol(time_frequency) : 0;
 
-              // for (const auto& format_pair : format_map) {
-              //     int format_key = format_pair.first;
-              //     std::cout << "Available Format Index: " << format_key << std::endl;
-              //     for (const auto& frame_pair : format_pair.second) {
-              //         int frame_key = frame_pair.first;
-              //         std::cout << "  Available Frame Index: " << frame_key << std::endl;
-              //     }
-              // }
             }
 
             if (max_frame_size != "N/A" && max_payload_size != "N/A") {
@@ -536,22 +473,19 @@ int main(int argc, char* argv[]) {
                     << ControlConfig::get_frame_format() << std::endl;
         }
     }
-#if !defined(TUI_SET) && !defined(GUI_SET)
+
+#ifdef GUI_SET
+    gui_window_number = temp_window_number;
+#else
     CtrlPrint::v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
     CtrlPrint::v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
     CtrlPrint::v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
     CtrlPrint::v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
             << std::endl;
-#elif GUI_SET
-    gui_window_number = temp_window_number;
 #endif
 
     std::signal(SIGINT, clean_exit);
     std::signal(SIGTERM, clean_exit);
-
-#ifdef TUI_SET
-    tui();
-#endif
 
     // Create threads for capture and processing
     std::thread capture_thread(capture_packets);
