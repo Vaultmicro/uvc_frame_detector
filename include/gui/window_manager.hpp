@@ -34,7 +34,7 @@
 
 // Constants for scales
 #define GRAPH_PERIOD_SECOND 4
-#define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8
+#define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8         //125 microseconds for each plotting
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_SECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND * 1000)
 
 class WindowData {
@@ -125,12 +125,13 @@ public:
     GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, bool type_pts);
 
     // Producer interface
+        //update
     void update_graph_data(int index, float value);         //not used
     void set_graph_custom_text(const std::string& text);
     void set_move_graph_custom_text(std::string&& text);
+        //save history
     void add_error_log_graph();
     void add_suspicious_log_graph();
-    void reset_graph();
         //calculation for the graph plotting
     void reset_reference_timepoint();
     void plot_graph(std::chrono::time_point<std::chrono::steady_clock> current_time, int y);
@@ -139,18 +140,15 @@ public:
     // Consumer interface
     size_t get_error_log_graph_data_size();
     size_t get_suspicious_log_graph_data_size();
-
     int get_graph_current_x_index();
     bool is_last_index();
 
     void update_max_graph_height_of_all_time();
-    void show_log_info(int selected_error_frame);
     void show_stream_info();
+    void show_log_info(int selected_error_frame);
+    void show_current_graph_data();
     void show_error_graph_data(int selected_error_frame);
     void show_suspicious_graph_data(int selected_error_frame);
-    void show_current_graph_data();
-
-    void debug_print();
 
 private:
     std::mutex mutex;
@@ -182,6 +180,7 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> reference_timepoint;
     std::chrono::milliseconds::rep time_gap;
     
+    // Private methods : do not use mutex inside
     void _update_graph_stats(int value);
     void _reset_graph();
     void _add_graph_data(int new_value);

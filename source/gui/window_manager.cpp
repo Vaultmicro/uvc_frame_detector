@@ -223,12 +223,6 @@ void GraphData::add_suspicious_log_graph() {
         {max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
 }
 
-void GraphData::reset_graph() {
-    std::lock_guard<std::mutex> lock(mutex);
-    _reset_graph();
-}
-
-
 void GraphData::reset_reference_timepoint() {
     std::lock_guard<std::mutex> lock(mutex);
     reference_timepoint = std::chrono::time_point<std::chrono::steady_clock>();
@@ -406,9 +400,9 @@ void GraphData::_update(int y){
         _reset_graph();
         reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
 
-        // for (int i = 0; i < graph_x_index; ++i) {
-        //     _add_graph_data(0.0f);
-        // }
+        for (int i = 0; i < graph_x_index; ++i) {
+            _add_graph_data(0.0f);
+        }
 
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
