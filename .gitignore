@@ -12,6 +12,7 @@ tests/change_shark/whole_logi_iso.txt
 CmakeSettings.json
 tests/build/
 imgui.ini
+log.txt
 debug_.ps1
 debug_p.ps1
 uvcfd_.ps1

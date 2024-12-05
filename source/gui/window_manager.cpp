@@ -21,6 +21,7 @@
 *********************************************************************/
 
 #include "gui/window_manager.hpp"
+#include <iostream>
 
 
 // WindowData Implementation
@@ -166,7 +167,6 @@ WindowManager::WindowManager():
 WindowManager::~WindowManager() {
 }
 
-// Getter Implementations
 WindowData& WindowManager::getWin_ValidFrame() { return ValidFrameData; }
 WindowData& WindowManager::getWin_ErrorFrame() { return ErrorFrameData; }
 WindowData& WindowManager::getWin_FrameTime() { return ErrorFrameTimeData; }
@@ -183,10 +183,12 @@ WindowData& WindowManager::getWin_GraphWindow() { return GraphWindowData; }
 // GraphData Implementation
 
 GraphData::GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz) : 
+    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz),
     graph_x_index(0), custom_text(""), stop_flag(false),
     max_graph_height(0), min_graph_height(2000000000),
     all_graph_height(0), count_non_zero_graph(0), max_graph_height_of_all_time(0),
-    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz)
+    current_time(std::chrono::time_point<std::chrono::steady_clock>()),
+    time_gap(0), reference_timepoint(std::chrono::time_point<std::chrono::steady_clock>())
 {
     graph_data.fill(0.0f);
 }
@@ -249,6 +251,83 @@ void GraphData::reset_graph() {
     std::lock_guard<std::mutex> lock(mutex);
     _reset_graph();
 }
+
+
+void GraphData::reset_reference_timepoint() {
+    std::lock_guard<std::mutex> lock(mutex);
+    reference_timepoint = std::chrono::time_point<std::chrono::steady_clock>();
+}
+
+void GraphData::init_current_time(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
+    std::lock_guard<std::mutex> lock(mutex);
+    current_time = recieved_time;
+}
+
+void GraphData::calculate_time_gap() {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
+        _reset_graph();
+    }
+    time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+}
+
+void GraphData::calculate_pts_overflow(int y) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (y > 0){
+        const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
+            std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
+        const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
+            0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000));
+        if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
+            reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
+        }
+        if (current_time < reference_timepoint) {
+            reference_timepoint += PTS_OVERFLOW_THRESHOLD_MS;
+        }
+        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+    }
+}
+
+void GraphData::plot_graph(int y){
+    std::lock_guard<std::mutex> lock(mutex);
+
+    int time_gap_insec = time_gap / 1000;
+    if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
+        reference_timepoint = current_time ;
+        time_gap = 0;
+    } else if (time_gap_insec >= GRAPH_PERIOD_SECOND) {
+        if (time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
+            for (int i = 0; i < (time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
+
+                _reset_graph();
+                reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+            }
+        }
+        _reset_graph();
+        reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+
+        for (int i = 0; i < graph_x_index; ++i) {
+            _add_graph_data(0.0f);
+        }
+
+        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+    }
+    if (time_gap >= 0 && time_gap < GRAPH_PERIOD_SECOND * 1000) {
+        if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= graph_x_index) {
+            _add_graph_data(y);
+        } else {
+            for (int i = graph_x_index; i < time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND; ++i) {
+                _add_graph_data(0.0f);
+            }
+            _add_graph_data(y);
+        }
+    } else {
+
+    }
+
+}
+
+// Consumer interface
 
 int GraphData::get_graph_current_x_index() {
     std::lock_guard<std::mutex> lock(mutex);
@@ -337,6 +416,7 @@ void GraphData::show_current_graph_data(){
 }
 
 // Private methods
+// Every private method should not be locked by mutex, as it is already locked by the public method
 void GraphData::_update_graph_stats(int value) {
     if (value != 0) {
         if (value > max_graph_height) max_graph_height = value;
@@ -353,6 +433,17 @@ void GraphData::_reset_graph() {
     min_graph_height = 2000000000;
     all_graph_height = 0;
     count_non_zero_graph = 0;
+}
+
+void GraphData::_add_graph_data(int new_value) {
+    if (graph_x_index >= 0 && graph_x_index < GRAPH_DATA_SIZE) {
+        graph_data[graph_x_index] = static_cast<float>(new_value);
+        graph_x_index++;
+    }
+    if (graph_x_index >= GRAPH_DATA_SIZE) {
+        _reset_graph();
+    }
+    _update_graph_stats(new_value);
 }
 
 // GraphManager Implementation

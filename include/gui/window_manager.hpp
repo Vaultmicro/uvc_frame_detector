@@ -30,8 +30,9 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include "validuvc/control_config.hpp"
 
-// Constants
+// Constants for scales
 #define GRAPH_PERIOD_SECOND 4
 #define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_SECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND * 1000)
@@ -133,6 +134,12 @@ public:
     void add_suspicious_log_graph();
     void reset_graph();
 
+    void reset_reference_timepoint();
+    void init_current_time(std::chrono::time_point<std::chrono::steady_clock> current_time);
+    void calculate_time_gap();
+    void calculate_pts_overflow(int y);
+    void plot_graph(int y);
+
 
     // Consumer interface
     size_t get_error_log_graph_data_size();
@@ -140,20 +147,35 @@ public:
 
     int get_graph_current_x_index();
     bool is_last_index();
+
     void update_max_graph_height_of_all_time();
-    
     void show_log_info(int selected_error_frame);
     void show_stream_info();
     void show_error_graph_data(int selected_error_frame);
     void show_suspicious_graph_data(int selected_error_frame);
     void show_current_graph_data();
 
-
+    void debug_print();
 
 private:
     void _update_graph_stats(int value);
     void _reset_graph();
+    void _add_graph_data(int new_value);
 
+    // Graph Info
+    int max_graph_height;
+    int min_graph_height;
+    int all_graph_height;
+    int count_non_zero_graph;
+    std::vector<std::array<int, 4>> error_graph_height_history;
+    std::vector<std::array<int, 4>> suspicious_graph_height_history;
+    int max_graph_height_of_all_time;
+
+    // Box Info
+    std::string graph_box_name;
+    ImVec2 graph_box_size;
+
+    // Drawing Data
     std::mutex mutex;
     std::array<float, GRAPH_DATA_SIZE> graph_data;
     int graph_x_index;
@@ -162,18 +184,12 @@ private:
     std::vector<std::array<float, GRAPH_DATA_SIZE>> error_log_graph_data;
     std::vector<std::array<float, GRAPH_DATA_SIZE>> suspicious_log_graph_data;
 
-    int max_graph_height;
-    int min_graph_height;
-    int all_graph_height;
-    int count_non_zero_graph;
-
-    std::vector<std::array<int, 4>> error_graph_height_history;
-    std::vector<std::array<int, 4>> suspicious_graph_height_history;
-
-    int max_graph_height_of_all_time;
+    // Calculation for the graph plotting
+    std::chrono::time_point<std::chrono::steady_clock> current_time;
+    std::chrono::time_point<std::chrono::steady_clock> reference_timepoint;
+    std::chrono::milliseconds::rep time_gap;
     
-    std::string graph_box_name;
-    ImVec2 graph_box_size;
+
 };
 
 class GraphManager {
