@@ -40,9 +40,9 @@ public:
     static void set_height(int h);
     static void set_fps(int f);
     static void set_frame_format(const std::string& format);
-    static uint32_t set_dwMaxVideoFrameSize(uint32_t max_video_frame_size);
-    static uint32_t set_dwMaxPayloadTransferSize(uint32_t max_payload_transfer_size);
-    static uint32_t set_dwTimeFrequency(uint32_t time_frequency);
+    static void set_dwMaxVideoFrameSize(uint32_t max_video_frame_size);
+    static void set_dwMaxPayloadTransferSize(uint32_t max_payload_transfer_size);
+    static void set_dwTimeFrequency(uint32_t time_frequency);
 
     static int get_width();
     static int get_height();

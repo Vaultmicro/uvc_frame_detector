@@ -93,8 +93,6 @@ int start_screen(){
     if (!init_imgui()) {
         return -1;
     }
-    WindowManager& manager = WindowManager::getInstance();
-
     return 0;
 }
 
@@ -114,31 +112,8 @@ void screen(){
     static bool prev_pts_decrease_filter = false;
     static bool prev_scr_stc_decrease_filter = false;
 
-    WindowManager& manager = WindowManager::getInstance();
-
-    const ImVec2 initial_positions[14] = {
-        ImVec2(0, 330), ImVec2(480, 330), ImVec2(960, 330),
-        ImVec2(480, 690), ImVec2(800, 690), ImVec2(1120, 690),
-        ImVec2(1440, 330), ImVec2(1600, 330), ImVec2(1760, 330),
-        ImVec2(1440, 690), ImVec2(1680, 690), ImVec2(1440, 690),
-        ImVec2(0, 0), ImVec2(0, 690)
-    };
-
-    const ImVec2 window_sizes[14] = {
-        ImVec2(480, 360), ImVec2(480, 360), ImVec2(480, 360),
-        ImVec2(320, 360), ImVec2(320, 360), ImVec2(320, 360),
-        ImVec2(160, 360), ImVec2(160, 360), ImVec2(160, 360),
-        ImVec2(240, 360), ImVec2(240, 360), ImVec2(480, 360), 
-        ImVec2(480, 330), ImVec2(480, 360)
-    };
-
-    const ImVec2 initial_positions_graph[2] = {
-        ImVec2(0, 0), ImVec2(0, 0)
-    };
-
-    const ImVec2 window_sizes_graph[2] = {
-        ImVec2(1920, 330), ImVec2(1920, 330)
-    };
+    WindowManager &uvcfd_win = WindowManager::getInstance();
+    GraphManager &uvcfd_graph = GraphManager::getInstance();
 
     while (!glfwWindowShouldClose(window)) {
 
@@ -150,8 +125,9 @@ void screen(){
 
         // **Window 11  **
         {
-            ImGui::SetNextWindowPos(initial_positions[11], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[11], ImGuiCond_Always);
+            WindowData& lb_data = uvcfd_win.getWin_LogButtons();
+            ImGui::SetNextWindowPos(lb_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(lb_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Error log buttons", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar);
 
@@ -318,16 +294,16 @@ void screen(){
                     }
                     ImGui::EndCombo();
                 }
-
-                if (!manager.getButtonLogText(8).empty()) {
-                    manager.setButtonLogText(11, manager.getButtonLogText(8));
+                
+                if (lb_data.errorlogtext_size() > 0) {
+                    lb_data.set_e3plog(uvcfd_win.getWin_CurrentError().get_e3plogtext());
                 }
 
                 ImGui::SetCursorPos(ImVec2(9, 75));
-                if (selected_error_frame < manager.getButtonLogText(11).size()) {
+                if (selected_error_frame < lb_data.e3plogtext_size()){
                     std::string current_error_label = "Error " + std::to_string(selected_error_payload);
                     if (ImGui::BeginCombo(":: Error Payload", current_error_label.c_str())) {
-                        for (size_t j = 0; j < manager.getButtonLogText(11)[selected_error_frame].size(); j++) {
+                        for (size_t j = 0; j < lb_data.e3plogtext_frame_size(selected_error_frame); j++) {
                             std::string item_label = "Error " + std::to_string(j);
                             bool is_selected = (j == selected_error_payload);
 
@@ -430,15 +406,6 @@ void screen(){
             }
             ImGui::PopStyleColor(2);
 
-            // ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            // ImVec2 window_pos = ImGui::GetWindowPos();
-            // draw_list->AddRectFilled(
-            //     ImVec2(window_pos.x + 134, window_pos.y + 112),
-            //     ImVec2(window_pos.x + 456, window_pos.y + 158),
-            //     IM_COL32(70, 120, 200, 70),
-            //     0.0f
-            // );
-
             ImGui::SetCursorPos(ImVec2(137, 130));
             if (show_error_log) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26f, 0.59f, 0.98f, 1.0f)); 
@@ -451,9 +418,9 @@ void screen(){
                 if (!error_frame_log_button.empty()) {
                     show_suspicious_log = false;
                     show_error_log = true;
-                    manager.setCustomText(11, "Selected Log: " + error_frame_log_button[selected_error_frame]);
+                    lb_data.set_customtext("Selected Log: " + error_frame_log_button[selected_error_frame]);
                 } else {
-                    manager.setCustomText(11,"No Error");
+                    lb_data.set_customtext("No Error");
                 }
             }
             ImGui::PopStyleColor(2);
@@ -470,7 +437,7 @@ void screen(){
                 if (!suspicious_frame_log_button.empty()) {
                     show_error_log = false;
                     show_suspicious_log = true;
-                    manager.setCustomText(11, "Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame]);
+                    lb_data.set_customtext("Selected Log: " + suspicious_frame_log_button[selected_suspicious_frame]);
                 }
             }
             ImGui::PopStyleColor(2);
@@ -487,16 +454,9 @@ void screen(){
                 show_error_log = false;
                 show_suspicious_log = false;
                 show_image = false;
-                manager.setCustomText(11, "Streaming is shown");
+                lb_data.set_customtext("Streaming is shown");
             }
             ImGui::PopStyleColor(2);
-
-            // draw_list->AddRectFilled(
-            //     ImVec2(window_pos.x + 24, window_pos.y + 167),
-            //     ImVec2(window_pos.x + 456, window_pos.y + 213),
-            //     IM_COL32(70, 120, 200, 70),
-            //     0.0f
-            // );
 
             ImGui::SetCursorPos(ImVec2(27, 185));
             if (UVCPHeaderChecker::capture_image_flag) {
@@ -568,13 +528,6 @@ void screen(){
                 }
             }
             ImGui::PopStyleColor(2);
-
-            // draw_list->AddRectFilled(
-            //     ImVec2(window_pos.x + 24, window_pos.y + 222),
-            //     ImVec2(window_pos.x + 456, window_pos.y + 268),
-            //     IM_COL32(70, 120, 200, 70),
-            //     0.0f
-            // );
 
             ImGui::SetCursorPos(ImVec2(27, 240));
             if (UVCPHeaderChecker::filter_on_off_flag) {
@@ -669,22 +622,37 @@ void screen(){
             }
 
             ImGui::SetCursorPos(ImVec2(9, 310));
-            ImGui::Text("%s", manager.getCustomText(11).c_str());
+            lb_data.print_customtext();
+            ImGui::End();
+        } 
+
+        // **Window 13 - Valid Frame **
+        {
+            WindowData& vf_data = uvcfd_win.getWin_ValidFrame();
+            ImGui::SetNextWindowPos(vf_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(vf_data.get_window_size(), ImGuiCond_Always);
+
+            ImGui::Begin("Valid Frame Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+            vf_data.print_customtext();
+            
+            float current_scroll_y = ImGui::GetScrollY();
+            float max_scroll_y = ImGui::GetScrollMaxY();
+            if (current_scroll_y >= max_scroll_y) {
+                ImGui::SetScrollHereY(1.0f);
+            }
 
             ImGui::End();
         }
 
         // **Window 0 - Frame Data**
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(0));
-
-            ImGui::SetNextWindowPos(initial_positions[0], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[0], ImGuiCond_Always);
+            WindowData& ef_data = uvcfd_win.getWin_ErrorFrame();
+            ImGui::SetNextWindowPos(ef_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ef_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Error Frame Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-
-            if (show_error_log && selected_error_frame < manager.getErrorLogText(0).size()) {
-                ImGui::Text("%s", manager.getErrorLogText(0)[selected_error_frame].c_str());
+            if (show_error_log && selected_error_frame < ef_data.errorlogtext_size()){
+                ef_data.print_errorlogtext(selected_error_frame);
                 if (show_image) {
                     ImGui::Text("Image:");
 
@@ -694,8 +662,8 @@ void screen(){
                         ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
                     }
                 }
-            } else if (show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(0).size()) {
-                ImGui::Text("%s", manager.getSuspiciousLogText(0)[selected_suspicious_frame].c_str());
+            } else if (show_suspicious_log && selected_suspicious_frame < ef_data.errorlogtext_size()) {
+                ef_data.print_suspiciouslogtext(selected_error_frame);
                 if (show_image) {
                     ImGui::Text("Image:");
 
@@ -706,7 +674,7 @@ void screen(){
                     }
                 }
             } else {
-                ImGui::Text("%s", manager.getCustomText(0).c_str());
+                ef_data.print_customtext();
             }
 
             float current_scroll_y = ImGui::GetScrollY();
@@ -720,19 +688,17 @@ void screen(){
 
         // **Window 1 - Time Data**
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(1));
-
-            ImGui::SetNextWindowPos(initial_positions[1], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[1], ImGuiCond_Always);
+            WindowData& ft_data = uvcfd_win.getWin_FrameTime();
+            ImGui::SetNextWindowPos(ft_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ft_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Error Frame: Time & Payload Size Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-            // ImGui::Text("Custom Text:");
-            if (show_error_log && selected_error_frame < manager.getErrorLogText(1).size()) {
-                ImGui::Text("%s", manager.getErrorLogText(1)[selected_error_frame].c_str());
-            } else if (show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(1).size()) {
-                ImGui::Text("%s", manager.getSuspiciousLogText(1)[selected_suspicious_frame].c_str());    
+            if (show_error_log && selected_error_frame < ft_data.errorlogtext_size()) {
+                ft_data.print_errorlogtext(selected_error_frame);
+            } else if (show_suspicious_log && selected_suspicious_frame < ft_data.suspiciouslogtext_size()) {
+                ft_data.print_suspiciouslogtext(selected_suspicious_frame);
             }else {
-                ImGui::Text("%s", manager.getCustomText(1).c_str());
+                ft_data.print_customtext();
             }
             
             float current_scroll_y = ImGui::GetScrollY();
@@ -740,24 +706,22 @@ void screen(){
             if (current_scroll_y >= max_scroll_y) {
                 ImGui::SetScrollHereY(1.0f);
             }
-
             ImGui::End();
         }
 
         // **Window 2 - Summary**
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(2));
-
-            ImGui::SetNextWindowPos(initial_positions[2], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[2], ImGuiCond_Always);
+            WindowData& sm_data = uvcfd_win.getWin_Summary();
+            ImGui::SetNextWindowPos(sm_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(sm_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Summary", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-            if (show_error_log && selected_error_frame < manager.getErrorLogText(2).size()) {
-                ImGui::Text("%s", manager.getErrorLogText(2)[selected_error_frame].c_str());
-            } else if(show_suspicious_log && selected_suspicious_frame < manager.getSuspiciousLogText(2).size()) {
-                ImGui::Text("%s", manager.getSuspiciousLogText(2)[selected_suspicious_frame].c_str());
+            if (show_error_log && selected_error_frame < sm_data.errorlogtext_size()) {
+                sm_data.print_errorlogtext(selected_error_frame);
+            } else if(show_suspicious_log && selected_suspicious_frame < sm_data.suspiciouslogtext_size()) {
+                sm_data.print_suspiciouslogtext(selected_suspicious_frame);
             }else {
-                ImGui::Text("%s", manager.getCustomText(2).c_str());
+                sm_data.print_customtext();
             }
 
             ImGui::End();
@@ -765,14 +729,13 @@ void screen(){
 
         // **Window 3 - Control**
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(3));
-
-            ImGui::SetNextWindowPos(initial_positions[3], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[3], ImGuiCond_Always);
+            WindowData& cc_data = uvcfd_win.getWin_ControlConfig();
+            ImGui::SetNextWindowPos(cc_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(cc_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Control Config", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
             ImGui::Text("Current Defined Configs:");
-            ImGui::Text("%s", manager.getCustomText(3).c_str());
+            cc_data.print_customtext();
 
             float current_scroll_y = ImGui::GetScrollY();
             float max_scroll_y = ImGui::GetScrollMaxY();
@@ -785,26 +748,23 @@ void screen(){
 
         // **Window 4 - Statistics**
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(4));
-
-            ImGui::SetNextWindowPos(initial_positions[4], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[4], ImGuiCond_Always);
+            WindowData& st_data = uvcfd_win.getWin_Statistics();
+            ImGui::SetNextWindowPos(st_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(st_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Statistics", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-            // ImGui::Text("Counting:");
-            ImGui::Text("%s", manager.getCustomText(4).c_str());
+            st_data.print_customtext();
             ImGui::End();
         }
 
         // **Window 5 - Debug**
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(5));
-
-            ImGui::SetNextWindowPos(initial_positions[5], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[5], ImGuiCond_Always);
+            WindowData& db_data = uvcfd_win.getWin_Debug();
+            ImGui::SetNextWindowPos(db_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(db_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-            ImGui::Text("%s", manager.getCustomText(5).c_str());
+            db_data.print_customtext();
             
             float current_scroll_y = ImGui::GetScrollY();
             float max_scroll_y = ImGui::GetScrollMaxY();
@@ -817,237 +777,94 @@ void screen(){
 
         // **Window 6 - prev **
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(6));
-
-            ImGui::SetNextWindowPos(initial_positions[6], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[6], ImGuiCond_Always);
+            WindowData& pv_data = uvcfd_win.getWin_PreviousValid();
+            ImGui::SetNextWindowPos(pv_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(pv_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Previous Valid Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-            // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < manager.getButtonLogText(6).size()) {
-                if (selected_error_payload < manager.getButtonLogText(6)[selected_error_frame].size()) {
-                    ImGui::Text("%s", manager.getButtonLogText(6)[selected_error_frame][selected_error_payload].c_str());
+            if (show_error_log && selected_error_frame < pv_data.e3plogtext_size()) {
+                if (selected_error_payload < pv_data.e3plogtext_frame_size(selected_error_frame)) {
+                    pv_data.print_e3p_logtext(selected_error_frame, selected_error_payload);
                 } else {
-                    ImGui::Text("%s", manager.getButtonLogText(6)[selected_error_frame][0].c_str());
+                    pv_data.print_e3p_logtext(selected_error_frame, 0);
                 }
             } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
-                ImGui::Text("%s", manager.getCustomText(6).c_str());
+                pv_data.print_customtext();
             }
             ImGui::End();
         }
 
         // **Window 7 - inbetween error **
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(7));
-
-            ImGui::SetNextWindowPos(initial_positions[7], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[7], ImGuiCond_Always);
+            WindowData& ie_data = uvcfd_win.getWin_LostInbetweenError();
+            ImGui::SetNextWindowPos(ie_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ie_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Lost Inbetween Error Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-            // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < manager.getButtonLogText(7).size()) {
-                if (selected_error_payload < manager.getButtonLogText(7)[selected_error_frame].size()) {
-                    ImGui::Text("%s", manager.getButtonLogText(7)[selected_error_frame][selected_error_payload].c_str());
+            if (show_error_log && selected_error_frame < ie_data.e3plogtext_size()) {
+                if (selected_error_payload < ie_data.e3plogtext_frame_size(selected_error_frame)) {
+                    ie_data.print_e3p_logtext(selected_error_frame, selected_error_payload);
                 } else {
-                    ImGui::Text("%s", manager.getButtonLogText(7)[selected_error_frame][0].c_str());
+                    ie_data.print_e3p_logtext(selected_error_frame, 0);
                 }
             } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
-                ImGui::Text("%s", manager.getCustomText(7).c_str());
+                ie_data.print_customtext();
             }
             ImGui::End();
         }
 
         // **Window 8 - current **
         {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(8));
-
-            ImGui::SetNextWindowPos(initial_positions[8], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[8], ImGuiCond_Always);
+            WindowData& ce_data = uvcfd_win.getWin_CurrentError();
+            ImGui::SetNextWindowPos(ce_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ce_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Current Error Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoResize);
-            // ImGui::Text("Counting:");
-            if (show_error_log && selected_error_frame < manager.getButtonLogText(8).size()) {
-                if (selected_error_payload < manager.getButtonLogText(8)[selected_error_frame].size()) {
-                    ImGui::Text("%s", manager.getButtonLogText(8)[selected_error_frame][selected_error_payload].c_str());
+            if (show_error_log && selected_error_frame < ce_data.e3plogtext_size()) {
+                if (selected_error_payload < ce_data.e3plogtext_frame_size(selected_error_frame)) {
+                    ce_data.print_e3p_logtext(selected_error_frame, selected_error_payload);
                 } else {
-                    ImGui::Text("%s", manager.getButtonLogText(8)[selected_error_frame][0].c_str());
+                    ce_data.print_e3p_logtext(selected_error_frame, 0);
                 }
             } else if(show_suspicious_log) {
                     ImGui::Text("-");
             } else {
-                ImGui::Text("%s", manager.getCustomText(8).c_str());
+                ce_data.print_customtext();
             }
+
             ImGui::End();
         }
-
-        // // **Window 9 - **
-        // {
-        //     std::lock_guard<std::mutex> lock(*manager.getMutex(9));
-
-        //     ImGui::SetNextWindowPos(initial_positions[9], ImGuiCond_Always);
-        //     ImGui::SetNextWindowSize(window_sizes[9], ImGuiCond_Always);
-
-        //     ImGui::Begin("FPS & Lost Frames", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-        //     // ImGui::Text("Counting:");
-        //     ImGui::Text("%s", manager.getCustomText(9).c_str());
-            
-        //     float current_scroll_y = ImGui::GetScrollY();
-        //     float max_scroll_y = ImGui::GetScrollMaxY();
-        //     if (current_scroll_y >= max_scroll_y) {
-        //         ImGui::SetScrollHereY(1.0f);
-        //     }
-
-        //     ImGui::End();
-        // }
-
-        // // **Window 10 - **
-        // {
-        //     std::lock_guard<std::mutex> lock(*manager.getMutex(10));
-
-        //     ImGui::SetNextWindowPos(initial_positions[10], ImGuiCond_Always);
-        //     ImGui::SetNextWindowSize(window_sizes[10], ImGuiCond_Always);
-
-        //     ImGui::Begin("Throughput", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-        //     // ImGui::Text("Counting:");
-        //     ImGui::Text("%s", manager.getCustomText(10).c_str());
-            
-        //     float current_scroll_y = ImGui::GetScrollY();
-        //     float max_scroll_y = ImGui::GetScrollMaxY();
-        //     if (current_scroll_y >= max_scroll_y) {
-        //         ImGui::SetScrollHereY(1.0f);
-        //     }
-
-        //     ImGui::End();
-        // }
         
         // **Graph 0 - Histogram **
         {
-            std::lock_guard<std::mutex> lock(*manager.getGraphMutex(0));
-            std::lock_guard<std::mutex> lock1(*manager.getGraphMutex(1));
-            GraphData& data = manager.getGraphData(0);
-            GraphData& data1 = manager.getGraphData(1);
+            WindowData& gw_data = uvcfd_win.getWin_GraphWindow();
+            GraphData& URB_graph_data = uvcfd_graph.getGraph_URBGraph();
+            GraphData& PTS_graph_data = uvcfd_graph.getGraph_PTSGraph();            
 
-            ImGui::SetNextWindowPos(initial_positions_graph[0], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes_graph[0], ImGuiCond_Always);
+            ImGui::SetNextWindowPos(gw_data.get_initial_position(), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(gw_data.get_window_size(), ImGuiCond_Always);
 
             ImGui::Begin("Histogram", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
+            URB_graph_data.update_max_graph_height_of_all_time();
+            PTS_graph_data.update_max_graph_height_of_all_time();
 
-            static float max_value = 0.0f;
-            float current_max = *std::max_element(data.graph_data.begin(), data.graph_data.end());
-            if (current_max > max_value) {
-                max_value = current_max;
-            }
-
-            if (show_error_log && selected_error_frame < data.error_log_graph_data.size()) {
-                data.custom_text = "E [ " + error_frame_log_button[selected_error_frame] + " ]";
-                const auto& selected_data = data.error_graph_height_history[selected_error_frame];
-                float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
-                ImGui::Text("%s Max: %i Min: %i Mean: %f", data.custom_text.c_str(), selected_data[0], selected_data[1], mean_value);
-                ImGui::PlotHistogram(
-                    "Throughput Data", 
-                    data.error_log_graph_data[selected_error_frame].data(),
-                    static_cast<int>(data.error_log_graph_data[selected_error_frame].size()),
-                    0, nullptr,
-                    0.0f, max_value,  
-                    ImVec2(1920, 120)
-                );
-                ImGui::PlotHistogram(
-                    "PTS Data", 
-                    data1.error_log_graph_data[selected_error_frame].data(),
-                    static_cast<int>(data1.error_log_graph_data[selected_error_frame].size()),
-                    0, nullptr,
-                    0.0f, max_value,  
-                    ImVec2(1920, 120)
-                );
-
-            } else if(show_suspicious_log && selected_suspicious_frame < data.suspicious_log_graph_data.size()) {
-                data.custom_text = "S [ " + suspicious_frame_log_button[selected_suspicious_frame] + " ]";
-                const auto& selected_data = data.error_graph_height_history[selected_error_frame];
-                float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
-                ImGui::Text("%s Max: %i Min: %i Mean: %f", data.custom_text.c_str(), selected_data[0], selected_data[1], mean_value);
-                ImGui::PlotHistogram(
-                    "Throughput Data",
-                    data.suspicious_log_graph_data[selected_suspicious_frame].data(),
-                    static_cast<int>(data.suspicious_log_graph_data[selected_suspicious_frame].size()),
-                    0, nullptr,
-                    0.0f, max_value,  
-                    ImVec2(1920, 120)
-                );
-                ImGui::PlotHistogram(
-                    "PTS Data",
-                    data1.suspicious_log_graph_data[selected_suspicious_frame].data(),
-                    static_cast<int>(data1.suspicious_log_graph_data[selected_suspicious_frame].size()),
-                    0, nullptr,
-                    0.0f, max_value,  
-                    ImVec2(1920, 120)
-                );
-
+            if (show_error_log && selected_error_frame < URB_graph_data.get_error_log_graph_data_size()) {
+                URB_graph_data.show_log_info(selected_error_frame);
+                URB_graph_data.show_error_graph_data(selected_error_frame);
+                PTS_graph_data.show_error_graph_data(selected_error_frame);
+            } else if(show_suspicious_log && selected_suspicious_frame < URB_graph_data.get_suspicious_log_graph_data_size()) {
+                URB_graph_data.show_log_info(selected_error_frame);
+                URB_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
+                PTS_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
             } else {
-                float mean_value = (data.count_non_zero_graph > 0) ? static_cast<float>(data.all_graph_height) / data.count_non_zero_graph : 0.0f;
-                ImGui::Text("%s Max: %i Min: %i Mean: %f", data.custom_text.c_str(), data.max_graph_height, data.min_graph_height, mean_value);
-                ImGui::PlotHistogram(
-                    "Throughput Data",
-                    data.graph_data.data(),
-                    static_cast<int>(data.graph_data.size()),
-                    0, nullptr,
-                    0.0f, max_value,  
-                    ImVec2(1920, 120)
-                );
-                ImGui::PlotHistogram(
-                    "PTS Data", 
-                    data1.graph_data.data(),
-                    static_cast<int>(data1.graph_data.size()),
-                    0, nullptr,
-                    0.0f, max_value,  
-                    ImVec2(1920, 120)
-                );
-            }
-
-            ImGui::End();
-        }
-
-        // **Window 12 - Photo **
-        // {
-        //     std::lock_guard<std::mutex> lock(*manager.getMutex(12));
-
-        //     ImGui::SetNextWindowPos(initial_positions[12], ImGuiCond_Always);
-        //     ImGui::SetNextWindowSize(window_sizes[12], ImGuiCond_Always);
-
-        //     ImGui::Begin("Image", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-
-        //     if (show_image) {
-        //         ImGui::Text("Image:");
-
-        //         if (texture_id) {
-        //             ImGui::Image((ImTextureID)(intptr_t)texture_id, ImVec2(480, 271));
-        //         } else {
-        //             ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
-        //         }
-        //     }
-
-
-        //     ImGui::End();
-        // }
-
-        // **Window 13  **
-        {
-            std::lock_guard<std::mutex> lock(*manager.getMutex(13));
-
-            ImGui::SetNextWindowPos(initial_positions[13], ImGuiCond_Always);
-            ImGui::SetNextWindowSize(window_sizes[13], ImGuiCond_Always);
-
-            ImGui::Begin("Valid Frame Data", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-            ImGui::Text("%s", manager.getCustomText(13).c_str());
-            
-            float current_scroll_y = ImGui::GetScrollY();
-            float max_scroll_y = ImGui::GetScrollMaxY();
-            if (current_scroll_y >= max_scroll_y) {
-                ImGui::SetScrollHereY(1.0f);
+                URB_graph_data.show_stream_info();
+                URB_graph_data.show_current_graph_data();
+                PTS_graph_data.show_current_graph_data();                
             }
 
             ImGui::End();
@@ -1067,17 +884,7 @@ void screen(){
 
 void end_screen(){
     std::cout << "end_screen()" << std::endl;
-    WindowManager& manager = WindowManager::getInstance();
-
-    for (int i = 0; i < manager.getWindowCount(); ++i) {
-        std::lock_guard<std::mutex> lock(*manager.getMutex(i));
-    }
-
-    for (int i = 0; i < manager.getGraphCount(); ++i) {
-        GraphData& graph_data = manager.getGraphData(i);
-        std::lock_guard<std::mutex> lock(graph_data.mutex);
-    }
-
+    WindowManager& uvcfd_win = WindowManager::getInstance();
 
     finish_imgui();
 

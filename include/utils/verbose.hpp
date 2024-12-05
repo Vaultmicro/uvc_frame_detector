@@ -28,9 +28,6 @@
 #include <iostream>
 #include <sstream>
 
-// // Global verbose level (extern to be defined in a cpp file)
-// extern int verbose_level;
-
 // VerboseStream class for handling different verbose levels
 class VerboseStream {
 public:
