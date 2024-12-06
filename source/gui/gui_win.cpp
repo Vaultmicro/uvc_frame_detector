@@ -296,7 +296,8 @@ void screen(){
                 }
                 
                 if (lb_data.errorlogtext_size() > 0) {
-                    lb_data.set_e3plog(uvcfd_win.getWin_CurrentError().get_e3plogtext());
+                    std::vector<std::vector<std::string>> temp_a = uvcfd_win.getWin_CurrentError().get_e3plogtext();
+                    lb_data.set_e3plog(temp_a);
                 }
 
                 ImGui::SetCursorPos(ImVec2(9, 75));
@@ -662,8 +663,8 @@ void screen(){
                         ImGui::Text("Invalid Image / Failed to load image. Image could be zero size or not found.");
                     }
                 }
-            } else if (show_suspicious_log && selected_suspicious_frame < ef_data.errorlogtext_size()) {
-                ef_data.print_suspiciouslogtext(selected_error_frame);
+            } else if (show_suspicious_log && selected_suspicious_frame < ef_data.suspiciouslogtext_size()) {
+                ef_data.print_suspiciouslogtext(selected_suspicious_frame);
                 if (show_image) {
                     ImGui::Text("Image:");
 
@@ -854,11 +855,11 @@ void screen(){
             PTS_graph_data.update_max_graph_height_of_all_time();
 
             if (show_error_log && selected_error_frame < URB_graph_data.get_error_log_graph_data_size()) {
-                URB_graph_data.show_log_info(selected_error_frame);
+                URB_graph_data.show_error_log_info(selected_error_frame);
                 URB_graph_data.show_error_graph_data(selected_error_frame);
                 PTS_graph_data.show_error_graph_data(selected_error_frame);
             } else if(show_suspicious_log && selected_suspicious_frame < URB_graph_data.get_suspicious_log_graph_data_size()) {
-                URB_graph_data.show_log_info(selected_error_frame);
+                URB_graph_data.show_suspicious_log_info(selected_suspicious_frame);
                 URB_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
                 PTS_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
             } else {

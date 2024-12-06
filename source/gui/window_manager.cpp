@@ -272,12 +272,24 @@ size_t GraphData::get_suspicious_log_graph_data_size() {
 
 
 
-void GraphData::show_log_info(int selected_error_frame) {
+void GraphData::show_error_log_info(int selected_error_frame) {
     std::lock_guard<std::mutex> lock(mutex);
     const auto &selected_data = error_graph_height_history[selected_error_frame];
     float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
     
     custom_text = "[ " + std::to_string(selected_error_frame) + " ]" 
+        + " Max: " + std::to_string(selected_data[0]) 
+        + " Min: " + std::to_string(selected_data[1]) 
+        + " Mean: " + std::to_string(mean_value);
+    ImGui::Text("%s", custom_text.c_str());
+}
+
+void GraphData::show_suspicious_log_info(int selected_suspicious_frame) {
+    std::lock_guard<std::mutex> lock(mutex);
+    const auto &selected_data = suspicious_graph_height_history[selected_suspicious_frame];
+    float mean_value = (selected_data[3] > 0) ? static_cast<float>(selected_data[2]) / selected_data[3] : 0.0f;
+    
+    custom_text = "[ " + std::to_string(selected_suspicious_frame) + " ]" 
         + " Max: " + std::to_string(selected_data[0]) 
         + " Min: " + std::to_string(selected_data[1]) 
         + " Mean: " + std::to_string(mean_value);
@@ -303,13 +315,13 @@ void GraphData::show_error_graph_data(int selected_error_frame) {
     );
 }
 
-void GraphData::show_suspicious_graph_data(int selected_error_frame){
+void GraphData::show_suspicious_graph_data(int selected_suspicious_frame){
     std::lock_guard<std::mutex> lock(mutex);
 
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
-        error_log_graph_data[selected_error_frame].data(),
-        static_cast<int>(error_log_graph_data[selected_error_frame].size()),
+        suspicious_log_graph_data[selected_suspicious_frame].data(),
+        static_cast<int>(suspicious_log_graph_data[selected_suspicious_frame].size()),
         0, nullptr,
         0.0f, static_cast<float>(max_graph_height_of_all_time),  
         graph_box_size

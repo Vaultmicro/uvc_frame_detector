@@ -145,10 +145,11 @@ public:
 
     void update_max_graph_height_of_all_time();
     void show_stream_info();
-    void show_log_info(int selected_error_frame);
+    void show_error_log_info(int selected_error_frame);
+    void show_suspicious_log_info(int selected_suspicious_frame);
     void show_current_graph_data();
     void show_error_graph_data(int selected_error_frame);
-    void show_suspicious_graph_data(int selected_error_frame);
+    void show_suspicious_graph_data(int selected_suspicious_frame);
 
 private:
     std::mutex mutex;
