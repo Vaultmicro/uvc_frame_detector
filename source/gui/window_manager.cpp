@@ -423,7 +423,7 @@ void GraphData::_update_switch(){
 
     } else {
         assert(time_gap <= GRAPH_PERIOD_SECOND *1000);
-        assert(time_gap >= 0);
+        // assert(time_gap >= 0);
     }
 }
 

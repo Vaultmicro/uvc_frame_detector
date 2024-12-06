@@ -16,7 +16,7 @@ The UVC Frame Detector (UVCFD) analyzes USB video frames by capturing data, vali
 ---
 
 ## Executable Files
-
+![icon](./icon.png)
 ### Main Project :  
 ### UVCFD (UVC Frame Detector)  
 This programme uses pipeline with tshark gets parsed data, recombine urb into payloads and frames.  
@@ -56,7 +56,7 @@ Uses same validation with oldmanandsea & Moncapler, however controlconfig data i
 Uses captured raw log data to test whether validation for payload and frame is well made.  
 Google test is used to test each unit, and linux urb is used as an example (but can run in window).  
 
-### Log_test, Log_test_t, Log_test_g
+### Log_test, Log_test_g
 Gets txt file from wireshark, File>Export Packet Dissections>As Plain Text>Details: All expanded  
 Use tests/change_shark/shkwhl_b for bulk shkwhl_i for iso  
 And modify the log_test code to find designate txt file, run. _t stands for tui, _g stands for gui  
@@ -207,10 +207,10 @@ ctrl + c to end
 ![uml_img](./documents/dark_uvc_frame_detector.drawio.png)
 
 # Example
-![example_0](./documents/034_0.jpg)
-![example_1](./documents/034_1.jpg)
+![example_0](./documents/035_0.jpg)
+![example_1](./documents/035_1.jpg)
 
 ![usage](./documents/usage.gif)
 
-### TODO
-Test Linux version <br/>
+
+
