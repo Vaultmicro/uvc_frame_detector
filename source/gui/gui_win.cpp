@@ -294,17 +294,12 @@ void screen(){
                     }
                     ImGui::EndCombo();
                 }
-                
-                if (lb_data.errorlogtext_size() > 0) {
-                    std::vector<std::vector<std::string>> temp_a = uvcfd_win.getWin_CurrentError().get_e3plogtext();
-                    lb_data.set_e3plog(temp_a);
-                }
 
                 ImGui::SetCursorPos(ImVec2(9, 75));
-                if (selected_error_frame < lb_data.e3plogtext_size()){
+                if (selected_error_frame < uvcfd_win.getWin_CurrentError().e3plogtext_size()){
                     std::string current_error_label = "Error " + std::to_string(selected_error_payload);
                     if (ImGui::BeginCombo(":: Error Payload", current_error_label.c_str())) {
-                        for (size_t j = 0; j < lb_data.e3plogtext_frame_size(selected_error_frame); j++) {
+                        for (size_t j = 0; j < uvcfd_win.getWin_CurrentError().e3plogtext_frame_size(selected_error_frame); j++) {
                             std::string item_label = "Error " + std::to_string(j);
                             bool is_selected = (j == selected_error_payload);
 
