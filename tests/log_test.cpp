@@ -8,7 +8,7 @@
 #ifdef TUI_SET
 #include "utils/tui_win.hpp"
 #elif GUI_SET
-#include "gui_win.hpp"
+#include "gui/gui_win.hpp"
 #endif
 #include "validuvc/control_config.hpp"
 

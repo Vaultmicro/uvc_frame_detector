@@ -446,6 +446,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
+        
         frame_suspicious_flag = 0;
 #endif
         if (capture_suspicious_flag && capture_image_flag){

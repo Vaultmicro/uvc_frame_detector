@@ -323,4 +323,4 @@ if(WIN32)
 # target_compile_definitions(oldmanandsea_t PUBLIC TUI_SET)
 endif(WIN32)
 
-# add_subdirectory(tests)
+add_subdirectory(tests)
