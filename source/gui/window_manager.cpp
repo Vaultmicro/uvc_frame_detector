@@ -23,6 +23,7 @@
 #include "gui/window_manager.hpp"
 #include <iostream>
 
+#include <cassert>
 
 // WindowData Implementation
 
@@ -235,7 +236,8 @@ void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> cu
     if (type_pts) {
         _calculate_pts_overflow();
     }
-    _update(y);
+    _update_switch();
+    _draw_graph(y);
 }
 
 
@@ -335,6 +337,7 @@ void GraphData::_update_graph_stats(int value) {
         if (value < min_graph_height) min_graph_height = value;
         all_graph_height += value;
         count_non_zero_graph++;
+
     }
 }
 
@@ -347,18 +350,6 @@ void GraphData::_reset_graph() {
     count_non_zero_graph = 0;
 }
 
-void GraphData::_add_graph_data(int new_value) {
-    if (graph_x_index >= 0 && graph_x_index < GRAPH_DATA_SIZE) {
-        graph_data[graph_x_index] = static_cast<float>(new_value);
-        graph_x_index++;
-    }
-    if (graph_x_index >= GRAPH_DATA_SIZE) {
-        _reset_graph();
-    }
-    _update_graph_stats(new_value);
-}
-
-
 void GraphData::_init_current_time(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
     current_time = recieved_time;
 }
@@ -366,57 +357,92 @@ void GraphData::_init_current_time(std::chrono::time_point<std::chrono::steady_c
 void GraphData::_calculate_time_gap() {
     if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
         _reset_graph();
+        reference_timepoint = current_time ;
     }
     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
 }
-
 void GraphData::_calculate_pts_overflow() {
     const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
     const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
-        0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000));
+        static_cast<long long>(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
+    
     if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
         reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
     }
-    if (current_time < reference_timepoint) {
+    
+    while (current_time < reference_timepoint) {
         current_time += PTS_OVERFLOW_THRESHOLD_MS;
     }
+
+    assert(reference_timepoint < PTS_OVERFLOW_THRESHOLD);
+    assert(current_time >= reference_timepoint);
+    
     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+    
+    if (time_gap > GRAPH_PERIOD_SECOND * 1000 * 2) {
+        reference_timepoint = current_time - std::chrono::milliseconds(GRAPH_PERIOD_SECOND * 1000 * 2);
+        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+    }
+    
+    assert(time_gap <= GRAPH_PERIOD_SECOND * 1000 * 2);
 }
 
-void GraphData::_update(int y){
-    int time_gap_insec = time_gap / 1000;
-    // When first data comes in, or the time gap is over the GRAPH_PERIOD_SECOND
-    if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
-        reference_timepoint = current_time ;
-        time_gap = 0;
-    } else if (time_gap_insec >= GRAPH_PERIOD_SECOND) {
-        if (time_gap_insec >= GRAPH_PERIOD_SECOND*2) {
-            for (int i = 0; i < (time_gap_insec - 1); i+=GRAPH_PERIOD_SECOND) {
 
-                _reset_graph();
+
+void GraphData::_update_switch(){
+    // When first data comes in, or the time gap is over the GRAPH_PERIOD_SECOND
+    if (time_gap > GRAPH_PERIOD_SECOND * 1000) {
+        assert(current_time >= reference_timepoint + std::chrono::seconds(GRAPH_PERIOD_SECOND));
+
+        if (time_gap > GRAPH_PERIOD_SECOND * 1000 *2) {
+            for (int i = 0; i < (time_gap - 1000); i+=GRAPH_PERIOD_SECOND*1000) {
                 reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
             }
         }
 
         _reset_graph();
         reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+        assert(current_time >= reference_timepoint);
+
+        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+        assert(time_gap >= 0); //Time gap is minus
+        assert(time_gap <= GRAPH_PERIOD_SECOND *1000);
+
+    } else {
+        assert(time_gap <= GRAPH_PERIOD_SECOND *1000);
+        assert(time_gap >= 0);
+    }
+}
+
+void GraphData::_add_graph_data(int new_value) {
+    assert(graph_x_index < GRAPH_DATA_SIZE );
+
+    if (graph_x_index >= 0 && graph_x_index < GRAPH_DATA_SIZE) {
+        graph_data[graph_x_index] = static_cast<float>(new_value);
+        graph_x_index++;
+    }
+    if (graph_x_index >= GRAPH_DATA_SIZE) {
+        _reset_graph();
+        reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
 
+    _update_graph_stats(new_value);
+}
+
+
+void GraphData::_draw_graph(int y) {
     // Drawing
-    if (time_gap >= 0 && time_gap < GRAPH_PERIOD_SECOND * 1000) {
-        if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= graph_x_index) {
-            _add_graph_data(y);
-        } else {
-            for (int i = graph_x_index; i < time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND; ++i) {
-                _add_graph_data(0.0f);
-            }
-            _add_graph_data(y);
-        }
+    if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= graph_x_index) {
+        _add_graph_data(y);
     } else {
-        // Error
+        for (int i = graph_x_index; i < time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND; ++i) {
+            _add_graph_data(0.0f);
+        }
+        _add_graph_data(y);
     }
+    assert(graph_x_index < GRAPH_DATA_SIZE);
 }
 
 // GraphManager Implementation

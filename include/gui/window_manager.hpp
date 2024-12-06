@@ -188,7 +188,8 @@ private:
     void _init_current_time(std::chrono::time_point<std::chrono::steady_clock> current_time);
     void _calculate_time_gap();
     void _calculate_pts_overflow();
-    void _update(int y);
+    void _update_switch();
+    void _draw_graph(int y);
 
 };
 
