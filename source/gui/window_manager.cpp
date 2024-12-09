@@ -183,8 +183,8 @@ WindowData& WindowManager::getWin_GraphWindow() { return GraphWindowData; }
 
 // GraphData Implementation
 
-GraphData::GraphData(const std::string& graph_box_nm,const ImVec2& graph_box_sz, bool type_pts) : 
-    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz), type_pts(type_pts),
+GraphData::GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, const ImVec4& graph_box_col, bool type_pts) : 
+    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz), graph_box_color(graph_box_col), type_pts(type_pts),
     graph_x_index(0), custom_text(""), stop_flag(false),
     max_graph_height(0), min_graph_height(2000000000),
     all_graph_height(0), count_non_zero_graph(0), max_graph_height_of_all_time(0),
@@ -305,6 +305,8 @@ void GraphData::show_stream_info() {
 void GraphData::show_error_graph_data(int selected_error_frame) {
     std::lock_guard<std::mutex> lock(mutex);
 
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
+
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
         error_log_graph_data[selected_error_frame].data(),
@@ -313,10 +315,14 @@ void GraphData::show_error_graph_data(int selected_error_frame) {
         0.0f, static_cast<float>(max_graph_height_of_all_time),  
         graph_box_size
     );
+
+    ImGui::PopStyleColor(1);
 }
 
 void GraphData::show_suspicious_graph_data(int selected_suspicious_frame){
     std::lock_guard<std::mutex> lock(mutex);
+
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
@@ -326,10 +332,14 @@ void GraphData::show_suspicious_graph_data(int selected_suspicious_frame){
         0.0f, static_cast<float>(max_graph_height_of_all_time),  
         graph_box_size
     );
+
+    ImGui::PopStyleColor(1);
 }
 
 void GraphData::show_current_graph_data(){
     std::lock_guard<std::mutex> lock(mutex);
+
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
     ImGui::PlotHistogram(
         graph_box_name.c_str(),
@@ -339,6 +349,9 @@ void GraphData::show_current_graph_data(){
         0.0f, static_cast<float>(max_graph_height_of_all_time),  
         graph_box_size
     );    
+
+    ImGui::PopStyleColor(1);
+
 }
 
 // Private methods
@@ -465,8 +478,8 @@ GraphManager& GraphManager::getInstance() {
 }
 
 GraphManager::GraphManager():
-    URBTimeGraphData("Received Time Data Graph", ImVec2(1920, 120), false),
-    PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 120), true)
+    URBTimeGraphData("Received Time Data Graph", ImVec2(1920, 120), ImVec4(1.0f, 0.8f, 0.9f, 1.0f), false),
+    PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 120), ImVec4(0.7f, 1.0f, 0.8f, 1.0f), true)
 {
 }
 

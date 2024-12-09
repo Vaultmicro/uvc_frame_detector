@@ -122,7 +122,7 @@ private:
 
 class GraphData {
 public:
-    GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, bool type_pts);
+    GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, const ImVec4& graph_box_color, bool type_pts);
 
     // Producer interface
         //update
@@ -167,6 +167,7 @@ private:
     // Box Info
     std::string graph_box_name;
     ImVec2 graph_box_size;
+    ImVec4 graph_box_color;
 
     // Drawing Data
     std::array<float, GRAPH_DATA_SIZE> graph_data;
