@@ -207,8 +207,8 @@ ctrl + c to end
 ![uml_img](./documents/dark_uvc_frame_detector.drawio.png)
 
 # Example
-![example_0](./documents/035_0.JPG)
-![example_1](./documents/035_1.JPG)
+![example_0](./documents/035_2.JPG)
+![example_1](./documents/035_3.JPG)
 
 ![usage](./documents/usage.gif)
 
