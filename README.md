@@ -1,6 +1,6 @@
 # UVC Frame Detector (uvc_frame_detector)
 
-version 0.3.4
+version 0.3.5
 New method for Graphs and Buttons.  
 New feature included, capturing and summarize suspicious frames.
 
