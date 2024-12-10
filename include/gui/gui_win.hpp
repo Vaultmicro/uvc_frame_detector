@@ -34,19 +34,11 @@
 #include "dearimgui.hpp"
 #include <atomic>
 
-// Global variable declaration
-extern int gui_window_number;
-extern int print_whole_flag;
-extern int temp_window_number;
-extern int frame_error_flag;
-extern int frame_suspicious_flag;
-
 void addErrorFrameLog(const std::string& efn);
 const std::vector<std::string>& getErrorFrameLog();
 
 void addSuspiciousFrameLog(const std::string& efn);
 const std::vector<std::string>& getSuspiciousFrameLog();
-
 
 GLuint LoadTextureFromFile(const char* filename);
 

@@ -110,7 +110,7 @@ void capture_packets() {
 
     std::string line;
 #ifdef GUI_SET
-    gui_window_number = 5;
+    gui_window_number = WIN_DEBUG;
     CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
 #else
     CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
@@ -456,7 +456,7 @@ int main(int argc, char* argv[]) {
     }
 #ifdef GUI_SET
   temp_window_number = gui_window_number;
-  gui_window_number = 3;
+  gui_window_number = WIN_CONTROL_CONFIG;
 #endif
     if (!fw_set || !fh_set || !fps_set || !ff_set) {
         if (!fw_set) {

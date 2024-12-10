@@ -26,6 +26,12 @@
 #include "gui/gui_win.hpp"
 #endif
 
+WindowName gui_window_number = WIN_DEBUG;
+bool print_whole_flag = false;
+WindowName temp_window_number = WIN_DEBUG;
+bool frame_error_flag = false;
+bool frame_suspicious_flag = false;
+
 // Initialize verbose level
 int VerboseStream::verbose_level = 2;
 
@@ -63,43 +69,38 @@ void VerboseStream::flush() {
   if (VerboseStream::verbose_level >= level_) {
 #ifdef GUI_SET
     WindowManager& uvcfd_win = WindowManager::getInstance();
-    // WindowData& data = manager.getWindowData(gui_window_number);
 
     WindowData* data = nullptr;
     
     switch (gui_window_number) {
-    case 0: data = &uvcfd_win.getWin_ErrorFrame(); break;
-    case 1: data = &uvcfd_win.getWin_FrameTime(); break;
-    case 2: data = &uvcfd_win.getWin_Summary(); break;
-    case 3: data = &uvcfd_win.getWin_ControlConfig(); break;
-    case 4: data = &uvcfd_win.getWin_Statistics(); break;
-    case 5: data = &uvcfd_win.getWin_Debug(); break;
-    
-    case 6: data = &uvcfd_win.getWin_PreviousValid(); break;
-    case 7: data = &uvcfd_win.getWin_LostInbetweenError(); break;
-    case 8: data = &uvcfd_win.getWin_CurrentError(); break;
+      case 0: data = &uvcfd_win.getWin_ErrorFrame(); break;
+      case 1: data = &uvcfd_win.getWin_FrameTime(); break;
+      case 2: data = &uvcfd_win.getWin_Summary(); break;
+      case 3: data = &uvcfd_win.getWin_ControlConfig(); break;
+      case 4: data = &uvcfd_win.getWin_Statistics(); break;
+      case 5: data = &uvcfd_win.getWin_Debug(); break;
+      
+      case 6: data = &uvcfd_win.getWin_PreviousValid(); break;
+      case 7: data = &uvcfd_win.getWin_LostInbetweenError(); break;
+      case 8: data = &uvcfd_win.getWin_CurrentError(); break;
 
 
-    case 11: data = &uvcfd_win.getWin_LogButtons(); break;
-    case 13: data = &uvcfd_win.getWin_ValidFrame(); break;
-    default: break;
+      case 11: data = &uvcfd_win.getWin_LogButtons(); break;
+      case 13: data = &uvcfd_win.getWin_ValidFrame(); break;
+      default: break;
     }
 
     if (data != nullptr) {
       if (frame_error_flag){
         data->pushback_errorlog(buffer_.str());
-        // manager.pushbackErrorLogText(gui_window_number,buffer_.str());
       }
       if (frame_suspicious_flag){
         data->pushback_suspiciouslog(buffer_.str());
-        // manager.pushbackSuspiciousLogText(gui_window_number,buffer_.str());
       }
       if (print_whole_flag){
         data->set_move_customtext(std::move(buffer_.str()));
-        // manager.setmoveCustomText(gui_window_number, buffer_.str());
       } else {
         data->add_move_customtext(buffer_.str());
-        // manager.addmoveCustomText(gui_window_number, buffer_.str()); 
       }
     }
 #else

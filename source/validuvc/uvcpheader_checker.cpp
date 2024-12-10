@@ -36,9 +36,7 @@
 #include "validuvc/uvcpheader_checker.hpp"
 #include "validuvc/control_config.hpp"
 
-#ifdef TUI_SET
-#include "utils/tui_win.hpp"
-#elif GUI_SET
+#ifdef GUI_SET
 #include "gui/gui_win.hpp"
 #endif
 
@@ -69,6 +67,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     uvcfd_graph.getGraph_PTSGraph().reset_reference_timepoint();
     return 0;
   }
+
+  temp_window_number = gui_window_number;
+  gui_window_number = WIN_DEBUG;
+
 #endif
 
   std::chrono::milliseconds::rep pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
@@ -76,11 +78,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
-
-#ifdef GUI_SET
-  temp_window_number = gui_window_number;
-  gui_window_number = 5;
-#endif
 
   if (uvc_payload.empty()) {          
     CtrlPrint::v_cerr_2 << "["<< formatted_time << "]" << " UVC payload is empty." << std::endl;
@@ -112,19 +109,15 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             received_frames_count++;
             CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
             << throughput * 8 / 1000000 << " mbps" << std::endl;
-    #ifdef GUI_SET
+#ifdef GUI_SET
             print_stats();
-    #endif
+#endif
             temp_received_time += std::chrono::seconds(1);
         }
     }
 
     CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
     << throughput * 8 / 1000000 << " mbps" << std::endl;
-
-#ifdef GUI_SET
-  gui_window_number = 5;
-#endif
 
     int fps_difference = ControlConfig::instance().get_fps() - frame_count;
     if (frame_count != ControlConfig::instance().get_fps()){
@@ -161,13 +154,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   FrameSuspicious suspicious_return = 
       frame_suspicious_check(payload_header, previous_payload_header, previous_previous_payload_header);
 
-#ifdef GUI_SET
   if (payload_header.PTS && uvc_payload.size() > payload_header.HLE) {
     current_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(payload_header.PTS / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
   }
-#endif
-
 
   // Update Frame
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF || payload_header_valid_return == ERR_FID_MISMATCH) {
@@ -192,7 +182,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           uvcfd_graph.getGraph_URBGraph().add_error_log_graph();
           uvcfd_graph.getGraph_PTSGraph().add_error_log_graph();    
 
-          frame_error_flag = 1;
+          frame_error_flag = true;
           print_received_times(*last_frame);
           print_frame_data(*last_frame);
           print_summary(*last_frame);
@@ -201,13 +191,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           uvcfd_win.getWin_LostInbetweenError().pushback_e3plog();
           uvcfd_win.getWin_CurrentError().pushback_e3plog();
 
-          frame_error_flag = 0;
-#elif CLI_SET 
+          frame_error_flag = false;
+#else
           print_frame_data(*last_frame);
           print_summary(*last_frame);
-          plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
-          print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
-#else
           plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
@@ -413,7 +400,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
           uvcfd_graph.getGraph_URBGraph().add_error_log_graph();
           uvcfd_graph.getGraph_PTSGraph().add_error_log_graph();
-        frame_error_flag = 1;
+        frame_error_flag = true;
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
@@ -422,14 +409,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           uvcfd_win.getWin_LostInbetweenError().pushback_e3plog();
           uvcfd_win.getWin_CurrentError().pushback_e3plog();
 
-        frame_error_flag = 0;
-
-#elif CLI_SET
+        frame_error_flag = false;
+#else
         print_frame_data(*last_frame);
         print_summary(*last_frame);
-        plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
-        print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
-#else
         plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
 #endif
@@ -437,17 +420,19 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           last_frame->push_queue();
         }
       } else if (last_frame->frame_suspicious && last_frame->frame_suspicious != SUSPICIOUS_UNCHECKED) {
-      update_suspicious_stats(last_frame->frame_suspicious);
+      
+        update_suspicious_stats(last_frame->frame_suspicious);
 #ifdef GUI_SET
         addSuspiciousFrameLog("Suspicious " + std::to_string(last_frame->frame_number));
-          uvcfd_graph.getGraph_URBGraph().add_suspicious_log_graph();
-          uvcfd_graph.getGraph_PTSGraph().add_suspicious_log_graph();
-        frame_suspicious_flag = 1;
+        uvcfd_graph.getGraph_URBGraph().add_suspicious_log_graph();
+        uvcfd_graph.getGraph_PTSGraph().add_suspicious_log_graph();
+        frame_suspicious_flag = true;
+
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
         
-        frame_suspicious_flag = 0;
+        frame_suspicious_flag = false;
 #endif
         if (capture_suspicious_flag && capture_image_flag){
           last_frame->push_queue();
@@ -540,34 +525,23 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
   } else {
     control_last_frame_number = 0;
   }
+  std::ostringstream logStream;
+  logStream << "[ " << control_last_frame_number << " ]\n";
+  logStream << "[ " << formatted_time << " ]\n";
+  logStream << "width: " << ControlConfig::instance().get_width() << "\n";
+  logStream << "height: " << ControlConfig::instance().get_height() << "\n";
+  logStream << "frame_format: " << ControlConfig::instance().get_frame_format() << "\n";
+  logStream << "fps: " << ControlConfig::instance().get_fps() << "\n";
+  logStream << "max_frame_size: " << ControlConfig::instance().get_dwMaxVideoFrameSize() << "\n";
+  logStream << "max_payload_size: " << ControlConfig::instance().get_dwMaxPayloadTransferSize() << "\n";
+  logStream << "time_frequency: " << ControlConfig::instance().get_dwTimeFrequency() << "\n";
+  logStream << "\n";
 
 #ifdef GUI_SET
-            std::ostringstream logStream;
-            logStream << "[ " << control_last_frame_number << " ]\n";
-            logStream << "[ " << formatted_time << " ]\n";
-            logStream << "width: " << ControlConfig::instance().get_width() << "\n";
-            logStream << "height: " << ControlConfig::instance().get_height() << "\n";
-            logStream << "frame_format: " << ControlConfig::instance().get_frame_format() << "\n";
-            logStream << "fps: " << ControlConfig::instance().get_fps() << "\n";
-            logStream << "max_frame_size: " << ControlConfig::instance().get_dwMaxVideoFrameSize() << "\n";
-            logStream << "max_payload_size: " << ControlConfig::instance().get_dwMaxPayloadTransferSize() << "\n";
-            logStream << "time_frequency: " << ControlConfig::instance().get_dwTimeFrequency() << "\n";
-            logStream << "\n";
-
-            WindowManager& uvcfd_win = WindowManager::getInstance();
-            // manager.addCustomText(3, logStream.str());
-            uvcfd_win.getWin_ControlConfig().add_customtext(logStream.str());
-
-#else
-              std::cout << "width: " << ControlConfig::instance().get_width() << "   ";
-              std::cout << "height: " << ControlConfig::instance().get_height() << "   ";
-              std::cout << "frame_format: " << ControlConfig::instance().get_frame_format() << "   ";
-              std::cout << "fps: " << ControlConfig::instance().get_fps() << "   ";
-              std::cout << "max_frame_size: " << ControlConfig::instance().get_dwMaxVideoFrameSize() << "   ";
-              std::cout << "max_payload_size: " << ControlConfig::instance().get_dwMaxPayloadTransferSize() << "   "; 
-              std::cout << "time_frequency: " << ControlConfig::instance().get_dwTimeFrequency() << "   ";
-              std::cout << std::endl;
-              
+  WindowManager& uvcfd_win = WindowManager::getInstance();
+  uvcfd_win.getWin_ControlConfig().add_customtext(logStream.str());
+#else 
+  std::cout << logStream.str();
 #endif
 
 }
@@ -739,14 +713,14 @@ void UVCPHeaderChecker::print_error_bits(const UVC_Payload_Header& previous_payl
     // CtrlPrint::v_cout_2 << "Frame Error Type__: " << frame_error << std::endl;
 
 #ifdef GUI_SET
-  frame_error_flag = 1;
-  gui_window_number = 6;
-  print_whole_flag = 1;
+  frame_error_flag = true;
+  gui_window_number = WIN_PREVIOUS_VALID;
+  print_whole_flag = true;
 #endif
     CtrlPrint::v_cout_2 << "[" << p_formatted_time << "] \n\n" << previous_payload_header << "\n" <<  std::endl;
 
 #ifdef GUI_SET
-  gui_window_number = 7;
+  gui_window_number = WIN_LOST_IN_BETWEEN_ERROR;
 #endif
 if (!e_formatted_time.empty()) {
     CtrlPrint::v_cout_2 << "[" << e_formatted_time << "] \n\n" << temp_error_payload_header << "\n" <<  std::endl;
@@ -755,13 +729,14 @@ if (!e_formatted_time.empty()) {
 }
 
 #ifdef GUI_SET
-  gui_window_number = 8;
+  gui_window_number = WIN_CURRENT_ERROR;
 #endif
     CtrlPrint::v_cout_2 << "[" << formatted_time << "] \n\n" << payload_header << "\n" <<  std::endl;
+
 #ifdef GUI_SET
-  gui_window_number = 5;
-  print_whole_flag = 0;
-  frame_error_flag = 0;
+  gui_window_number = WIN_DEBUG;
+  print_whole_flag = false;
+  frame_error_flag = false;
 #else
     CtrlPrint::v_cout_2 <<  std::endl;
 #endif
@@ -795,7 +770,7 @@ std::ostream& operator<<(std::ostream& os, const UVC_Payload_Header& header) {
 
 void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
 #ifdef GUI_SET
-    gui_window_number = 1;
+    gui_window_number = WIN_FRAME_TIME;
 #endif
 
     // Sort received_chrono_times in ascending order
@@ -837,7 +812,7 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "\n\n" << std::endl;
 
 #ifdef GUI_SET
-    gui_window_number = 5;
+    gui_window_number = WIN_DEBUG;
 #endif
 }
 
@@ -845,8 +820,8 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
 
 void UVCPHeaderChecker::print_stats() const {
 #ifdef GUI_SET
-  gui_window_number = 4;
-  print_whole_flag = 1;
+  gui_window_number = WIN_STATISTICS;
+  print_whole_flag = true;
 #endif
 
     payload_stats.print_stats();
@@ -855,17 +830,17 @@ void UVCPHeaderChecker::print_stats() const {
     CtrlPrint::v_cout_1 << std::flush;
 
 #ifdef GUI_SET
-    print_whole_flag = 0;
-  gui_window_number = 5;
+    print_whole_flag = false;
+  gui_window_number = WIN_DEBUG;
 #endif
 }
 
 void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 #ifdef GUI_SET
   if ((frame.frame_error || frame.frame_suspicious) && frame.frame_suspicious != SUSPICIOUS_UNCHECKED) {
-    gui_window_number = 0;
+    gui_window_number = WIN_ERROR_FRAME;
   } else {
-    gui_window_number = 13;
+    gui_window_number = WIN_VALID_FRAME;
   }
 #endif
     CtrlPrint::v_cout_2 << "[ " << frame.frame_number << " ]"<< "\n";
@@ -965,15 +940,15 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 
     CtrlPrint::v_cout_2 << std::endl;
 #ifdef GUI_SET
-  gui_window_number = 5;
+  gui_window_number = WIN_DEBUG;
 #endif
 }
 
 
 void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
 #ifdef GUI_SET
-    print_whole_flag = 1;
-    gui_window_number = 2;
+    print_whole_flag = true;
+    gui_window_number = WIN_SUMMARY;
 #endif
 
     CtrlPrint::v_cout_2 << "Frame Number: " << frame.frame_number << "\n";
@@ -1066,8 +1041,8 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
   CtrlPrint::v_cout_2 << std::flush;
 
 #ifdef GUI_SET
-    print_whole_flag = 0;
-    gui_window_number = 5;
+    print_whole_flag = false;
+    gui_window_number = WIN_DEBUG;
 #endif
 }
 

@@ -26,12 +26,6 @@
 #include "rgb_to_jpeg.hpp"
 #include "yuyv_to_rgb.hpp"
 
-
-// std::mutex dev_f_image_mutex;
-// std::condition_variable dev_f_image_cv;
-// std::queue<std::vector<std::vector<u_char>>> dev_f_image_queue;
-// std::queue<DevFImageFormat> dev_f_image_format_queue;
-
 void DevFImage::develope_mjpeg_to_jpg(std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path) {
     std::ofstream output_file(output_jpg_path, std::ios::binary);
     if (!output_file.is_open()) {

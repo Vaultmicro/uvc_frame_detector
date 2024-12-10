@@ -258,6 +258,8 @@ enum FrameSuspicious{
 
 class ValidFrame{
 public:
+    ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0), frame_suspicious(SUSPICIOUS_NO_SUSPICIOUS) {}
+    
     uint64_t frame_number;
     uint16_t packet_number;
     uint32_t frame_pts;
@@ -281,8 +283,6 @@ public:
 
     std::vector<UVCError> payload_errors;
     std::vector<size_t> lost_data_sizes;
-
-    ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0), frame_suspicious(SUSPICIOUS_NO_SUSPICIOUS) {}
 
     void add_payload(const UVC_Payload_Header& header, size_t payload_size, const std::vector<u_char>& payload) {
         payload_headers.push_back(header);  // Add header to the vector
@@ -344,9 +344,6 @@ public:
 
 class UVCPHeaderChecker {
 private:  
-
-    UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
-
     uint64_t received_frames_count;
     uint64_t received_throughput;
     uint32_t previous_frame_pts;
@@ -359,12 +356,6 @@ private:
 
     std::vector<u_char> payload = {};
 
-    UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
-    
-    void print_error_bits(const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
-
-    FrameSuspicious frame_suspicious_check(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
-
     uint32_t current_frame_number;
 
     PayloadErrorStats payload_stats;
@@ -372,6 +363,7 @@ private:
     FrameSuspiciousStats frame_suspicious_stats;
 
     uint32_t frame_average_size;
+
 
     void update_payload_error_stat(UVCError perror) {
         switch (perror) {
@@ -423,6 +415,13 @@ private:
         }
     }
 
+    UVC_Payload_Header parse_uvc_payload_header(const std::vector<u_char>& uvc_payload, std::chrono::time_point<std::chrono::steady_clock> received_time);
+
+    UVCError payload_header_valid(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
+    FrameSuspicious frame_suspicious_check(const UVC_Payload_Header& payload_header, const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& previous_previous_payload_header);
+
+    void print_error_bits(const UVC_Payload_Header& previous_payload_header, const UVC_Payload_Header& temp_error_payload_header, const UVC_Payload_Header& payload_header);
+
     void save_frames_to_log(std::unique_ptr<ValidFrame>& current_frame);
     void save_payload_header_to_log(
         const UVC_Payload_Header& payload_header,
@@ -444,7 +443,6 @@ private:
                         size_t y_size, std::chrono::time_point<std::chrono::steady_clock> temp_time);
 
 public:
-
     UVCPHeaderChecker() :  
         frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0),
         received_frames_count(0), received_throughput(0), previous_frame_pts(0), temp_received_time(std::chrono::time_point<std::chrono::steady_clock>()) {
@@ -460,6 +458,7 @@ public:
     uint64_t throughput;
     uint64_t graph_throughput;
     double average_frame_rate;
+    
     static bool play_pause_flag;
     static bool capture_image_flag;
     static bool capture_error_flag;

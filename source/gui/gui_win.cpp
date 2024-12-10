@@ -27,12 +27,6 @@
 #include <vector>
 #include <algorithm>
 
-int gui_window_number = 5;
-int print_whole_flag = 0;
-int temp_window_number = 5;
-int frame_error_flag = 0;
-int frame_suspicious_flag = 0;
-
 static std::vector<std::string> error_frame_log_button;
 void addErrorFrameLog(const std::string& efn) {
     error_frame_log_button.push_back(efn);

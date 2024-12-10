@@ -70,4 +70,28 @@ namespace CtrlPrint{
     extern VerboseStream v_cerr_5;
 };
 
+enum WindowName {
+    WIN_ERROR_FRAME = 0,
+    WIN_FRAME_TIME = 1,
+    WIN_SUMMARY = 2,
+    WIN_CONTROL_CONFIG = 3,
+    WIN_STATISTICS = 4,
+    WIN_DEBUG = 5,
+    WIN_PREVIOUS_VALID = 6,
+    WIN_LOST_IN_BETWEEN_ERROR = 7,
+    WIN_CURRENT_ERROR = 8,
+
+    WIN_LOG_BUTTONS = 11,
+    
+    WIN_VALID_FRAME = 13
+};
+
+// Global variable declaration 
+extern WindowName gui_window_number;
+extern bool print_whole_flag;
+extern WindowName temp_window_number;
+extern bool frame_error_flag;
+extern bool frame_suspicious_flag;
+
+
 #endif // VERBOSE_HPP
