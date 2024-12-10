@@ -26,14 +26,6 @@
 #include <iostream>
 #include <cstdint>
 
-// int ControlConfig::width = 1280;
-// int ControlConfig::height = 720;
-// int ControlConfig::fps = 30;
-// std::string ControlConfig::frame_format = "mjpeg";
-// uint64_t ControlConfig::dwMaxVideoFrameSize = 16777216;
-// uint64_t ControlConfig::dwMaxPayloadTransferSize = 1310720;
-
-
 ControlConfig& ControlConfig::instance() {
     static ControlConfig instance; // Guaranteed to be destroyed, instantiated on first use.
     return instance;

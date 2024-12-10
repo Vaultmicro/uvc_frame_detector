@@ -60,12 +60,12 @@ int main() {
     //     return 1;
     // }
 
-    ControlConfig::set_width(1280);
-    ControlConfig::set_height(720);
-    ControlConfig::set_fps(30);
-    ControlConfig::set_frame_format("mjpeg");
-    ControlConfig::set_dwMaxVideoFrameSize(16777216);
-    ControlConfig::set_dwMaxPayloadTransferSize(1310720);
+    ControlConfig::instance().set_width(1280);
+    ControlConfig::instance().set_height(720);
+    ControlConfig::instance().set_fps(30);
+    ControlConfig::instance().set_frame_format("mjpeg");
+    ControlConfig::instance().set_dwMaxVideoFrameSize(16777216);
+    ControlConfig::instance().set_dwMaxPayloadTransferSize(1310720);
 
     std::thread processing_thread(process_file, std::ref(whole_frame_checker), filename);
 
@@ -119,9 +119,9 @@ int main() {
 
 
 
-// int ControlConfig::width = 1280;
-// int ControlConfig::height = 720;
-// int ControlConfig::fps = 30;
-// std::string ControlConfig::frame_format = "mjpeg";
-// uint64_t ControlConfig::dwMaxVideoFrameSize = 16777216;
-// uint64_t ControlConfig::dwMaxPayloadTransferSize = 1310720;
+// int ControlConfig::instance().width = 1280;
+// int ControlConfig::instance().height = 720;
+// int ControlConfig::instance().fps = 30;
+// std::string ControlConfig::instance().frame_format = "mjpeg";
+// uint64_t ControlConfig::instance().dwMaxVideoFrameSize = 16777216;
+// uint64_t ControlConfig::instance().dwMaxPayloadTransferSize = 1310720;
