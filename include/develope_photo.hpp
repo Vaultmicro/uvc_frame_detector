@@ -36,20 +36,54 @@
   typedef unsigned char u_char;
 #endif
 
-struct DevFImageFormat{
+class DevFImage{
+public:
+  static DevFImage& instance(){
+    static DevFImage devfimage;
+    return devfimage;
+  }
+
+  struct DevFImageFormat{
     int frame_number;
     int width;
     int height;
     std::string format;
+  };
+
+  std::mutex dev_f_image_mutex;
+  std::condition_variable dev_f_image_cv;
+  std::queue<std::vector<std::vector<u_char>>> dev_f_image_queue;
+  std::queue<DevFImageFormat> dev_f_image_format_queue;
+
+  void u_char_to_jpg(const std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path);
+  void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data);
+
+  void develope_mjpeg_to_jpg(std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path);
+  void develope_rgb_to_jpg(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data, const std::string& output_jpg_path);
+  void develope_yuyv_to_jpg(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data, const std::string& output_jpg_path);
+
+private:
+  DevFImage() = default;
+  DevFImage(const DevFImage&) = delete;
+  DevFImage& operator=(const DevFImage&) = delete;
 };
 
-extern std::mutex dev_f_image_mutex;
-extern std::condition_variable dev_f_image_cv;
-extern std::queue<std::vector<std::vector<u_char>>> dev_f_image_queue;
-extern std::queue<DevFImageFormat> dev_f_image_format_queue;
+
+// struct DevFImageFormat{
+//     int frame_number;
+//     int width;
+//     int height;
+//     std::string format;
+// };
 
 
-void u_char_to_jpg(const std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path);
-void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data);
+// extern std::mutex dev_f_image_mutex;
+// extern std::condition_variable dev_f_image_cv;
+// extern std::queue<std::vector<std::vector<u_char>>> dev_f_image_queue;
+// extern std::queue<DevFImageFormat> dev_f_image_format_queue;
+
+
+// void u_char_to_jpg(const std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path);
+// void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data);
 
 #endif // DEVELOP_PHOTO_HPP

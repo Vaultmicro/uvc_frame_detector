@@ -324,19 +324,21 @@ public:
     }
 
     void push_queue() {
-        DevFImageFormat frame_format_struct;
+        DevFImage::DevFImageFormat frame_format_struct;
         frame_format_struct.frame_number = static_cast<int>(frame_number);
         frame_format_struct.width = frame_width;
         frame_format_struct.height = frame_height;
         frame_format_struct.format = frame_format;
+
+        DevFImage& dev_f_image = DevFImage::instance();
         {
-            std::lock_guard<std::mutex> lock(dev_f_image_mutex);
+            std::lock_guard<std::mutex> lock(dev_f_image.dev_f_image_mutex);
             
-            dev_f_image_queue.push(std::move(payload_datas));
-            dev_f_image_format_queue.push(frame_format_struct);
+            dev_f_image.dev_f_image_queue.push(std::move(payload_datas));
+            dev_f_image.dev_f_image_format_queue.push(frame_format_struct);
         }
 
-        dev_f_image_cv.notify_one();
+        dev_f_image.dev_f_image_cv.notify_one();
     }
 };
 

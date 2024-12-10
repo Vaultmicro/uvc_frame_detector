@@ -27,12 +27,12 @@
 #include "yuyv_to_rgb.hpp"
 
 
-std::mutex dev_f_image_mutex;
-std::condition_variable dev_f_image_cv;
-std::queue<std::vector<std::vector<u_char>>> dev_f_image_queue;
-std::queue<DevFImageFormat> dev_f_image_format_queue;
+// std::mutex dev_f_image_mutex;
+// std::condition_variable dev_f_image_cv;
+// std::queue<std::vector<std::vector<u_char>>> dev_f_image_queue;
+// std::queue<DevFImageFormat> dev_f_image_format_queue;
 
-void develope_mjpeg_to_jpg(std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path) {
+void DevFImage::develope_mjpeg_to_jpg(std::vector<std::vector<u_char>>& binary_data, const std::string& output_jpg_path) {
     std::ofstream output_file(output_jpg_path, std::ios::binary);
     if (!output_file.is_open()) {
         std::cerr << "Failed to open output file." << std::endl;
@@ -44,7 +44,7 @@ void develope_mjpeg_to_jpg(std::vector<std::vector<u_char>>& binary_data, const 
     }
 }
 
-void develope_rgb_to_jpg(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data, const std::string& output_jpg_path) {
+void DevFImage::develope_rgb_to_jpg(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data, const std::string& output_jpg_path) {
     std::vector<u_char> rgb_data;
     size_t required_size = frame_format.width * frame_format.height * 3;
     rgb_data.reserve(required_size);
@@ -64,7 +64,7 @@ void develope_rgb_to_jpg(const DevFImageFormat& frame_format, std::vector<std::v
     saveJPEG(rgb_data, frame_format.width, frame_format.height, output_jpg_path);
 }
 
-void develope_yuyv_to_jpg(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data, const std::string& output_jpg_path) {
+void DevFImage::develope_yuyv_to_jpg(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data, const std::string& output_jpg_path) {
     std::vector<u_char> yuyv_data;
     size_t required_size = frame_format.width * frame_format.height * 2;
     yuyv_data.reserve(required_size);
@@ -88,10 +88,7 @@ void develope_yuyv_to_jpg(const DevFImageFormat& frame_format, std::vector<std::
     saveJPEG(rgb_data, frame_format.width, frame_format.height, output_jpg_path);
 }
 
-void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data){
-// #ifdef GUI_SET
-// gui_window_number = 12;
-
+void DevFImage::develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector<u_char>>& frame_data){
 //recieve frame number, frame format and the data by using queue
 #ifdef _WIN32
         std::string output_jpg_path = "images\\frame_" + std::to_string(frame_format.frame_number) + ".jpg";
@@ -123,5 +120,4 @@ void develope_photo(const DevFImageFormat& frame_format, std::vector<std::vector
     } else {
         std::cerr << "Failed to save frame " << frame_format.frame_number << " in " << output_jpg_path << std::endl;
     }
-// #endif
 };
