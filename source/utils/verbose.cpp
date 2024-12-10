@@ -84,7 +84,6 @@ void VerboseStream::flush() {
       case 7: data = &uvcfd_win.getWin_LostInbetweenError(); break;
       case 8: data = &uvcfd_win.getWin_CurrentError(); break;
 
-
       case 11: data = &uvcfd_win.getWin_LogButtons(); break;
       case 13: data = &uvcfd_win.getWin_ValidFrame(); break;
       default: break;

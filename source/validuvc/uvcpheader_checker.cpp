@@ -70,7 +70,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   temp_window_number = gui_window_number;
   gui_window_number = WIN_DEBUG;
-
 #endif
 
   std::chrono::milliseconds::rep pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
@@ -107,7 +106,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             }
             average_frame_rate = (average_frame_rate * received_frames_count + frame_count) / (received_frames_count + 1);
             received_frames_count++;
-            CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
+            CtrlPrint::v_cerr_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
             << throughput * 8 / 1000000 << " mbps" << std::endl;
 #ifdef GUI_SET
             print_stats();
@@ -116,7 +115,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         }
     }
 
-    CtrlPrint::v_cout_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
+    CtrlPrint::v_cerr_1 << "[" << formatted_time << "] " <<  frame_count << " FPS  " 
     << throughput * 8 / 1000000 << " mbps" << std::endl;
 
     int fps_difference = ControlConfig::instance().get_fps() - frame_count;
@@ -193,11 +192,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
           frame_error_flag = false;
 #else
+          print_received_times(*last_frame);
           print_frame_data(*last_frame);
           print_summary(*last_frame);
-          plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
           print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
+          plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
 #endif
+
+
         }
         if (capture_error_flag && capture_image_flag){
           last_frame->push_queue();
@@ -398,24 +400,28 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
         addErrorFrameLog("Frame " + std::to_string(last_frame->frame_number));
 
-          uvcfd_graph.getGraph_URBGraph().add_error_log_graph();
-          uvcfd_graph.getGraph_PTSGraph().add_error_log_graph();
+        uvcfd_graph.getGraph_URBGraph().add_error_log_graph();
+        uvcfd_graph.getGraph_PTSGraph().add_error_log_graph();
+
         frame_error_flag = true;
+
         print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
-          uvcfd_win.getWin_PreviousValid().pushback_e3plog();
-          uvcfd_win.getWin_LostInbetweenError().pushback_e3plog();
-          uvcfd_win.getWin_CurrentError().pushback_e3plog();
+        uvcfd_win.getWin_PreviousValid().pushback_e3plog();
+        uvcfd_win.getWin_LostInbetweenError().pushback_e3plog();
+        uvcfd_win.getWin_CurrentError().pushback_e3plog();
 
         frame_error_flag = false;
 #else
+        print_received_times(*last_frame);
         print_frame_data(*last_frame);
         print_summary(*last_frame);
-        plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
         print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
+        plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
 #endif
+
         if (capture_error_flag && capture_image_flag){
           last_frame->push_queue();
         }
@@ -439,10 +445,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         }
 
       }else{
+
       update_suspicious_stats(last_frame->frame_suspicious);
-#ifdef GUI_SET
-        print_frame_data(*last_frame);
-#endif
+      print_frame_data(*last_frame);
         if (capture_valid_flag && capture_image_flag){
           last_frame->push_queue();
         }
@@ -478,18 +483,18 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       last_frame->payload_errors.push_back(payload_header_valid_return);
       last_frame->lost_data_sizes.push_back(uvc_payload.size());
       last_frame->packet_number++;
-
-#ifndef GUI_SET
-      plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
-#endif
     }
+
 #ifdef GUI_SET
-        if (uvc_payload.size() > payload_header.HLE){
-          uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,0);
-          if (payload_header.PTS){
-            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,0);
-          }
-        }
+    if (uvc_payload.size() > payload_header.HLE){
+      uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,0);
+      if (payload_header.PTS){
+        uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,0);
+      }
+    }
+#else
+    auto& last_frame = frames.back();
+    plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
 #endif
 
     print_error_bits(previous_payload_header, temp_error_payload_header ,payload_header);
@@ -817,7 +822,6 @@ void UVCPHeaderChecker::print_received_times(const ValidFrame& frame) {
 }
 
 
-
 void UVCPHeaderChecker::print_stats() const {
 #ifdef GUI_SET
   gui_window_number = WIN_STATISTICS;
@@ -843,6 +847,7 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     gui_window_number = WIN_VALID_FRAME;
   }
 #endif
+
     CtrlPrint::v_cout_2 << "[ " << frame.frame_number << " ]"<< "\n";
 
     // Calculate time taken from valid start to the last of error or valid times
@@ -939,6 +944,7 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "Frame Size: " << total_payload_size << " bytes" << "\n";
 
     CtrlPrint::v_cout_2 << std::endl;
+
 #ifdef GUI_SET
   gui_window_number = WIN_DEBUG;
 #endif

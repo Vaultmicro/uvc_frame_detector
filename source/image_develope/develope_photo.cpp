@@ -49,10 +49,10 @@ void DevFImage::develope_rgb_to_jpg(const DevFImageFormat& frame_format, std::ve
 
     if (rgb_data.size() < required_size) {
         rgb_data.resize(required_size, 0);
-        std::cerr << "Warning: RGB data was smaller than expected. Filled with 0." << std::endl;
+        // std::cerr << "Warning: RGB data was smaller than expected. Filled with 0." << std::endl;
     } else if (rgb_data.size() > required_size) {
         rgb_data.resize(required_size);
-        std::cerr << "Warning: RGB data was larger than expected. Excess data was truncated." << std::endl;
+        // std::cerr << "Warning: RGB data was larger than expected. Excess data was truncated." << std::endl;
     }
 
     saveJPEG(rgb_data, frame_format.width, frame_format.height, output_jpg_path);
@@ -69,15 +69,15 @@ void DevFImage::develope_yuyv_to_jpg(const DevFImageFormat& frame_format, std::v
 
     if (yuyv_data.size() < required_size) {
         yuyv_data.resize(required_size, 0);
-        std::cerr << "Warning: YUYV data was smaller than expected. Filled with 0." << std::endl;
+        // std::cerr << "Warning: YUYV data was smaller than expected. Filled with 0." << std::endl;
     } else if (yuyv_data.size() > required_size) {
         yuyv_data.resize(required_size);
-        std::cerr << "Warning: YUYV data was larger than expected. Excess data was truncated." << std::endl;
+        // std::cerr << "Warning: YUYV data was larger than expected. Excess data was truncated." << std::endl;
     }
 
     std::vector<u_char> rgb_data = convertYUYVtoRGB(yuyv_data, frame_format.width, frame_format.height);
 
-    std::cerr << "RGB Convertion Success" << std::endl;
+    // std::cerr << "RGB Convertion Success" << std::endl;
     
     saveJPEG(rgb_data, frame_format.width, frame_format.height, output_jpg_path);
 }
@@ -110,7 +110,7 @@ void DevFImage::develope_photo(const DevFImageFormat& frame_format, std::vector<
 
 
     if (save_success) {
-        std::cout << "Frame " << frame_format.frame_number << " saved as JPEG in " << output_jpg_path << std::endl;
+        // std::cout << "Frame " << frame_format.frame_number << " saved as JPEG in " << output_jpg_path << std::endl;
     } else {
         std::cerr << "Failed to save frame " << frame_format.frame_number << " in " << output_jpg_path << std::endl;
     }
