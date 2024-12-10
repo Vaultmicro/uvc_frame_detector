@@ -87,7 +87,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     update_payload_error_stat(ERR_EMPTY_PAYLOAD);
     return ERR_EMPTY_PAYLOAD;
   }
-  if (uvc_payload.size() > ControlConfig::get_dwMaxPayloadTransferSize()) {
+  if (uvc_payload.size() > ControlConfig::instance().get_dwMaxPayloadTransferSize()) {
 
     CtrlPrint::v_cerr_2 << "["<< formatted_time << "]" << " Payload size exceeds maximum transfer size." << std::endl;
 
@@ -104,8 +104,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             frame_count = 0;
             throughput = 0;
 
-            int fps_difference = ControlConfig::get_fps() - frame_count;
-            if (frame_count != ControlConfig::get_fps()) {
+            int fps_difference = ControlConfig::instance().get_fps() - frame_count;
+            if (frame_count != ControlConfig::instance().get_fps()) {
                 frame_stats.count_frame_drop += fps_difference;
             }
             average_frame_rate = (average_frame_rate * received_frames_count + frame_count) / (received_frames_count + 1);
@@ -126,8 +126,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   gui_window_number = 5;
 #endif
 
-    int fps_difference = ControlConfig::get_fps() - frame_count;
-    if (frame_count != ControlConfig::get_fps()){
+    int fps_difference = ControlConfig::instance().get_fps() - frame_count;
+    if (frame_count != ControlConfig::instance().get_fps()){
       frame_stats.count_frame_drop += fps_difference;
     }
 
@@ -164,7 +164,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #ifdef GUI_SET
   if (payload_header.PTS && uvc_payload.size() > payload_header.HLE) {
     current_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
-        std::chrono::milliseconds(payload_header.PTS / (ControlConfig::get_dwTimeFrequency() / 1000)));
+        std::chrono::milliseconds(payload_header.PTS / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
   }
 #endif
 
@@ -247,9 +247,9 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 #ifdef GUI_SET
         uvcfd_graph.getGraph_URBGraph().set_move_graph_custom_text("[ " + std::to_string(frame->frame_number) + " ]"
-            + std::to_string(ControlConfig::get_width()) + "x" 
-            + std::to_string(ControlConfig::get_height()) + " " 
-            + ControlConfig::get_frame_format());
+            + std::to_string(ControlConfig::instance().get_width()) + "x" 
+            + std::to_string(ControlConfig::instance().get_height()) + " " 
+            + ControlConfig::instance().get_frame_format());
             
         if (uvc_payload.size() > payload_header.HLE){
           uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
@@ -262,7 +262,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           frame->add_received_valid_time(received_time);
 
           size_t total_payload_size = std::accumulate(frame->payload_sizes.begin(), frame->payload_sizes.end(), size_t(0));
-          if (total_payload_size > ControlConfig::get_dwMaxVideoFrameSize()) {
+          if (total_payload_size > ControlConfig::instance().get_dwMaxVideoFrameSize()) {
             frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
           }
 
@@ -301,13 +301,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       } else {
         new_frame->add_received_valid_time(received_time);
       }
-      new_frame->set_frame_format(ControlConfig::get_width(), ControlConfig::get_height(), ControlConfig::get_frame_format());
+      new_frame->set_frame_format(ControlConfig::instance().get_width(), ControlConfig::instance().get_height(), ControlConfig::instance().get_frame_format());
 
 #ifdef GUI_SET
         uvcfd_graph.getGraph_URBGraph().set_move_graph_custom_text("[ " + std::to_string(new_frame->frame_number) + " ]"
-            + std::to_string(ControlConfig::get_width()) + "x" 
-            + std::to_string(ControlConfig::get_height()) + " " 
-            + ControlConfig::get_frame_format());
+            + std::to_string(ControlConfig::instance().get_width()) + "x" 
+            + std::to_string(ControlConfig::instance().get_height()) + " " 
+            + ControlConfig::instance().get_frame_format());
 
         if (uvc_payload.size() > payload_header.HLE){
           uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
@@ -318,8 +318,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         }
 #endif
       size_t total_payload_size = std::accumulate(new_frame->payload_sizes.begin(), new_frame->payload_sizes.end(), size_t(0));
-      if (total_payload_size > ControlConfig::dwMaxVideoFrameSize) {
-        new_frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;  
+      if (total_payload_size > ControlConfig::instance().get_dwMaxVideoFrameSize()) {
+        new_frame->frame_error = ERR_FRAME_MAX_FRAME_OVERFLOW;
       }
 
       if (payload_header_valid_return && payload_header_valid_return != ERR_MISSING_EOF && payload_header_valid_return != ERR_FID_MISMATCH) {
@@ -347,10 +347,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       // Check the Frame width x height in here
       // For YUYV format, the width x height should be 1280 x 720 x 2 excluding
       // the headerlength If not then there is a problem with the frame
-      if (ControlConfig::get_frame_format() == "yuyv") {
+      if (ControlConfig::instance().get_frame_format() == "yuyv") {
         // Calculate the expected size for the YUYV frame
         size_t expected_frame_size =
-            ControlConfig::get_width() * ControlConfig::get_height() * 2;
+            ControlConfig::instance().get_width() * ControlConfig::instance().get_height() * 2;
 
         // Calculate the actual size by summing up all payload sizes and
         // subtracting the total header lengths
@@ -372,7 +372,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
 
       if (filter_on_off_flag && irregular_define_flag){
-        if (ControlConfig::get_frame_format() == "mjpeg"){
+        if (ControlConfig::instance().get_frame_format() == "mjpeg"){
           size_t total_size_sum = 0;
           size_t total_payload_count_sum = 0;
           for (const auto& frame : processed_frames) {
@@ -387,7 +387,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             CtrlPrint::v_cout_2 << "[" << formatted_time << "] " << "Inconsistent frame size detected." << std::endl;
           }
 
-          if (total_size_sum < ControlConfig::get_height() * ControlConfig::get_width() * 2 * 0.05) {
+          if (total_size_sum < ControlConfig::instance().get_height() * ControlConfig::instance().get_width() * 2 * 0.05) {
             last_frame->frame_suspicious = SUSPICIOUS_OVERCOMPRESSED;
             CtrlPrint::v_cout_2 << "[" << formatted_time << "] " << "Overcompressed frame detected." << std::endl;
           }
@@ -522,13 +522,13 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 }
 
 void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint32_t max_frame_size, uint32_t max_payload_size, uint32_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time) {
-  ControlConfig::set_width(width);
-  ControlConfig::set_height(height);
-  ControlConfig::set_fps(fps);
-  ControlConfig::set_frame_format(frame_format);
-  ControlConfig::set_dwMaxVideoFrameSize(max_frame_size);
-  ControlConfig::set_dwMaxPayloadTransferSize(max_payload_size);
-  ControlConfig::set_dwTimeFrequency(time_frequency);
+  ControlConfig::instance().set_width(width);
+  ControlConfig::instance().set_height(height);
+  ControlConfig::instance().set_fps(fps);
+  ControlConfig::instance().set_frame_format(frame_format);
+  ControlConfig::instance().set_dwMaxVideoFrameSize(max_frame_size);
+  ControlConfig::instance().set_dwMaxPayloadTransferSize(max_payload_size);
+  ControlConfig::instance().set_dwTimeFrequency(time_frequency);
 
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
@@ -545,13 +545,13 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
             std::ostringstream logStream;
             logStream << "[ " << control_last_frame_number << " ]\n";
             logStream << "[ " << formatted_time << " ]\n";
-            logStream << "width: " << ControlConfig::get_width() << "\n";
-            logStream << "height: " << ControlConfig::get_height() << "\n";
-            logStream << "frame_format: " << ControlConfig::get_frame_format() << "\n";
-            logStream << "fps: " << ControlConfig::get_fps() << "\n";
-            logStream << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "\n";
-            logStream << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "\n";
-            logStream << "time_frequency: " << ControlConfig::get_dwTimeFrequency() << "\n";
+            logStream << "width: " << ControlConfig::instance().get_width() << "\n";
+            logStream << "height: " << ControlConfig::instance().get_height() << "\n";
+            logStream << "frame_format: " << ControlConfig::instance().get_frame_format() << "\n";
+            logStream << "fps: " << ControlConfig::instance().get_fps() << "\n";
+            logStream << "max_frame_size: " << ControlConfig::instance().get_dwMaxVideoFrameSize() << "\n";
+            logStream << "max_payload_size: " << ControlConfig::instance().get_dwMaxPayloadTransferSize() << "\n";
+            logStream << "time_frequency: " << ControlConfig::instance().get_dwTimeFrequency() << "\n";
             logStream << "\n";
 
             WindowManager& uvcfd_win = WindowManager::getInstance();
@@ -559,13 +559,13 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
             uvcfd_win.getWin_ControlConfig().add_customtext(logStream.str());
 
 #else
-              std::cout << "width: " << ControlConfig::get_width() << "   ";
-              std::cout << "height: " << ControlConfig::get_height() << "   ";
-              std::cout << "frame_format: " << ControlConfig::get_frame_format() << "   ";
-              std::cout << "fps: " << ControlConfig::get_fps() << "   ";
-              std::cout << "max_frame_size: " << ControlConfig::get_dwMaxVideoFrameSize() << "   ";
-              std::cout << "max_payload_size: " << ControlConfig::get_dwMaxPayloadTransferSize() << "   "; 
-              std::cout << "time_frequency: " << ControlConfig::get_dwTimeFrequency() << "   ";
+              std::cout << "width: " << ControlConfig::instance().get_width() << "   ";
+              std::cout << "height: " << ControlConfig::instance().get_height() << "   ";
+              std::cout << "frame_format: " << ControlConfig::instance().get_frame_format() << "   ";
+              std::cout << "fps: " << ControlConfig::instance().get_fps() << "   ";
+              std::cout << "max_frame_size: " << ControlConfig::instance().get_dwMaxVideoFrameSize() << "   ";
+              std::cout << "max_payload_size: " << ControlConfig::instance().get_dwMaxPayloadTransferSize() << "   "; 
+              std::cout << "time_frequency: " << ControlConfig::instance().get_dwTimeFrequency() << "   ";
               std::cout << std::endl;
               
 #endif
@@ -1001,8 +1001,8 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
       CtrlPrint::v_cout_2 << " - Frame Error: " << frame.frame_error << "\n";
       printFrameErrorExplanation(frame.frame_error);
       size_t actual_frame_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
-      if (ControlConfig::get_frame_format() == "yuyv") {
-        size_t expected_frame_size = ControlConfig::get_width() * ControlConfig::get_height() * 2;
+      if (ControlConfig::instance().get_frame_format() == "yuyv") {
+        size_t expected_frame_size = ControlConfig::instance().get_width() * ControlConfig::instance().get_height() * 2;
         CtrlPrint::v_cout_2 << " - Frame Format: YUYV\n";
         CtrlPrint::v_cout_2 << "Expected frame size: " << expected_frame_size << " bytes excluding the header length.\n";
         if (expected_frame_size != actual_frame_size) {
@@ -1043,9 +1043,9 @@ void UVCPHeaderChecker::print_summary(const ValidFrame& frame) {
         auto final_end = (error_end > valid_end) ? error_end : valid_end;
         auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(final_end - valid_start).count();
 
-        if (time_taken > (1000.0 / (ControlConfig::get_fps())) + 20){
+        if (time_taken > (1000.0 / (ControlConfig::instance().get_fps())) + 20){
           CtrlPrint::v_cout_2 << "Frame Drop May Cause because of Time Taken (Valid Start to Last Event): \n"
-          << "Should be " << (1000.0 / (ControlConfig::get_fps())) << " ms, but " << time_taken << " ms \n"
+          << "Should be " << (1000.0 / (ControlConfig::instance().get_fps())) << " ms, but " << time_taken << " ms \n"
           << "Or two frames could be overlapped \n";
         }
     }
@@ -1114,7 +1114,7 @@ void UVCPHeaderChecker::printFrameErrorExplanation(FrameError error) {
         CtrlPrint::v_cout_2 << "Frame Error - General frame error \nCaused by payload validation errors.\n";
     } else if (error == ERR_FRAME_MAX_FRAME_OVERFLOW) {
         CtrlPrint::v_cout_2 << "Max Frame Size Overflow - Frame size exceeds max frame size setting.\nIndicates potential dummy data or erroneous payload.\n";
-        CtrlPrint::v_cout_2 << "Max Frame Size is " << ControlConfig::get_dwMaxVideoFrameSize() << " bytes.\n";
+        CtrlPrint::v_cout_2 << "Max Frame Size is " << ControlConfig::instance().get_dwMaxVideoFrameSize() << " bytes.\n";
     } else if (error == ERR_FRAME_INVALID_YUYV_RAW_SIZE) {
         CtrlPrint::v_cout_2 << "YUYV Frame Length Error - YUYV frame length mismatch.\nExpected size for YUYV is width * height * 2.\n";
     } else if (error == ERR_FRAME_SAME_DIFFERENT_PTS) {
@@ -1145,8 +1145,8 @@ void UVCPHeaderChecker::printSuspiciousExplanation(FrameSuspicious error) {
         CtrlPrint::v_cout_2 << "SCR STC Decrease - SCR STC value decreased.\n";
     } else if (error == SUSPICIOUS_OVERCOMPRESSED) {
         CtrlPrint::v_cout_2 << "Overcompressed - Frame is overcompressed.\nSmaller than " << 
-        ControlConfig::get_width() << " x " << ControlConfig::get_height() << " x 2 x 0.05\n" <<
-        ControlConfig::get_width() * ControlConfig::get_height() * 2 * 0.05 << "bytes .\n";
+        ControlConfig::instance().get_width() << " x " << ControlConfig::instance().get_height() << " x 2 x 0.05\n" <<
+        ControlConfig::instance().get_width() * ControlConfig::instance().get_height() * 2 * 0.05 << "bytes .\n";
     } else if (error == SUSPICIOUS_ERROR_CHECKED) {
         CtrlPrint::v_cout_2 << "Error Checked - Frame is already set ERROR.\n";
     } else if (error == SUSPICIOUS_UNCHECKED) {
@@ -1281,8 +1281,8 @@ void UVCPHeaderChecker::plot_received_chrono_times(const std::vector<std::chrono
 
     const int zoom = 4;
     const int cut = 20;
-    const int total_markers = ControlConfig::get_fps() * zoom;         
-    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::get_fps()) / (zoom *cut)));
+    const int total_markers = ControlConfig::instance().get_fps() * zoom;         
+    const auto interval_ns = std::chrono::nanoseconds(static_cast<long long>(1e9 / static_cast<double>(ControlConfig::instance().get_fps()) / (zoom *cut)));
 
 
     auto base_time = received_valid_times[0];

@@ -107,12 +107,12 @@ int main(int argc, char* argv[]) {
 
   UVCPHeaderChecker header_checker;
 
-  ControlConfig::set_width(1080);
-  ControlConfig::set_height(720);
-  ControlConfig::set_fps(30);
-  ControlConfig::set_frame_format("MJPEG");
-  ControlConfig::set_dwMaxVideoFrameSize(387200);
-  ControlConfig::set_dwMaxPayloadTransferSize(387200);
+  ControlConfig::instance().set_width(1080);
+  ControlConfig::instance().set_height(720);
+  ControlConfig::instance().set_fps(30);
+  ControlConfig::instance().set_frame_format("MJPEG");
+  ControlConfig::instance().set_dwMaxVideoFrameSize(387200);
+  ControlConfig::instance().set_dwMaxPayloadTransferSize(387200);
 
   static uint8_t designed_fps = 30;
   std::chrono::milliseconds frame_interval(1000 / designed_fps);  // 33ms

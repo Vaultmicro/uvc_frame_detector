@@ -388,9 +388,9 @@ void GraphData::_calculate_time_gap() {
 }
 void GraphData::_calculate_pts_overflow() {
     const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
-        std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
+        std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
     const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
-        static_cast<long long>(0xFFFFFFFFU / (ControlConfig::get_dwTimeFrequency() / 1000)));
+        static_cast<long long>(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
     
     if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
         reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;

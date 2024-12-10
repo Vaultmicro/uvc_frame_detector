@@ -28,29 +28,44 @@
 
 class ControlConfig {
 public:
-    static int width;
-    static int height;
-    static int fps;
-    static std::string frame_format;
-    static uint32_t dwMaxVideoFrameSize;
-    static uint32_t dwMaxPayloadTransferSize;
-    static uint32_t dwTimeFrequency;
+    // Getter for singleton instance
+    static ControlConfig& instance();
 
-    static void set_width(int w);
-    static void set_height(int h);
-    static void set_fps(int f);
-    static void set_frame_format(const std::string& format);
-    static void set_dwMaxVideoFrameSize(uint32_t max_video_frame_size);
-    static void set_dwMaxPayloadTransferSize(uint32_t max_payload_transfer_size);
-    static void set_dwTimeFrequency(uint32_t time_frequency);
+    // Delete copy constructor and copy assignment operator
+    ControlConfig(const ControlConfig&) = delete;
+    ControlConfig& operator=(const ControlConfig&) = delete;
 
-    static int get_width();
-    static int get_height();
-    static int get_fps();
-    static std::string get_frame_format();
-    static uint32_t get_dwMaxVideoFrameSize();
-    static uint32_t get_dwMaxPayloadTransferSize();
-    static uint32_t get_dwTimeFrequency();
+    // Public setters
+    void set_width(int w);
+    void set_height(int h);
+    void set_fps(int f);
+    void set_frame_format(const std::string& format);
+    void set_dwMaxVideoFrameSize(uint32_t max_video_frame_size);
+    void set_dwMaxPayloadTransferSize(uint32_t max_payload_transfer_size);
+    void set_dwTimeFrequency(uint32_t time_frequency);
+
+    // Public getters
+    int get_width() const;
+    int get_height() const;
+    int get_fps() const;
+    std::string get_frame_format() const;
+    uint32_t get_dwMaxVideoFrameSize() const;
+    uint32_t get_dwMaxPayloadTransferSize() const;
+    uint32_t get_dwTimeFrequency() const;
+
+private:
+    // Private constructor to prevent instantiation
+    ControlConfig();
+
+    // Member variables
+    int width;
+    int height;
+    int fps;
+    std::string frame_format;
+    uint32_t dwMaxVideoFrameSize;
+    uint32_t dwMaxPayloadTransferSize;
+    uint32_t dwTimeFrequency;
 };
+
 
 #endif // CONTROL_CONFIG_HPP

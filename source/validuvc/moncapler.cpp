@@ -672,21 +672,21 @@ int main(int argc, char* argv[]) {
     } else if (std::strcmp(argv[i], "-dn") == 0 && i + 1 < argc) {
       target_devnum = std::atoi(argv[i + 1]);
     } else if (std::strcmp(argv[i], "-fw") == 0 && i + 1 < argc) {
-      ControlConfig::set_width(std::atoi(argv[i + 1]));
+      ControlConfig::instance().set_width(std::atoi(argv[i + 1]));
       fw_set = true;
     } else if (std::strcmp(argv[i], "-fh") == 0 && i + 1 < argc) {
-      ControlConfig::set_height(std::atoi(argv[i + 1]));
+      ControlConfig::instance().set_height(std::atoi(argv[i + 1]));
       fh_set = true;
     } else if (std::strcmp(argv[i], "-fps") == 0 && i + 1 < argc) {
-      ControlConfig::set_fps(std::atoi(argv[i + 1]));
+      ControlConfig::instance().set_fps(std::atoi(argv[i + 1]));
       fps_set = true;
     } else if (std::strcmp(argv[i], "-ff") == 0 && i + 1 < argc) {
-      ControlConfig::set_frame_format(argv[i + 1]);
+      ControlConfig::instance().set_frame_format(argv[i + 1]);
       ff_set = true;
     } else if (std::strcmp(argv[i], "-mf") == 0 && i + 1 < argc) {
-      ControlConfig::set_dwMaxVideoFrameSize(std::atoi(argv[i + 1]));
+      ControlConfig::instance().set_dwMaxVideoFrameSize(std::atoi(argv[i + 1]));
     } else if (std::strcmp(argv[i], "-mp") == 0 && i + 1 < argc) {
-      ControlConfig::set_dwMaxPayloadTransferSize(std::atoi(argv[i + 1]));
+      ControlConfig::instance().set_dwMaxPayloadTransferSize(std::atoi(argv[i + 1]));
     } else if (std::strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
       VerboseStream::verbose_level = std::atoi(argv[i + 1]);
     } else if (std::strcmp(argv[i], "-lv") == 0 && i + 1 < argc) {
@@ -721,25 +721,25 @@ int main(int argc, char* argv[]) {
   if (!fw_set || !fh_set || !fps_set || !ff_set) {
     if (!fw_set) {
       CtrlPrint::v_cout_1 << "Frame width not specified, using default: "
-                << ControlConfig::get_width() << std::endl;
+                << ControlConfig::instance().get_width() << std::endl;
     }
     if (!fh_set) {
       CtrlPrint::v_cout_1 << "Frame height not specified, using default: "
-                << ControlConfig::get_height() << std::endl;
+                << ControlConfig::instance().get_height() << std::endl;
     }
     if (!fps_set) {
       CtrlPrint::v_cout_1 << "FPS not specified, using default: "
-                << ControlConfig::get_fps() << std::endl;
+                << ControlConfig::instance().get_fps() << std::endl;
     }
     if (!ff_set) {
       CtrlPrint::v_cout_1 << "Frame format not specified, using default: "
-                << ControlConfig::get_frame_format() << std::endl;
+                << ControlConfig::instance().get_frame_format() << std::endl;
     }
   }
-  CtrlPrint::v_cout_1 << "Frame Width: " << ControlConfig::get_width() << std::endl;
-  CtrlPrint::v_cout_1 << "Frame Height: " << ControlConfig::get_height() << std::endl;
-  CtrlPrint::v_cout_1 << "Frame FPS: " << ControlConfig::get_fps() << std::endl;
-  CtrlPrint::v_cout_1 << "Frame Format: " << ControlConfig::get_frame_format()
+  CtrlPrint::v_cout_1 << "Frame Width: " << ControlConfig::instance().get_width() << std::endl;
+  CtrlPrint::v_cout_1 << "Frame Height: " << ControlConfig::instance().get_height() << std::endl;
+  CtrlPrint::v_cout_1 << "Frame FPS: " << ControlConfig::instance().get_fps() << std::endl;
+  CtrlPrint::v_cout_1 << "Frame Format: " << ControlConfig::instance().get_frame_format()
            << std::endl;
 
   // Register signal handler for safe exit

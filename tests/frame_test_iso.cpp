@@ -18,12 +18,12 @@ class frame_test : public ::testing::Test {
 // Test for whole frame
 TEST_F(frame_test, whole_frame_test_brio) {
 
-  ControlConfig::set_width(1280);
-  ControlConfig::set_height(720);
-  ControlConfig::set_frame_format("mjpeg");
-  ControlConfig::set_fps(30);
-  ControlConfig::set_dwMaxPayloadTransferSize(1310720);
-  ControlConfig::set_dwMaxVideoFrameSize(16777216);
+  ControlConfig::instance().set_width(1280);
+  ControlConfig::instance().set_height(720);
+  ControlConfig::instance().set_frame_format("mjpeg");
+  ControlConfig::instance().set_fps(30);
+  ControlConfig::instance().set_dwMaxPayloadTransferSize(1310720);
+  ControlConfig::instance().set_dwMaxVideoFrameSize(16777216);
 
   // Packet 0
   std::vector<u_char> packet_0 = create_packet(
