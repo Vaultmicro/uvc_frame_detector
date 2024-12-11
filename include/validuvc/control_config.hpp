@@ -36,6 +36,10 @@ public:
     ControlConfig& operator=(const ControlConfig&) = delete;
 
     // Public setters
+    void set_vendor_id(int v);
+    void set_product_id(int p);
+    void set_device_name(const std::string& name);
+
     void set_width(int w);
     void set_height(int h);
     void set_fps(int f);
@@ -45,6 +49,10 @@ public:
     void set_dwTimeFrequency(uint32_t time_frequency);
 
     // Public getters
+    int get_vendor_id() const;
+    int get_product_id() const;
+    std::string get_device_name() const;
+
     int get_width() const;
     int get_height() const;
     int get_fps() const;
@@ -56,6 +64,11 @@ public:
 private:
     // Private constructor to prevent instantiation
     ControlConfig();
+
+    // Device Info
+    int vendor_id;
+    int product_id;
+    std::string device_name;
 
     // Member variables
     int width;

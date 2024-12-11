@@ -20,44 +20,53 @@
  * SOFTWARE.
 *********************************************************************/
 
-#ifndef MONCAPWER_HPP
-#define MONCAPWER_HPP
+#ifndef DEVICE_INFO_HPP
+#define DEVICE_INFO_HPP
 
-#include <chrono>
-#include <condition_variable>
-#include <csignal>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <mutex>
-#include <queue>
 #include <string>
-#include <string_view>
-#include <thread>
 #include <vector>
-#include <array>
-#ifdef __linux__
-#include <cstring>
-#endif
+#include "control_config.hpp"
 
-#include "validuvc/control_config.hpp"
-#include "validuvc/uvcpheader_checker.hpp"
-#include "validuvc/device_info.hpp"
-#include "utils/verbose.hpp"
-#include "develope_photo.hpp"
+class DeviceInfo {
+public:
+    DeviceInfo();
 
-#ifdef TUI_SET
-#include "utils/tui_win.hpp"
-#elif GUI_SET
-#include "gui/gui_win.hpp"
-#endif
+    void set_vendor_id(int vendor_id);
+    void set_product_id(int product_id);
+    void set_serial_number(int serial_number);
+    void set_name(const std::string& name);
+    void set_description(const std::string& description);
 
-void clean_exit(int signum);
-std::vector<std::string> split(const std::string& s, char delimiter);
-std::chrono::time_point<std::chrono::steady_clock> convert_epoch_to_time_point(double frame_time_epoch);
-void hex_string_to_bytes_append(const std::string& hex_str, std::vector<u_char>& out_vec);
-void capture_packets();
-void process_packets();
-void develope_frame_image();
+    int get_vendor_id() const;
+    int get_product_id() const;
+    int get_serial_number() const;
+    std::string get_name() const;
+    std::string get_description() const;
 
-#endif // MONCAPWER_HPP
+private:
+    int vendor_id_;
+    int product_id_;
+    int serial_number_;
+    std::string name_;
+    std::string description_;
+};
+
+class DeviceInfoList {
+public:
+    static DeviceInfoList& get_instance();
+    void call_log_history();
+    void update(int vendor_id, int product_id);
+    void save_log_history();
+    
+    DeviceInfo current_device;
+
+private:
+    DeviceInfoList();
+    DeviceInfoList(const DeviceInfoList&) = delete;
+    DeviceInfoList& operator=(const DeviceInfoList&) = delete;
+
+    std::vector<DeviceInfo> devices_;
+    
+};
+
+#endif // DEVICE_INFO_HPP

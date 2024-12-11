@@ -32,21 +32,22 @@ ControlConfig& ControlConfig::instance() {
 }
 
 ControlConfig::ControlConfig() 
-    : width(1), height(1), fps(1), frame_format("mjpeg"),
+    : vendor_id(0), product_id(0), device_name("-"), width(1), height(1), fps(1), frame_format("mjpeg"),
       dwMaxVideoFrameSize(1), dwMaxPayloadTransferSize(1), dwTimeFrequency(1) {}
 
 
-void ControlConfig::set_width(int w) {
-    width = w;
-}
+void ControlConfig::set_vendor_id(int v) {vendor_id = v;}
 
-void ControlConfig::set_height(int h) {
-    height = h;
-}
+void ControlConfig::set_product_id(int p) {product_id = p;}
 
-void ControlConfig::set_fps(int f) {
-    fps = f;
-}
+void ControlConfig::set_device_name(const std::string& name) {device_name = name;}
+
+
+void ControlConfig::set_width(int w) {width = w;}
+
+void ControlConfig::set_height(int h) {height = h;}
+
+void ControlConfig::set_fps(int f) {fps = f;}
 
 void ControlConfig::set_frame_format(const std::string& format) {
     std::string format_lower = format;
@@ -74,32 +75,26 @@ void ControlConfig::set_dwTimeFrequency(uint32_t time_frequency) {
     dwTimeFrequency = time_frequency;
 }
 
-int ControlConfig::get_width() const {
-    return width;
-}
 
-int ControlConfig::get_height() const {
-    return height;
-}
+int ControlConfig::get_vendor_id() const {return vendor_id;}
 
-int ControlConfig::get_fps() const {
-    return fps;
-}
+int ControlConfig::get_product_id() const {return product_id;}
 
-std::string ControlConfig::get_frame_format() const {
-    return frame_format;
-}
+std::string ControlConfig::get_device_name() const {return device_name;}
 
-uint32_t ControlConfig::get_dwMaxVideoFrameSize() const {
-    return dwMaxVideoFrameSize;
-}
 
-uint32_t ControlConfig::get_dwMaxPayloadTransferSize() const {
-    return dwMaxPayloadTransferSize;
-}
+int ControlConfig::get_width() const {return width;}
 
-uint32_t ControlConfig::get_dwTimeFrequency() const {
-    return dwTimeFrequency;
-}
+int ControlConfig::get_height() const {return height;}
+
+int ControlConfig::get_fps() const {return fps;}
+
+std::string ControlConfig::get_frame_format() const {return frame_format;}
+
+uint32_t ControlConfig::get_dwMaxVideoFrameSize() const {return dwMaxVideoFrameSize;}
+
+uint32_t ControlConfig::get_dwMaxPayloadTransferSize() const {return dwMaxPayloadTransferSize;}
+
+uint32_t ControlConfig::get_dwTimeFrequency() const {return dwTimeFrequency;}
 
 

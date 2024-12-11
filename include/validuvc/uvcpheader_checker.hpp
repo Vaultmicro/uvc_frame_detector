@@ -476,7 +476,7 @@ public:
         const std::vector<u_char>& uvc_payload,
         std::chrono::time_point<std::chrono::steady_clock> received_time);
     
-    void control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint32_t max_frame_size, uint32_t max_payload_size, uint32_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time);
+    void control_configuration_ctrl(int vendor_id, int product_id, std::string device_name, int width, int height, int fps, std::string frame_format, uint32_t max_frame_size, uint32_t max_payload_size, uint32_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time);
 
     void print_stats() const;
 };

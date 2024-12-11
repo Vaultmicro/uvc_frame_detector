@@ -201,6 +201,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/device_info.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/gui/gui_win.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/gui/window_manager.cpp
@@ -235,6 +236,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/source/moncapwer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/uvcpheader_checker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/control_config.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/source/validuvc/device_info.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/source/utils/verbose.cpp
     ${DEVELOPE_PHOTO_SOURCES}
 )

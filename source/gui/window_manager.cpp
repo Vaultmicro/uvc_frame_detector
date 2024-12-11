@@ -130,6 +130,7 @@ void WindowData::print_suspiciouslogtext(int index) {
     if (index >= 0 && index < suspicious_log_text.size()) {
         ImGui::Text("%s", suspicious_log_text[index].c_str());
     }
+
 }
 
 void WindowData::print_e3p_logtext(int error_frame_index, int error_payload_index) {
@@ -231,13 +232,13 @@ void GraphData::reset_reference_timepoint() {
 
 void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> current_time, int y) {
     std::lock_guard<std::mutex> lock(mutex);
-    _init_current_time(current_time);
-    _calculate_time_gap();
+    init_current_time_(current_time);
+    calculate_time_gap_();
     if (type_pts) {
-        _calculate_pts_overflow();
+        calculate_pts_overflow_();
     }
-    _update_switch();
-    _draw_graph(y);
+    update_switch_();
+    draw_graph_(y);
 }
 
 
@@ -356,7 +357,7 @@ void GraphData::show_current_graph_data(){
 
 // Private methods
 // Every private method should not be locked by mutex, as it is already locked by the public method
-void GraphData::_update_graph_stats(int value) {
+void GraphData::update_graph_stats_(int value) {
     if (value != 0) {
         if (value > max_graph_height) max_graph_height = value;
         if (value < min_graph_height) min_graph_height = value;
@@ -366,7 +367,7 @@ void GraphData::_update_graph_stats(int value) {
     }
 }
 
-void GraphData::_reset_graph() {
+void GraphData::reset_graph_() {
     graph_data.fill(0.0f);
     graph_x_index = 0;
     max_graph_height = 0;
@@ -375,18 +376,18 @@ void GraphData::_reset_graph() {
     count_non_zero_graph = 0;
 }
 
-void GraphData::_init_current_time(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
+void GraphData::init_current_time_(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
     current_time = recieved_time;
 }
 
-void GraphData::_calculate_time_gap() {
+void GraphData::calculate_time_gap_() {
     if (reference_timepoint == std::chrono::time_point<std::chrono::steady_clock>()) {
-        _reset_graph();
+        reset_graph_();
         reference_timepoint = current_time ;
     }
     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
 }
-void GraphData::_calculate_pts_overflow() {
+void GraphData::calculate_pts_overflow_() {
     const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
     const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
@@ -415,7 +416,7 @@ void GraphData::_calculate_pts_overflow() {
 
 
 
-void GraphData::_update_switch(){
+void GraphData::update_switch_(){
     // When first data comes in, or the time gap is over the GRAPH_PERIOD_SECOND
     if (time_gap > GRAPH_PERIOD_SECOND * 1000) {
         assert(current_time >= reference_timepoint + std::chrono::seconds(GRAPH_PERIOD_SECOND));
@@ -426,7 +427,7 @@ void GraphData::_update_switch(){
             }
         }
 
-        _reset_graph();
+        reset_graph_();
         reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
         assert(current_time >= reference_timepoint);
 
@@ -440,7 +441,7 @@ void GraphData::_update_switch(){
     }
 }
 
-void GraphData::_add_graph_data(int new_value) {
+void GraphData::add_graph_data_(int new_value) {
     assert(graph_x_index < GRAPH_DATA_SIZE );
 
     if (graph_x_index >= 0 && graph_x_index < GRAPH_DATA_SIZE) {
@@ -448,24 +449,24 @@ void GraphData::_add_graph_data(int new_value) {
         graph_x_index++;
     }
     if (graph_x_index >= GRAPH_DATA_SIZE) {
-        _reset_graph();
+        reset_graph_();
         reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
 
-    _update_graph_stats(new_value);
+    update_graph_stats_(new_value);
 }
 
 
-void GraphData::_draw_graph(int y) {
+void GraphData::draw_graph_(int y) {
     // Drawing
     if (time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND <= graph_x_index) {
-        _add_graph_data(y);
+        add_graph_data_(y);
     } else {
         for (int i = graph_x_index; i < time_gap * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND; ++i) {
-            _add_graph_data(0.0f);
+            add_graph_data_(0.0f);
         }
-        _add_graph_data(y);
+        add_graph_data_(y);
     }
     assert(graph_x_index < GRAPH_DATA_SIZE);
 }

@@ -28,7 +28,7 @@ std::queue<std::vector<u_char>> packet_queue;
 std::mutex queue_mutex;
 std::condition_variable queue_cv;
 bool stop_processing = false;
-std::queue<std::tuple<int, int, int, std::string, uint32_t, uint32_t, uint32_t, std::chrono::time_point<std::chrono::steady_clock>>> set_control_queue;
+std::queue<std::tuple<int, int, std::string, int, int, int, std::string, uint32_t, uint32_t, uint32_t, std::chrono::time_point<std::chrono::steady_clock>>> set_control_queue;
 
 
 struct FrameInfo{
@@ -116,12 +116,12 @@ void capture_packets() {
     CtrlPrint::v_cout_1 << "Waiting for input...     " << std::endl;
 #endif
     while (std::getline(std::cin, line)) {
-        // Split the line by semicolon
+        // Split the line by semicolon 
         std::vector<std::string> tokens = split(line, ';');
 
         // Prepare fields with defaults if they are missing
         // -e usb.transfer_type -e frame.time_epoch -e frame.len -e usb.capdata or usb.iso.data
-        // MUST BE IN CORRECT ORDER
+        // MUST BE IN CORRECT ORDER , else change the shellscript
         std::string usb_transfer_type = (tokens.size() > 0 && !tokens[0].empty()) ? tokens[0] : "N/A";
         std::string frame_time_epoch = (tokens.size() > 1 && !tokens[1].empty()) ? tokens[1] : "N/A";
         std::string frame_len = (tokens.size() > 2 && !tokens[2].empty()) ? tokens[2] : "N/A";
@@ -137,6 +137,8 @@ void capture_packets() {
         std::string max_payload_size = (tokens.size() > 12 && !tokens[12].empty()) ? tokens[12] : "N/A";
         std::string num_frame_descriptor = (tokens.size() > 13 && !tokens[13].empty()) ? tokens[13] : "N/A";
         std::string time_frequency = (tokens.size() > 14 && !tokens[14].empty()) ? tokens[14] : "N/A";
+        std::string vendor_id = (tokens.size() > 15 && !tokens[15].empty()) ? tokens[15] : "N/A";
+        std::string product_id = (tokens.size() > 16 && !tokens[16].empty()) ? tokens[16] : "N/A";
 
         auto time_point_d = (frame_time_epoch != "N/A") ? convert_epoch_to_time_point(std::stod(frame_time_epoch)) : std::chrono::steady_clock::time_point{};
 
@@ -147,7 +149,7 @@ void capture_packets() {
         static int start_flag = 0;
 #endif
 
-        if (usb_capdata == "N/A" && usb_isodata == "N/A" && format_index == "N/A") {
+        if (usb_capdata == "N/A" && usb_isodata == "N/A" && format_index == "N/A" && vendor_id == "N/A" && product_id == "N/A") {
             continue;
         } else {
 
@@ -186,9 +188,15 @@ void capture_packets() {
             static std::map<int, std::map<int, FrameInfo>> format_map;
             static uint32_t time_frequency_ = 0;
 
-            if (frame_widths != "N/A" && frame_heights != "N/A") {
+            if (vendor_id != "N/A" && product_id != "N/A") {
+                int vendor_id_int = std::stoi(vendor_id, nullptr, 16);
+                int product_id_int = std::stoi(product_id, nullptr, 16);
 
-              // std::cout << "in" << std::endl;
+                DeviceInfoList& device_list = DeviceInfoList::get_instance();
+                device_list.update(vendor_id_int, product_id_int);
+            }
+
+            if (frame_widths != "N/A" && frame_heights != "N/A") {
 
               size_t format_index_counter = 0;
               int count = 0;
@@ -267,9 +275,12 @@ void capture_packets() {
                           frame_format = "mjpeg";
                           break;
                   }
+                    DeviceInfoList& device_list = DeviceInfoList::get_instance();
+                    DeviceInfo& current_device = device_list.current_device;
 
-                    std::tuple<int, int, int, std::string, uint32_t, uint32_t, uint32_t, std::chrono::time_point<std::chrono::steady_clock>> control_data = 
-                        std::make_tuple(width, height, 10000000 / std::stoi(frame_interval_fps), frame_format, std::stoi(max_frame_size), std::stoi(max_payload_size), 
+                    std::tuple<int, int, std::string, int, int, int, std::string, uint32_t, uint32_t, uint32_t, std::chrono::time_point<std::chrono::steady_clock>> control_data = 
+                        std::make_tuple(current_device.get_vendor_id(), current_device.get_product_id(), current_device.get_name(),
+                        width, height, 10000000 / std::stoi(frame_interval_fps), frame_format, std::stoi(max_frame_size), std::stoi(max_payload_size), 
                         time_frequency_, time_point_d);
                   {
                       std::lock_guard<std::mutex> lock(queue_mutex);
@@ -356,14 +367,16 @@ void process_packets() {
         set_control_queue.pop();
         lock.unlock();
 
+        int vendor_id, product_id;
+        std::string device_name;
         int width, height, fps;
         std::string frame_format;
         uint64_t max_frame_size, max_payload_size, time_frequency;
         std::chrono::time_point<std::chrono::steady_clock> received_time;
-        std::tie(width, height, fps, frame_format, max_frame_size, max_payload_size, time_frequency, received_time) = control_data;
+        std::tie(vendor_id, product_id, device_name, width, height, fps, frame_format, max_frame_size, max_payload_size, time_frequency, received_time) = control_data;
 
         CtrlPrint::v_cout_3 << "Processing control configuration" << std::endl;
-        header_checker.control_configuration_ctrl(width, height, fps, frame_format, max_frame_size, max_payload_size, time_frequency, received_time);
+        header_checker.control_configuration_ctrl(vendor_id, product_id, device_name, width, height, fps, frame_format, max_frame_size, max_payload_size, time_frequency, received_time);
 
     }else if (!packet_queue.empty()) {
 
@@ -426,23 +439,25 @@ int main(int argc, char* argv[]) {
     bool fps_set = false;
     bool ff_set = false;
 
+    ControlConfig& set_control = ControlConfig::instance();
+
     for (int i = 1; i < argc; i += 2) {
         if (std::strcmp(argv[i], "-fw") == 0 && i + 1 < argc) {
-        ControlConfig::instance().set_width(std::atoi(argv[i + 1]));
+        set_control.set_width(std::atoi(argv[i + 1]));
         fw_set = true;
         } else if (std::strcmp(argv[i], "-fh") == 0 && i + 1 < argc) {
-        ControlConfig::instance().set_height(std::atoi(argv[i + 1]));
+        set_control.set_height(std::atoi(argv[i + 1]));
         fh_set = true;
         } else if (std::strcmp(argv[i], "-fps") == 0 && i + 1 < argc) {
-        ControlConfig::instance().set_fps(std::atoi(argv[i + 1]));
+        set_control.set_fps(std::atoi(argv[i + 1]));
         fps_set = true;
         } else if (std::strcmp(argv[i], "-ff") == 0 && i + 1 < argc) {
-        ControlConfig::instance().set_frame_format(argv[i + 1]);
+        set_control.set_frame_format(argv[i + 1]);
         ff_set = true;
         } else if (std::strcmp(argv[i], "-mf") == 0 && i + 1 < argc) {
-        ControlConfig::instance().set_dwMaxVideoFrameSize(std::atoi(argv[i + 1]));
+        set_control.set_dwMaxVideoFrameSize(std::atoi(argv[i + 1]));
         } else if (std::strcmp(argv[i], "-mp") == 0 && i + 1 < argc) {
-        ControlConfig::instance().set_dwMaxPayloadTransferSize(std::atoi(argv[i + 1]));
+        set_control.set_dwMaxPayloadTransferSize(std::atoi(argv[i + 1]));
         } else if (std::strcmp(argv[i], "-v") == 0 && i + 1 < argc) {
         VerboseStream::verbose_level = std::atoi(argv[i + 1]);
         } else {
@@ -461,29 +476,29 @@ int main(int argc, char* argv[]) {
     if (!fw_set || !fh_set || !fps_set || !ff_set) {
         if (!fw_set) {
         CtrlPrint::v_cout_1 << "Frame width not specified, using default: "
-                    << ControlConfig::instance().get_width() << std::endl;
+                    << set_control.get_width() << std::endl;
         }
         if (!fh_set) {
         CtrlPrint::v_cout_1 << "Frame height not specified, using default: "
-                    << ControlConfig::instance().get_height() << std::endl;
+                    << set_control.get_height() << std::endl;
         }
         if (!fps_set) {
         CtrlPrint::v_cout_1 << "FPS not specified, using default: "
-                    << ControlConfig::instance().get_fps() << std::endl;
+                    << set_control.get_fps() << std::endl;
         }
         if (!ff_set) {
         CtrlPrint::v_cout_1 << "Frame format not specified, using default: "
-                    << ControlConfig::instance().get_frame_format() << std::endl;
+                    << set_control.get_frame_format() << std::endl;
         }
     }
 
 #ifdef GUI_SET
     gui_window_number = temp_window_number;
 #else
-    CtrlPrint::v_cout_1 << "Frame Width: " << ControlConfig::instance().get_width() << std::endl;
-    CtrlPrint::v_cout_1 << "Frame Height: " << ControlConfig::instance().get_height() << std::endl;
-    CtrlPrint::v_cout_1 << "Frame FPS: " << ControlConfig::instance().get_fps() << std::endl;
-    CtrlPrint::v_cout_1 << "Frame Format: " << ControlConfig::instance().get_frame_format()
+    CtrlPrint::v_cout_1 << "Frame Width: " << set_control.get_width() << std::endl;
+    CtrlPrint::v_cout_1 << "Frame Height: " << set_control.get_height() << std::endl;
+    CtrlPrint::v_cout_1 << "Frame FPS: " << set_control.get_fps() << std::endl;
+    CtrlPrint::v_cout_1 << "Frame Format: " << set_control.get_frame_format()
             << std::endl;
 #endif
 

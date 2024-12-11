@@ -511,14 +511,23 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   return ERR_UNKNOWN;
 }
 
-void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fps, std::string frame_format, uint32_t max_frame_size, uint32_t max_payload_size, uint32_t time_frequency, std::chrono::time_point<std::chrono::steady_clock> received_time) {
-  ControlConfig::instance().set_width(width);
-  ControlConfig::instance().set_height(height);
-  ControlConfig::instance().set_fps(fps);
-  ControlConfig::instance().set_frame_format(frame_format);
-  ControlConfig::instance().set_dwMaxVideoFrameSize(max_frame_size);
-  ControlConfig::instance().set_dwMaxPayloadTransferSize(max_payload_size);
-  ControlConfig::instance().set_dwTimeFrequency(time_frequency);
+void UVCPHeaderChecker::control_configuration_ctrl(int vendor_id, int product_id, std::string device_name, 
+                                                  int width, int height, int fps, std::string frame_format, 
+                                                  uint32_t max_frame_size, uint32_t max_payload_size, uint32_t time_frequency, 
+                                                  std::chrono::time_point<std::chrono::steady_clock> received_time) {
+  
+  ControlConfig& control_config = ControlConfig::instance();
+
+  control_config.set_vendor_id(vendor_id);
+  control_config.set_product_id(product_id);
+  control_config.set_device_name(device_name);        
+  control_config.set_width(width);
+  control_config.set_height(height);
+  control_config.set_fps(fps);
+  control_config.set_frame_format(frame_format);
+  control_config.set_dwMaxVideoFrameSize(max_frame_size);
+  control_config.set_dwMaxPayloadTransferSize(max_payload_size);
+  control_config.set_dwTimeFrequency(time_frequency);
 
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
@@ -533,13 +542,16 @@ void UVCPHeaderChecker::control_configuration_ctrl(int width, int height, int fp
   std::ostringstream logStream;
   logStream << "[ " << control_last_frame_number << " ]\n";
   logStream << "[ " << formatted_time << " ]\n";
-  logStream << "width: " << ControlConfig::instance().get_width() << "\n";
-  logStream << "height: " << ControlConfig::instance().get_height() << "\n";
-  logStream << "frame_format: " << ControlConfig::instance().get_frame_format() << "\n";
-  logStream << "fps: " << ControlConfig::instance().get_fps() << "\n";
-  logStream << "max_frame_size: " << ControlConfig::instance().get_dwMaxVideoFrameSize() << "\n";
-  logStream << "max_payload_size: " << ControlConfig::instance().get_dwMaxPayloadTransferSize() << "\n";
-  logStream << "time_frequency: " << ControlConfig::instance().get_dwTimeFrequency() << "\n";
+  logStream << "vendor_id: 0x" << std::hex << control_config.get_vendor_id() << std::dec << "\n";
+  logStream << "product_id: 0x" << std::hex << control_config.get_product_id() << std::dec << "\n";
+  logStream << "device_name: " << control_config.get_device_name() << "\n";
+  logStream << "width: " << control_config.get_width() << "\n";
+  logStream << "height: " << control_config.get_height() << "\n";
+  logStream << "frame_format: " << control_config.get_frame_format() << "\n";
+  logStream << "fps: " << control_config.get_fps() << "\n";
+  logStream << "max_frame_size: " << control_config.get_dwMaxVideoFrameSize() << "\n";
+  logStream << "max_payload_size: " << control_config.get_dwMaxPayloadTransferSize() << "\n";
+  logStream << "time_frequency: " << control_config.get_dwTimeFrequency() << "\n";
   logStream << "\n";
 
 #ifdef GUI_SET
