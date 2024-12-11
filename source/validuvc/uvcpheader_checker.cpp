@@ -155,8 +155,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
   if (payload_header.PTS && uvc_payload.size() > payload_header.HLE) {
     
-    std::cerr << "CLK: " << formatted_time << std::endl;
-    std::cerr << "PTS: " << std::hex <<  payload_header.PTS << std::endl;
+    // std::cerr << "CLK: " << formatted_time << std::endl;
+    // std::cerr << "PTS: " << std::hex <<  payload_header.PTS << std::endl;
 
     current_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(payload_header.PTS / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
