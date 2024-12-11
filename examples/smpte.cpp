@@ -9,6 +9,7 @@
 
 #include "validuvc/control_config.hpp"
 #include "validuvc/uvcpheader_checker.hpp"
+#include "develope_photo.hpp"
 
 // Utility function to convert a string of hex values to a vector of u_char
 std::vector<u_char> hex_string_to_vector(const std::string& hex_string) {
@@ -87,18 +88,19 @@ std::vector<u_char> create_packet(int frame_count,
 }
 
 void develope_frame_image() {
+    DevFImage& dev_f_image = DevFImage::instance();
     while (true){
-        std::unique_lock<std::mutex> lock(dev_f_image_mutex);
-        dev_f_image_cv.wait(lock, [] { return !dev_f_image_queue.empty(); });
+        std::unique_lock<std::mutex> lock(dev_f_image.dev_f_image_mutex);
+        dev_f_image.dev_f_image_cv.wait(lock, [&dev_f_image] { return !dev_f_image.dev_f_image_queue.empty(); });
         
-        auto frame_format = std::move(dev_f_image_format_queue.front());
-        dev_f_image_format_queue.pop();
-        auto frame_data = std::move(dev_f_image_queue.front());
-        dev_f_image_queue.pop();
+        auto frame_format = std::move(dev_f_image.dev_f_image_format_queue.front());
+        dev_f_image.dev_f_image_format_queue.pop();
+        auto frame_data = std::move(dev_f_image.dev_f_image_queue.front());
+        dev_f_image.dev_f_image_queue.pop();
 
         lock.unlock();
 
-        develope_photo(frame_format, frame_data);
+        dev_f_image.develope_photo(frame_format, frame_data);
     }
 }
 

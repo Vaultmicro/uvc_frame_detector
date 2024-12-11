@@ -77,6 +77,7 @@ def create_and_run_tshark_command(uvc_devices):
         f' -e usbvideo.frame.width -e usbvideo.frame.height '
         f' -e usbvideo.streaming.descriptorSubType -e usbvideo.frame.interval '
         f' -e usbvideo.probe.maxVideoFrameSize -e usbvideo.probe.maxPayloadTransferSize -e usbvideo.format.numFrameDescriptors -e usbvideo.probe.clockFrequency '
+        f' -e usb.idVendor -e usb.idProduct '
         f' -E separator=; '
         f' -Y "{filter_expression}" -Q'
     )
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         uvcfd_command = sys.argv[1]
     else:
         # TODO: change default uvcfd_command
-        uvcfd_command = r"build\Debug\uvcfd.exe"
+        uvcfd_command = r"build\source\Debug\uvcfd.exe"
 
     subprocess.run(uvcfd_command, shell=True, stdin=tshark_process.stdout)
     tshark_process.stdout.close()

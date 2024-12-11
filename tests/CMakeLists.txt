@@ -1,24 +1,24 @@
-cmake_minimum_required(VERSION 3.15)
+# cmake_minimum_required(VERSION 3.15)
 
-project(
-    uvcfd_test
-    DESCRIPTION "Test Code for uvcfd"
-    VERSION 0.3.3
-    LANGUAGES CXX C
-)
+# project(
+#     uvcfd_test
+#     DESCRIPTION "Test Code for uvcfd"
+#     VERSION 0.3.5
+#     LANGUAGES CXX C
+# )
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_STANDARD_REQUIRED True)
+# set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_CXX_STANDARD_REQUIRED True)
+# set(CMAKE_C_STANDARD 99)
+# set(CMAKE_C_STANDARD_REQUIRED True)
 
-if (WIN32)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-    add_compile_definitions(
-        $<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=2>
-        $<$<CONFIG:Release>:_ITERATOR_DEBUG_LEVEL=0>
-    )
-endif()
+# if (WIN32)
+#     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+#     add_compile_definitions(
+#         $<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=2>
+#         $<$<CONFIG:Release>:_ITERATOR_DEBUG_LEVEL=0>
+#     )
+# endif()
 
 # Fetch GoogleTest
 include(FetchContent)
@@ -114,10 +114,13 @@ target_link_libraries(uvcfd
 )
 endif()
 
-# target_link_libraries(log_test_g PRIVATE ${GUI_LIBRARIES} ${LIBJPEG_TURBO_LIBRARIES})
-
 # Example
-add_executable(example ${CMAKE_SOURCE_DIR}/examples/smpte.cpp ${COMMON_SOURCES})
+add_executable(
+    example 
+    ${CMAKE_SOURCE_DIR}/examples/smpte.cpp 
+    ${COMMON_SOURCES}
+)
+
 target_link_libraries(example PRIVATE ${LIBJPEG_TURBO_LIBRARIES} )
 
 
