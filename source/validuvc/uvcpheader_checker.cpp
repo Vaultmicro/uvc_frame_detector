@@ -154,6 +154,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       frame_suspicious_check(payload_header, previous_payload_header, previous_previous_payload_header);
 
   if (payload_header.PTS && uvc_payload.size() > payload_header.HLE) {
+    
+    std::cerr << "CLK: " << formatted_time << std::endl;
+    std::cerr << "PTS: " << std::hex <<  payload_header.PTS << std::endl;
+
     current_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(payload_header.PTS / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
   }
@@ -529,6 +533,10 @@ void UVCPHeaderChecker::control_configuration_ctrl(int vendor_id, int product_id
   control_config.set_dwMaxPayloadTransferSize(max_payload_size);
   control_config.set_dwTimeFrequency(time_frequency);
 
+  if (control_config.get_vendor_id() == 0x054c && control_config.get_product_id() == 0x0e4f){
+    control_config.set_dwTimeFrequency(time_frequency / 1000);
+  }
+
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
   int control_last_frame_number;
@@ -619,8 +627,8 @@ UVCError UVCPHeaderChecker::payload_header_valid(
   // Checks if the header length is valid
   if (payload_header.HLE < 0x02 || payload_header.HLE > 0x0C) {
     CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Unexpected start byte 0x"
-             << std::hex << std::setw(2) << std::setfill('0')
-             << static_cast<int>(payload_header.HLE) << "." << std::endl;
+                << std::hex << std::setw(2) << std::setfill('0')
+                << static_cast<int>(payload_header.HLE) << "." << std::endl;
     return ERR_LENGTH_OUT_OF_RANGE; 
   }
 
@@ -630,19 +638,19 @@ UVCError UVCPHeaderChecker::payload_header_valid(
       payload_header.HLE != 0x0C) {
     CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " <<"Both Presentation Time Stamp and "
                 "Source Clock Reference bits are set."
-             << std::endl;
+                << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x06) {
     CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Presentation Time Stamp bit is "
                 "set but header length is less than 6."
-             << std::endl;
+                 << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x08) {
     CtrlPrint::v_cerr_2 << "[" << formatted_time << "] " << "Source Clock Reference bit is "
                 "set but header length is less than 12."
-             << std::endl;
+                << std::endl;
     return ERR_LENGTH_INVALID;
   } else if (!payload_header.bmBFH.BFH_PTS && !payload_header.bmBFH.BFH_SCR &&
              payload_header.HLE != 0x02) {
