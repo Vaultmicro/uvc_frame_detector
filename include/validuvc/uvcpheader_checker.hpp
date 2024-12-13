@@ -364,6 +364,8 @@ private:
 
     uint32_t frame_average_size;
 
+    bool temp_new_frame_flag;
+
 
     void update_payload_error_stat(UVCError perror) {
         switch (perror) {

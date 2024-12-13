@@ -184,11 +184,12 @@ WindowData& WindowManager::getWin_GraphWindow() { return GraphWindowData; }
 
 // GraphData Implementation
 
-GraphData::GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, const ImVec4& graph_box_col, bool type_pts) : 
-    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz), graph_box_color(graph_box_col), type_pts(type_pts),
+GraphData::GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, const ImVec4& graph_box_col, const int self_type): 
+    graph_box_name(graph_box_nm), graph_box_size(graph_box_sz), graph_box_color(graph_box_col), self_type(self_type),
     graph_x_index(0), custom_text(""), stop_flag(false),
     max_graph_height(0), min_graph_height(2000000000),
-    all_graph_height(0), count_non_zero_graph(0), max_graph_height_of_all_time(0),
+    all_graph_height(0), count_non_zero_graph(0), payload_count(0), frame_count(0),
+    max_graph_height_of_all_time(0),
     current_time(std::chrono::time_point<std::chrono::steady_clock>()),
     time_gap(0), reference_timepoint(std::chrono::time_point<std::chrono::steady_clock>())
 {
@@ -234,7 +235,7 @@ void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> cu
     std::lock_guard<std::mutex> lock(mutex);
     init_current_time_(current_time);
     calculate_time_gap_();
-    if (type_pts) {
+    if (self_type == 1) {
         calculate_pts_overflow_();
     }
     update_switch_();
@@ -281,7 +282,9 @@ void GraphData::show_error_log_info(int selected_error_frame) {
     custom_text = "[ " + std::to_string(selected_error_frame) + " ]" 
         + " Max: " + std::to_string(selected_data[0]) 
         + " Min: " + std::to_string(selected_data[1]) 
-        + " Mean: " + std::to_string(mean_value);
+        + " Mean: " + std::to_string(mean_value)
+        + " bytes "
+        + " PCount: " + std::to_string(selected_data[3]);
     ImGui::Text("%s", custom_text.c_str());
 }
 
@@ -293,14 +296,16 @@ void GraphData::show_suspicious_log_info(int selected_suspicious_frame) {
     custom_text = "[ " + std::to_string(selected_suspicious_frame) + " ]" 
         + " Max: " + std::to_string(selected_data[0]) 
         + " Min: " + std::to_string(selected_data[1]) 
-        + " Mean: " + std::to_string(mean_value);
+        + " Mean: " + std::to_string(mean_value)
+        + " bytes "
+        + " PCount: " + std::to_string(selected_data[3]);
     ImGui::Text("%s", custom_text.c_str());
 }
 
 void GraphData::show_stream_info() {
     std::lock_guard<std::mutex> lock(mutex);
     float mean_value = (count_non_zero_graph > 0) ? static_cast<float>(all_graph_height) / count_non_zero_graph : 0.0f;
-    ImGui::Text("%s Max: %i Min: %i Mean: %f", custom_text.c_str(), max_graph_height, min_graph_height, mean_value);
+    ImGui::Text("%s Max: %i Min: %i Mean: %f bytes PCount: %i FCount:", custom_text.c_str(), max_graph_height, min_graph_height, mean_value, count_non_zero_graph);
 }
 
 void GraphData::show_error_graph_data(int selected_error_frame) {
@@ -373,7 +378,12 @@ void GraphData::reset_graph_() {
     max_graph_height = 0;
     min_graph_height = 2000000000;
     all_graph_height = 0;
-    count_non_zero_graph = 0;
+    // count_non_zero_graph = 0;
+    payload_count = 0;
+    frame_count = 0;
+    // if (self_type == 2){
+    //     draw_scale_();
+    // }
 }
 
 void GraphData::init_current_time_(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
@@ -406,37 +416,37 @@ void GraphData::calculate_pts_overflow_() {
     
     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     
-    if (time_gap > GRAPH_PERIOD_SECOND * 1000 * 2) {
-        reference_timepoint = current_time - std::chrono::milliseconds(GRAPH_PERIOD_SECOND * 1000 * 2);
+    if (time_gap > GRAPH_PERIOD_MILLISECOND * 2) {
+        reference_timepoint = current_time - std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND * 2);
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
     
-    assert(time_gap <= GRAPH_PERIOD_SECOND * 1000 * 2);
+    assert(time_gap <= GRAPH_PERIOD_MILLISECOND * 2);
 }
 
 
 
 void GraphData::update_switch_(){
     // When first data comes in, or the time gap is over the GRAPH_PERIOD_SECOND
-    if (time_gap > GRAPH_PERIOD_SECOND * 1000) {
-        assert(current_time >= reference_timepoint + std::chrono::seconds(GRAPH_PERIOD_SECOND));
+    if (time_gap > GRAPH_PERIOD_MILLISECOND) {
+        assert(current_time >= reference_timepoint + std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND));
 
-        if (time_gap > GRAPH_PERIOD_SECOND * 1000 *2) {
-            for (int i = 0; i < (time_gap - 1000); i+=GRAPH_PERIOD_SECOND*1000) {
-                reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+        if (time_gap > GRAPH_PERIOD_MILLISECOND *2) {
+            for (int i = 0; i < (time_gap - 1000); i+=GRAPH_PERIOD_MILLISECOND) {
+                reference_timepoint += std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND);
             }
         }
 
         reset_graph_();
-        reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+        reference_timepoint += std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND);
         assert(current_time >= reference_timepoint);
 
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
         assert(time_gap >= 0); //Time gap is minus
-        assert(time_gap <= GRAPH_PERIOD_SECOND *1000);
+        assert(time_gap <= GRAPH_PERIOD_MILLISECOND);
 
     } else {
-        assert(time_gap <= GRAPH_PERIOD_SECOND *1000);
+        assert(time_gap <= GRAPH_PERIOD_MILLISECOND);
         // assert(time_gap >= 0);
     }
 }
@@ -450,7 +460,7 @@ void GraphData::add_graph_data_(int new_value) {
     }
     if (graph_x_index >= GRAPH_DATA_SIZE) {
         reset_graph_();
-        reference_timepoint += std::chrono::seconds(GRAPH_PERIOD_SECOND);
+        reference_timepoint += std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND);
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
 
@@ -471,6 +481,14 @@ void GraphData::draw_graph_(int y) {
     assert(graph_x_index < GRAPH_DATA_SIZE);
 }
 
+void GraphData::draw_scale_() {
+    const int interval = GRAPH_SCALE_INTERVAL_MILLISECOND  * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND;
+    for (int i = 0; i < GRAPH_PERIOD_MILLISECOND; i += GRAPH_SCALE_INTERVAL_MILLISECOND){
+        int index = i*GRAPH_PLOTTING_NUMBER_PER_MILLISECOND;
+        graph_data[index] = static_cast<float>(1);
+    }
+}
+
 // GraphManager Implementation
 
 GraphManager& GraphManager::getInstance() {
@@ -479,8 +497,9 @@ GraphManager& GraphManager::getInstance() {
 }
 
 GraphManager::GraphManager():
-    URBTimeGraphData("Received Time Data Graph", ImVec2(1920, 120), ImVec4(1.0f, 0.8f, 0.9f, 1.0f), false),
-    PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 120), ImVec4(0.7f, 1.0f, 0.8f, 1.0f), true)
+    URBTimeGraphData("Received Time Data Graph", ImVec2(1920, 120), ImVec4(1.0f, 0.8f, 0.9f, 1.0f), 0),
+    ScaleSOFData("Scale Data Graph", ImVec2(1920, 10), ImVec4(0.988f, 0.906f, 0.490f, 1.000f), 2),
+    PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 110), ImVec4(0.7f, 1.0f, 0.8f, 1.0f), 1)
 {
 }
 
@@ -488,4 +507,5 @@ GraphManager::~GraphManager() {
 }
 
 GraphData& GraphManager::getGraph_URBGraph() { return URBTimeGraphData; }
+GraphData& GraphManager::getGraph_SOFGraph() { return ScaleSOFData; }
 GraphData& GraphManager::getGraph_PTSGraph() { return PTSTimeGraphData; }

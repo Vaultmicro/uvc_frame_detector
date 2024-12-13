@@ -833,6 +833,7 @@ void screen(){
         {
             WindowData& gw_data = uvcfd_win.getWin_GraphWindow();
             GraphData& URB_graph_data = uvcfd_graph.getGraph_URBGraph();
+            GraphData& SOF_graph_data = uvcfd_graph.getGraph_SOFGraph();
             GraphData& PTS_graph_data = uvcfd_graph.getGraph_PTSGraph();            
 
             ImGui::SetNextWindowPos(gw_data.get_initial_position(), ImGuiCond_Always);
@@ -841,20 +842,27 @@ void screen(){
             ImGui::Begin("Histogram", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
             URB_graph_data.update_max_graph_height_of_all_time();
+            SOF_graph_data.update_max_graph_height_of_all_time();
             PTS_graph_data.update_max_graph_height_of_all_time();
 
             if (show_error_log && selected_error_frame < URB_graph_data.get_error_log_graph_data_size()) {
                 URB_graph_data.show_error_log_info(selected_error_frame);
+                // PTS_graph_data.show_error_log_info(selected_error_frame);
                 URB_graph_data.show_error_graph_data(selected_error_frame);
+                SOF_graph_data.show_error_graph_data(selected_error_frame);
                 PTS_graph_data.show_error_graph_data(selected_error_frame);
             } else if(show_suspicious_log && selected_suspicious_frame < URB_graph_data.get_suspicious_log_graph_data_size()) {
                 URB_graph_data.show_suspicious_log_info(selected_suspicious_frame);
+                // PTS_graph_data.show_suspicious_log_info(selected_suspicious_frame);
                 URB_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
+                SOF_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
                 PTS_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
             } else {
                 URB_graph_data.show_stream_info();
+                // PTS_graph_data.show_stream_info();
                 URB_graph_data.show_current_graph_data();
-                PTS_graph_data.show_current_graph_data();                
+                SOF_graph_data.show_current_graph_data();
+                PTS_graph_data.show_current_graph_data();
             }
 
             ImGui::End();

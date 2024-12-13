@@ -33,9 +33,10 @@
 #include "validuvc/control_config.hpp"
 
 // Constants for scales
-#define GRAPH_PERIOD_SECOND 4
+#define GRAPH_PERIOD_MILLISECOND 250
 #define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8         //125 microseconds for each plotting
-#define GRAPH_DATA_SIZE (GRAPH_PERIOD_SECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND * 1000)
+#define GRAPH_DATA_SIZE (GRAPH_PERIOD_MILLISECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)
+#define GRAPH_SCALE_INTERVAL_MILLISECOND 200
 
 class WindowData {
 public:
@@ -122,7 +123,7 @@ private:
 
 class GraphData {
 public:
-    GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, const ImVec4& graph_box_color, bool type_pts);
+    GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz, const ImVec4& graph_box_color, const int self_type);
 
     // Producer interface
         //update
@@ -159,10 +160,12 @@ private:
     int min_graph_height;
     int all_graph_height;
     int count_non_zero_graph;
+    int payload_count;
+    int frame_count;
     std::vector<std::array<int, 4>> error_graph_height_history;
     std::vector<std::array<int, 4>> suspicious_graph_height_history;
     int max_graph_height_of_all_time;
-    bool type_pts;
+    int self_type;
 
     // Box Info
     std::string graph_box_name;
@@ -192,6 +195,7 @@ private:
     void calculate_pts_overflow_();
     void update_switch_();
     void draw_graph_(int y);
+    void draw_scale_();
 };
 
 class GraphManager {
@@ -199,6 +203,7 @@ public:
     static GraphManager& getInstance();
 
     GraphData& getGraph_URBGraph();
+    GraphData& getGraph_SOFGraph();
     GraphData& getGraph_PTSGraph();
 
 private:
@@ -206,6 +211,7 @@ private:
     ~GraphManager();
 
     GraphData URBTimeGraphData;
+    GraphData ScaleSOFData;
     GraphData PTSTimeGraphData;
 
     std::mutex GraphManagermutex;

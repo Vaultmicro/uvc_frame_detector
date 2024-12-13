@@ -1,6 +1,7 @@
 build
 .vscode/
 .vs/
+b.ps1
 log/
 CMakefiles/
 gui/build/
