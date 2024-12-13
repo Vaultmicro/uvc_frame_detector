@@ -243,10 +243,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             + std::to_string(ControlConfig::instance().get_width()) + "x" 
             + std::to_string(ControlConfig::instance().get_height()) + " " 
             + ControlConfig::instance().get_frame_format());
-        uvcfd_graph.getGraph_PTSGraph().set_move_graph_custom_text("[ " + std::to_string(frame->frame_number) + " ]"
-            + std::to_string(ControlConfig::instance().get_width()) + "x" 
-            + std::to_string(ControlConfig::instance().get_height()) + " " 
-            + ControlConfig::instance().get_frame_format());
+        // uvcfd_graph.getGraph_PTSGraph().set_move_graph_custom_text("[ " + std::to_string(frame->frame_number) + " ]"
+        //     + std::to_string(ControlConfig::instance().get_width()) + "x" 
+        //     + std::to_string(ControlConfig::instance().get_height()) + " " 
+        //     + ControlConfig::instance().get_frame_format());
 
         if (uvc_payload.size() > payload_header.HLE){
           uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
@@ -313,11 +313,11 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             + std::to_string(ControlConfig::instance().get_width()) + "x" 
             + std::to_string(ControlConfig::instance().get_height()) + " " 
             + ControlConfig::instance().get_frame_format());
-        uvcfd_graph.getGraph_PTSGraph().set_move_graph_custom_text("[ " + std::to_string(new_frame->frame_number) + " ]"
-            + std::to_string(ControlConfig::instance().get_width()) + "x" 
-            + std::to_string(ControlConfig::instance().get_height()) + " " 
-            + ControlConfig::instance().get_frame_format());
-
+        // uvcfd_graph.getGraph_PTSGraph().set_move_graph_custom_text("[ " + std::to_string(new_frame->frame_number) + " ]"
+        //     + std::to_string(ControlConfig::instance().get_width()) + "x" 
+        //     + std::to_string(ControlConfig::instance().get_height()) + " " 
+        //     + ControlConfig::instance().get_frame_format());
+        uvcfd_graph.getGraph_URBGraph().count_sof();
         temp_new_frame_flag = true;
 
         if (uvc_payload.size() > payload_header.HLE){

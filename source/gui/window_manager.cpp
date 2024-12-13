@@ -189,7 +189,7 @@ GraphData::GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz
     graph_box_name(graph_box_nm), graph_box_size(graph_box_sz), graph_box_color(graph_box_col), self_type(self_type),
     graph_x_index(0), custom_text(""), stop_flag(false),
     max_graph_height(0), min_graph_height(2000000000),
-    all_graph_height(0), count_non_zero_graph(0), payload_count(0), frame_count(0),
+    all_graph_height(0), count_non_zero_graph(0), frame_count(0),
     max_graph_height_of_all_time(0), new_max_graph_height_of_all_time(0),
     current_time(std::chrono::time_point<std::chrono::steady_clock>()),
     time_gap(0), reference_timepoint(std::chrono::time_point<std::chrono::steady_clock>())
@@ -213,18 +213,23 @@ void GraphData::set_move_graph_custom_text(std::string&& text) {
     custom_text = std::move(text);
 }
 
+void GraphData::count_sof() {
+    std::lock_guard<std::mutex> lock(mutex);
+    frame_count ++;
+}
+
 void GraphData::add_error_log_graph() {
     std::lock_guard<std::mutex> lock(mutex);
     error_log_graph_data.push_back(graph_data);
     error_graph_height_history.push_back(
-        {max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
+        {max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph, frame_count});
 }
 
 void GraphData::add_suspicious_log_graph() {
     std::lock_guard<std::mutex> lock(mutex);
     suspicious_log_graph_data.push_back(graph_data);
     suspicious_graph_height_history.push_back(
-        {max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph});
+        {max_graph_height, min_graph_height, all_graph_height, count_non_zero_graph, frame_count});
 }
 
 void GraphData::reset_reference_timepoint() {
@@ -285,7 +290,8 @@ void GraphData::show_error_log_info(int selected_error_frame) {
         + " Min: " + std::to_string(selected_data[1]) 
         + " Mean: " + std::to_string(mean_value)
         + " bytes "
-        + " PCount: " + std::to_string(selected_data[3]);
+        + " PCount: " + std::to_string(selected_data[3])
+        + " FCount: " + std::to_string(selected_data[4]);
     ImGui::Text("%s", custom_text.c_str());
 }
 
@@ -299,14 +305,15 @@ void GraphData::show_suspicious_log_info(int selected_suspicious_frame) {
         + " Min: " + std::to_string(selected_data[1]) 
         + " Mean: " + std::to_string(mean_value)
         + " bytes "
-        + " PCount: " + std::to_string(selected_data[3]);
+        + " PCount: " + std::to_string(selected_data[3])
+        + " FCount: " + std::to_string(selected_data[4]);
     ImGui::Text("%s", custom_text.c_str());
 }
 
 void GraphData::show_stream_info() {
     std::lock_guard<std::mutex> lock(mutex);
     float mean_value = (count_non_zero_graph > 0) ? static_cast<float>(all_graph_height) / count_non_zero_graph : 0.0f;
-    ImGui::Text("%s Max: %i Min: %i Mean: %f bytes PCount: %i FCount:", custom_text.c_str(), max_graph_height, min_graph_height, mean_value, count_non_zero_graph);
+    ImGui::Text("%s Max: %i Min: %i Mean: %f bytes PCount: %i FCount: %i", custom_text.c_str(), max_graph_height, min_graph_height, mean_value, count_non_zero_graph, frame_count);
 }
 
 void GraphData::show_error_graph_data(int selected_error_frame) {
@@ -426,7 +433,6 @@ void GraphData::reset_graph_() {
     min_graph_height = 2000000000;
     all_graph_height = 0;
     count_non_zero_graph = 0;
-    payload_count = 0;
     frame_count = 0;
     // if (self_type == 2){
     //     draw_scale_();

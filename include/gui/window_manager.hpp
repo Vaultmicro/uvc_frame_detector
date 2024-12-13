@@ -33,7 +33,7 @@
 #include "validuvc/control_config.hpp"
 
 // Constants for scales
-#define GRAPH_PERIOD_MILLISECOND 4000                   
+#define GRAPH_PERIOD_MILLISECOND 4000                   //if want to see non compressed graph, change this value to 250 and turn off the GRAPH_RESCALE to 1                   
 #define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8         //125 microseconds for each plotting
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_MILLISECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)
 #define GRAPH_RESCALE 20
@@ -134,6 +134,7 @@ public:
     void update_graph_data(int index, float value);         //not used
     void set_graph_custom_text(const std::string& text);
     void set_move_graph_custom_text(std::string&& text);
+    void count_sof();
         //save history
     void add_error_log_graph();
     void add_suspicious_log_graph();
@@ -164,10 +165,9 @@ private:
     int min_graph_height;
     int all_graph_height;
     int count_non_zero_graph;
-    int payload_count;
     int frame_count;
-    std::vector<std::array<int, 4>> error_graph_height_history;
-    std::vector<std::array<int, 4>> suspicious_graph_height_history;
+    std::vector<std::array<int, 5>> error_graph_height_history;
+    std::vector<std::array<int, 5>> suspicious_graph_height_history;
     int max_graph_height_of_all_time;
     int self_type;
 
