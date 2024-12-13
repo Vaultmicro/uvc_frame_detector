@@ -249,21 +249,17 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             + ControlConfig::instance().get_frame_format());
 
         if (uvc_payload.size() > payload_header.HLE){
-          for (int i=0; i<1; i++){
-            uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
-          }
+          uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
 
           if (temp_new_frame_flag){
-            for (int i=0; i<3; i++){
+            for (int i=0; i<5; i++){
               uvcfd_graph.getGraph_SOFGraph().plot_graph(received_time, 1);
             }
             temp_new_frame_flag = false;
           }
 
           if (payload_header.PTS){
-            for (int i=0; i<1; i++){
-             uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
-            }
+            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
           }
         }
 #endif
@@ -325,18 +321,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
         temp_new_frame_flag = true;
 
         if (uvc_payload.size() > payload_header.HLE){
-          for (int i=0; i<1; i++){
-            uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
-          }
-          for (int i=0; i<3; i++){
+          uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
+          for (int i=0; i<5; i++){
             uvcfd_graph.getGraph_SOFGraph().plot_graph(received_time, 1);
           }
           temp_new_frame_flag = false;
 
           if (payload_header.PTS){
-            for (int i=0; i<1; i++){
-              uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
-            }
+            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
           }
         }
 #endif

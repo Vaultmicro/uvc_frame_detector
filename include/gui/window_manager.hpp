@@ -33,9 +33,13 @@
 #include "validuvc/control_config.hpp"
 
 // Constants for scales
-#define GRAPH_PERIOD_MILLISECOND 250
+#define GRAPH_PERIOD_MILLISECOND 4000
 #define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8         //125 microseconds for each plotting
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_MILLISECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)
+#define GRAPH_RESCALE 20
+#define GRAPH_NEW_SIZE (GRAPH_DATA_SIZE/GRAPH_RESCALE)
+
+// This for just showing graph scale
 #define GRAPH_SCALE_INTERVAL_MILLISECOND 200
 
 class WindowData {
@@ -186,6 +190,10 @@ private:
     std::chrono::milliseconds::rep time_gap;
     
     // Private methods : do not use mutex inside
+    int new_max_graph_height_of_all_time;
+    std::array<float, GRAPH_NEW_SIZE> new_graph_data;
+    void resize_graph_scale_(std::array<float, GRAPH_DATA_SIZE>& prev_graph_data);
+
     void update_graph_stats_(int value);
     void reset_graph_();
     void add_graph_data_(int new_value);

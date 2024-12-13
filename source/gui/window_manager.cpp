@@ -22,6 +22,7 @@
 
 #include "gui/window_manager.hpp"
 #include <iostream>
+#include <numeric>
 
 #include <cassert>
 
@@ -189,7 +190,7 @@ GraphData::GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz
     graph_x_index(0), custom_text(""), stop_flag(false),
     max_graph_height(0), min_graph_height(2000000000),
     all_graph_height(0), count_non_zero_graph(0), payload_count(0), frame_count(0),
-    max_graph_height_of_all_time(0),
+    max_graph_height_of_all_time(0), new_max_graph_height_of_all_time(0),
     current_time(std::chrono::time_point<std::chrono::steady_clock>()),
     time_gap(0), reference_timepoint(std::chrono::time_point<std::chrono::steady_clock>())
 {
@@ -313,15 +314,25 @@ void GraphData::show_error_graph_data(int selected_error_frame) {
 
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
+    resize_graph_scale_(error_log_graph_data[selected_error_frame]);
+
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
-        error_log_graph_data[selected_error_frame].data(),
-        static_cast<int>(error_log_graph_data[selected_error_frame].size()),
+        new_graph_data.data(),
+        static_cast<int>(new_graph_data.size()),
         0, nullptr,
-        0.0f, static_cast<float>(max_graph_height_of_all_time),  
+        0.0f, static_cast<float>(new_max_graph_height_of_all_time),
         graph_box_size
     );
-
+    // ImGui::PlotHistogram(
+    //     graph_box_name.c_str(), 
+    //     error_log_graph_data[selected_error_frame].data(),
+    //     static_cast<int>(error_log_graph_data[selected_error_frame].size()),
+    //     0, nullptr,
+    //     0.0f, static_cast<float>(max_graph_height_of_all_time),  
+    //     graph_box_size
+    // );
+    
     ImGui::PopStyleColor(1);
 }
 
@@ -330,14 +341,25 @@ void GraphData::show_suspicious_graph_data(int selected_suspicious_frame){
 
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
+    resize_graph_scale_(suspicious_log_graph_data[selected_suspicious_frame]);
+
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
-        suspicious_log_graph_data[selected_suspicious_frame].data(),
-        static_cast<int>(suspicious_log_graph_data[selected_suspicious_frame].size()),
+        new_graph_data.data(),
+        static_cast<int>(new_graph_data.size()),
         0, nullptr,
-        0.0f, static_cast<float>(max_graph_height_of_all_time),  
+        0.0f, static_cast<float>(new_max_graph_height_of_all_time),  
         graph_box_size
     );
+
+    // ImGui::PlotHistogram(
+    //     graph_box_name.c_str(), 
+    //     suspicious_log_graph_data[selected_suspicious_frame].data(),
+    //     static_cast<int>(suspicious_log_graph_data[selected_suspicious_frame].size()),
+    //     0, nullptr,
+    //     0.0f, static_cast<float>(max_graph_height_of_all_time),  
+    //     graph_box_size
+    // );
 
     ImGui::PopStyleColor(1);
 }
@@ -347,14 +369,25 @@ void GraphData::show_current_graph_data(){
 
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
+    resize_graph_scale_(graph_data);
+
     ImGui::PlotHistogram(
-        graph_box_name.c_str(),
-        graph_data.data(),
-        static_cast<int>(graph_data.size()),
+        graph_box_name.c_str(), 
+        new_graph_data.data(),
+        static_cast<int>(new_graph_data.size()),
         0, nullptr,
-        0.0f, static_cast<float>(max_graph_height_of_all_time),  
+        0.0f, static_cast<float>(new_max_graph_height_of_all_time),  
         graph_box_size
-    );    
+    );
+
+    // ImGui::PlotHistogram(
+    //     graph_box_name.c_str(),
+    //     graph_data.data(),
+    //     static_cast<int>(graph_data.size()),
+    //     0, nullptr,
+    //     0.0f, static_cast<float>(max_graph_height_of_all_time),  
+    //     graph_box_size
+    // );    
 
     ImGui::PopStyleColor(1);
 
@@ -362,6 +395,20 @@ void GraphData::show_current_graph_data(){
 
 // Private methods
 // Every private method should not be locked by mutex, as it is already locked by the public method
+
+void GraphData::resize_graph_scale_(std::array<float, GRAPH_DATA_SIZE>& prev_graph_data) {
+    // graph_data.data is now grouping size 
+    for (size_t i = 0; i < GRAPH_NEW_SIZE; ++i) {
+        auto begin = prev_graph_data.begin() + i * GRAPH_RESCALE;
+        auto end = begin + GRAPH_RESCALE;
+        float group_sum = std::accumulate(begin, end, 0.0f);
+        new_graph_data[i] = group_sum;
+        if (group_sum > new_max_graph_height_of_all_time){
+            new_max_graph_height_of_all_time = group_sum;
+        }
+    }
+}
+
 void GraphData::update_graph_stats_(int value) {
     if (value != 0) {
         if (value > max_graph_height) max_graph_height = value;
@@ -378,7 +425,7 @@ void GraphData::reset_graph_() {
     max_graph_height = 0;
     min_graph_height = 2000000000;
     all_graph_height = 0;
-    // count_non_zero_graph = 0;
+    count_non_zero_graph = 0;
     payload_count = 0;
     frame_count = 0;
     // if (self_type == 2){
