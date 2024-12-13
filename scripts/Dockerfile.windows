@@ -1,0 +1,21 @@
+FROM mcr.microsoft.com/windows/servercore:20H2
+
+RUN @powershell -NoProfile -ExecutionPolicy Bypass -Command \
+    "Set-ExecutionPolicy Bypass -Scope Process; \
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));"
+
+RUN choco install -y \
+cmake \
+visualstudio2019buildtools
+
+RUN powershell -Command \
+    "Add-WindowsFeature Web-Server"
+
+WORKDIR C:/app
+
+COPY . .
+
+RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ..&& cmake --build . --config Release
+
+CMD ["./scripts/docker_test.ps1"]
