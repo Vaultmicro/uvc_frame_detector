@@ -33,7 +33,7 @@
 #include "validuvc/control_config.hpp"
 
 // Constants for scales
-#define GRAPH_PERIOD_MILLISECOND 4000
+#define GRAPH_PERIOD_MILLISECOND 4000                   
 #define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8         //125 microseconds for each plotting
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_MILLISECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)
 #define GRAPH_RESCALE 20
