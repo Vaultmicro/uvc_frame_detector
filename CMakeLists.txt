@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 project(
     uvcfd
     DESCRIPTION "Packet Capture And Analysis Tool for UVC Frame [UVCFD] stands for USB Video Class Frame Detector"
-    VERSION 0.3.5
+    VERSION 1.0.0
     LANGUAGES CXX C
 )
 

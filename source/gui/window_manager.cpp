@@ -195,6 +195,9 @@ GraphData::GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz
     time_gap(0), reference_timepoint(std::chrono::time_point<std::chrono::steady_clock>())
 {
     graph_data.fill(0.0f);
+    if (self_type == 3){
+        set_mark_scale();
+    }
 }
 
 void GraphData::update_graph_data(int index, float value) {
@@ -248,6 +251,10 @@ void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> cu
     draw_graph_(y);
 }
 
+void GraphData::set_mark_scale(){
+    std::lock_guard<std::mutex> lock(mutex);
+    draw_scale_();
+}
 
 // Consumer interface
 
@@ -331,6 +338,7 @@ void GraphData::show_error_graph_data(int selected_error_frame) {
         0.0f, static_cast<float>(new_max_graph_height_of_all_time),
         graph_box_size
     );
+
     // ImGui::PlotHistogram(
     //     graph_box_name.c_str(), 
     //     error_log_graph_data[selected_error_frame].data(),
@@ -434,9 +442,6 @@ void GraphData::reset_graph_() {
     all_graph_height = 0;
     count_non_zero_graph = 0;
     frame_count = 0;
-    // if (self_type == 2){
-    //     draw_scale_();
-    // }
 }
 
 void GraphData::init_current_time_(std::chrono::time_point<std::chrono::steady_clock> recieved_time) {
@@ -500,7 +505,6 @@ void GraphData::update_switch_(){
 
     } else {
         assert(time_gap <= GRAPH_PERIOD_MILLISECOND);
-        // assert(time_gap >= 0);
     }
 }
 
@@ -552,6 +556,7 @@ GraphManager& GraphManager::getInstance() {
 GraphManager::GraphManager():
     URBTimeGraphData("Received Time Data Graph", ImVec2(1920, 120), ImVec4(1.0f, 0.8f, 0.9f, 1.0f), 0),
     ScaleSOFData("Scale Data Graph", ImVec2(1920, 10), ImVec4(0.988f, 0.906f, 0.490f, 1.000f), 2),
+    TickMarkScaleData("Tick Mark Data Graph", ImVec2(1920, 10), ImVec4(0.8f, 0.8f, 0.8f, 1.0f), 3),
     PTSTimeGraphData("PTS Data Graph", ImVec2(1920, 110), ImVec4(0.7f, 1.0f, 0.8f, 1.0f), 1)
 {
 }
@@ -561,4 +566,5 @@ GraphManager::~GraphManager() {
 
 GraphData& GraphManager::getGraph_URBGraph() { return URBTimeGraphData; }
 GraphData& GraphManager::getGraph_SOFGraph() { return ScaleSOFData; }
+GraphData& GraphManager::getGraph_TMKScale() { return TickMarkScaleData; }
 GraphData& GraphManager::getGraph_PTSGraph() { return PTSTimeGraphData; }

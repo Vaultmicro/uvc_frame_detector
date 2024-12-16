@@ -37,11 +37,11 @@
 #define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8         //125 microseconds for each plotting
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_MILLISECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)
 #define GRAPH_RESCALE ((GRAPH_PERIOD_MILLISECOND*GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)/1600) // 1600 is the factor for 1920x1080 resolution that no graph data is being cropped
-                                                                                              //Change only if the resolution is changed (should be smaller than 1920)
+                                                                                              // Change only if the resolution is changed (1600 should be smaller than 1920)
 #define GRAPH_NEW_SIZE (GRAPH_DATA_SIZE/GRAPH_RESCALE)
 
 // This for just showing graph scale
-#define GRAPH_SCALE_INTERVAL_MILLISECOND 200
+#define GRAPH_SCALE_INTERVAL_MILLISECOND 200        //200 milliseconds for each scale, if 30 fps, 6 frames for each scale
 
 class WindowData {
 public:
@@ -142,7 +142,8 @@ public:
     void reset_reference_timepoint();
         //calculation for the graph plotting
     void plot_graph(std::chrono::time_point<std::chrono::steady_clock> current_time, int y);
-
+        //scale
+    void set_mark_scale();
 
     // Consumer interface
     auto get_error_log_graph_data_size() -> size_t;
@@ -213,6 +214,7 @@ public:
 
     GraphData& getGraph_URBGraph();
     GraphData& getGraph_SOFGraph();
+    GraphData& getGraph_TMKScale();
     GraphData& getGraph_PTSGraph();
 
 private:
@@ -221,6 +223,7 @@ private:
 
     GraphData URBTimeGraphData;
     GraphData ScaleSOFData;
+    GraphData TickMarkScaleData;
     GraphData PTSTimeGraphData;
 
     std::mutex GraphManagermutex;

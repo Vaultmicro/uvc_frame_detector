@@ -834,6 +834,7 @@ void screen(){
             WindowData& gw_data = uvcfd_win.getWin_GraphWindow();
             GraphData& URB_graph_data = uvcfd_graph.getGraph_URBGraph();
             GraphData& SOF_graph_data = uvcfd_graph.getGraph_SOFGraph();
+            GraphData& TMK_scale_data = uvcfd_graph.getGraph_TMKScale();
             GraphData& PTS_graph_data = uvcfd_graph.getGraph_PTSGraph();            
 
             ImGui::SetNextWindowPos(gw_data.get_initial_position(), ImGuiCond_Always);
@@ -850,21 +851,25 @@ void screen(){
                 // PTS_graph_data.show_error_log_info(selected_error_frame);
                 URB_graph_data.show_error_graph_data(selected_error_frame);
                 SOF_graph_data.show_error_graph_data(selected_error_frame);
+                TMK_scale_data.show_current_graph_data();
                 PTS_graph_data.show_error_graph_data(selected_error_frame);
             } else if(show_suspicious_log && selected_suspicious_frame < URB_graph_data.get_suspicious_log_graph_data_size()) {
                 URB_graph_data.show_suspicious_log_info(selected_suspicious_frame);
                 // PTS_graph_data.show_suspicious_log_info(selected_suspicious_frame);
                 URB_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
                 SOF_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
+                TMK_scale_data.show_current_graph_data();
                 PTS_graph_data.show_suspicious_graph_data(selected_suspicious_frame);
             } else {
                 URB_graph_data.show_stream_info();
                 // PTS_graph_data.show_stream_info();
                 URB_graph_data.show_current_graph_data();
                 SOF_graph_data.show_current_graph_data();
+                TMK_scale_data.show_current_graph_data();
                 PTS_graph_data.show_current_graph_data();
             }
-
+            
+            
             ImGui::End();
         }
 
