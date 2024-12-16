@@ -36,7 +36,8 @@
 #define GRAPH_PERIOD_MILLISECOND 4000                   //if want to see non compressed graph, change this value to 250 and turn off the GRAPH_RESCALE to 1                   
 #define GRAPH_PLOTTING_NUMBER_PER_MILLISECOND 8         //125 microseconds for each plotting
 #define GRAPH_DATA_SIZE (GRAPH_PERIOD_MILLISECOND * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)
-#define GRAPH_RESCALE 20
+#define GRAPH_RESCALE ((GRAPH_PERIOD_MILLISECOND*GRAPH_PLOTTING_NUMBER_PER_MILLISECOND)/1600) // 1600 is the factor for 1920x1080 resolution that no graph data is being cropped
+                                                                                              //Change only if the resolution is changed (should be smaller than 1920)
 #define GRAPH_NEW_SIZE (GRAPH_DATA_SIZE/GRAPH_RESCALE)
 
 // This for just showing graph scale
