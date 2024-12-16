@@ -262,7 +262,7 @@ void screen(){
 
                         ImGui::Separator();
                         ImGui::Text("Application Version:");
-                        ImGui::BulletText("Version 0.3.5");
+                        ImGui::BulletText("Version 1.0.0");
 
                         ImGui::EndMenu();
                     }
