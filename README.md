@@ -40,9 +40,6 @@ in linux
   ```
 ./run_uvcfd.bash
   ```
-  
-</br>
-</br>
 
 ### Side Projects:
 ### Moncapler
@@ -149,16 +146,40 @@ Build with cmake above<br/>
 
 ## How It Works
 
-And then it filters the data by looking at urb header and find specific device's urb<br/>
-When it is found, devide them into in out, control bulk iso<br/>
-And recombine urb block with each algorithms to have complete transfer data,<br/>
-starting with payload header<br/>
-Then another thread validate the transferred data by looking at the headers<br/>
-When validation is finished, transfers are combined into a frame<br/>
-When it is done, fps are calculated and shows whether frame has errors<br/>
-Error statistics will be given<br/>
+And then it filters the data by looking at urb header and find specific device's urb. <br/>
+When it is found, devide them into in out, control bulk iso. <br/>
+And recombine urb block with each algorithms to have complete transfer data, starting with payload header.<br/>
+Then another thread validate the transferred data by looking at the headers.<br/>
+When validation is finished, transfers are combined into a frame.<br/>
+When it is done, fps are calculated and shows whether frame has errors.<br/>
+Error statistics will be given.<br/>
+
+ Overall, the upper three windows display the image, graph, and control panel.  
+ The middle section shows error log frame information and summarizes the error types.  
+ The bottom section displays the latest streaming data information with updating statistics.  
+
+Coral coloured graph shows the actual received time of the URB block in the computer system.  
+Mint coloured graph shows the PTS time that the camera gave. Yellow dots represent the start of every frame. White dots represent the time scale of every designated millisecond.  
+When the same value is received in the programme, it draws right next to the previous plot, which means the most left plot of the block represents actual interpreted time.  
+By comparing SOF yellow dot and PTS block’s left edge, shows the delay of receiving streaming data.  
+PTS data is calculated in a different way due to the overflow actions.  
+To change the graph scale, change the #define value in window_manager.hpp  
+
+For the detailed information, please checkout the usb video clas frame detector.pdf in the documents directory
+
+### Buttons 
 
 ![workflow](./documents/workflow.png)
+
+ When the UVCPHeaderChecker class receives payload data, it parses the header and validates it sequentially.  
+   
+ Red: These symbols are responsible for verifying the validity of the payload.  
+ Ensuring that the payload data conforms to expected standards and specifications before further processing.  
+ If an invalid payload is detected during frame processing, except for eof error and fid error, the erroneous payload data is discarded to prevent corruption or further issues in the overall data flow.
+   
+Blue: These symbols focus on validating the integrity of the entire frame, identifying any anomalies or inconsistencies.  
+
+Pink: These symbols are used to identify and handle suspicious data, but only when the suspicious flag is activated. Aggregating all suspicious data found within the frames,  allowing for detailed analysis and corrective action as needed.  
 
 # UML Diagram
 ![uml_img](./documents/dark_uvc_frame_detector.drawio.png)
