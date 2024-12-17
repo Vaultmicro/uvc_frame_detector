@@ -192,13 +192,16 @@ GraphData::GraphData(const std::string& graph_box_nm, const ImVec2& graph_box_sz
     all_graph_height(0), count_non_zero_graph(0), frame_count(0),
     max_graph_height_of_all_time(0), new_max_graph_height_of_all_time(0),
     current_time(std::chrono::time_point<std::chrono::steady_clock>()),
-    time_gap(0), reference_timepoint(std::chrono::time_point<std::chrono::steady_clock>())
+    time_gap(0), reference_timepoint(std::chrono::time_point<std::chrono::steady_clock>()),
+    temp_time(), temp_y()
 {
     graph_data.fill(0.0f);
     if (self_type == 3){
         set_mark_scale();
     }
 }
+
+int GraphData::counting_for_compression = 0;
 
 void GraphData::update_graph_data(int index, float value) {
     if (index < 0 || index >= GRAPH_DATA_SIZE) return;
@@ -250,6 +253,36 @@ void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> cu
     update_switch_();
     draw_graph_(y);
 }
+
+// // TODO: make same pattern for all graph
+// void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> current_time, int y){
+//     std::lock_guard<std::mutex> lock(mutex);
+//     if (self_type == 0){
+//         counting_for_compression++;
+//         if (counting_for_compression > GRAPH_RESCALE){
+//             counting_for_compression = 0;
+//         }
+//     }
+
+//     if (counting_for_compression == GRAPH_RESCALE){
+//         //draw
+//         auto max_y = std::max_element(temp_y.begin(), temp_y.end());
+//         size_t max_index = std::distance(temp_y.begin(), max_y);
+//         auto max_time = temp_time[max_index];
+//         init_current_time_(max_time);
+//         calculate_time_gap_();
+//         if (self_type == 1) {
+//             calculate_pts_overflow_();
+//         }
+//         update_switch_();
+//         draw_graph_(*max_y);
+//     } else {
+//         //accumulate
+//         temp_time[counting_for_compression] = current_time;
+//         temp_y[counting_for_compression] = y;
+//     }
+//     assert(counting_for_compression <= GRAPH_RESCALE);
+// }
 
 void GraphData::set_mark_scale(){
     std::lock_guard<std::mutex> lock(mutex);
@@ -329,7 +362,6 @@ void GraphData::show_error_graph_data(int selected_error_frame) {
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
     resize_graph_scale_(error_log_graph_data[selected_error_frame]);
-
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
         new_graph_data.data(),
@@ -357,7 +389,6 @@ void GraphData::show_suspicious_graph_data(int selected_suspicious_frame){
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
     resize_graph_scale_(suspicious_log_graph_data[selected_suspicious_frame]);
-
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
         new_graph_data.data(),
@@ -385,7 +416,6 @@ void GraphData::show_current_graph_data(){
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, graph_box_color);
 
     resize_graph_scale_(graph_data);
-
     ImGui::PlotHistogram(
         graph_box_name.c_str(), 
         new_graph_data.data(),
@@ -416,7 +446,8 @@ void GraphData::resize_graph_scale_(std::array<float, GRAPH_DATA_SIZE>& prev_gra
     for (size_t i = 0; i < GRAPH_NEW_SIZE; ++i) {
         auto begin = prev_graph_data.begin() + i * GRAPH_RESCALE;
         auto end = begin + GRAPH_RESCALE;
-        float group_sum = std::accumulate(begin, end, 0.0f);
+        // float group_sum = std::accumulate(begin, end, 0.0f);
+        float group_sum = *std::max_element(begin, end);
         new_graph_data[i] = group_sum;
         if (group_sum > new_max_graph_height_of_all_time){
             new_max_graph_height_of_all_time = group_sum;
@@ -455,6 +486,7 @@ void GraphData::calculate_time_gap_() {
     }
     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
 }
+
 void GraphData::calculate_pts_overflow_() {
     const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
@@ -474,12 +506,10 @@ void GraphData::calculate_pts_overflow_() {
     
     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     
-    if (time_gap > GRAPH_PERIOD_MILLISECOND * 2) {
-        reference_timepoint = current_time - std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND * 2);
+    while (time_gap > GRAPH_PERIOD_MILLISECOND) {
+        reference_timepoint = current_time - std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND);
         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     }
-    
-    assert(time_gap <= GRAPH_PERIOD_MILLISECOND * 2);
 }
 
 
@@ -537,6 +567,7 @@ void GraphData::draw_graph_(int y) {
     }
     assert(graph_x_index < GRAPH_DATA_SIZE);
 }
+
 
 void GraphData::draw_scale_() {
     const int interval = GRAPH_SCALE_INTERVAL_MILLISECOND  * GRAPH_PLOTTING_NUMBER_PER_MILLISECOND;

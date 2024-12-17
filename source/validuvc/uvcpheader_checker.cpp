@@ -167,7 +167,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
   if (!payload_header_valid_return || payload_header_valid_return == ERR_MISSING_EOF || payload_header_valid_return == ERR_FID_MISMATCH) {
 
 
-    //Process the last frame when EOF is missing
+    //Process(Finish) the last frame when EOF is missing
     if (payload_header_valid_return == ERR_MISSING_EOF) {
       CtrlPrint::v_cerr_3 << "Missing EOF." << std::endl;
       if (!frames.empty()) {
@@ -221,6 +221,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
       }
     }
 
+    // Find the frames and match the FID 
     bool frame_found = false;
     if (payload_header_valid_return != ERR_FID_MISMATCH) {
     
@@ -250,14 +251,10 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
         if (uvc_payload.size() > payload_header.HLE){
           uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
-
           if (temp_new_frame_flag){
-            for (int i=0; i<5; i++){
-              uvcfd_graph.getGraph_SOFGraph().plot_graph(received_time, 1);
-            }
+            uvcfd_graph.getGraph_SOFGraph().plot_graph(received_time, 1);
             temp_new_frame_flag = false;
           }
-
           if (payload_header.PTS){
             uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
           }
@@ -322,11 +319,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
         if (uvc_payload.size() > payload_header.HLE){
           uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,uvc_payload.size()-payload_header.HLE);
-          for (int i=0; i<5; i++){
-            uvcfd_graph.getGraph_SOFGraph().plot_graph(received_time, 1);
-          }
+          uvcfd_graph.getGraph_SOFGraph().plot_graph(received_time, 1);
           temp_new_frame_flag = false;
-
           if (payload_header.PTS){
             uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
           }
@@ -415,7 +409,6 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 
         }
       }
-
 
       update_frame_error_stat(last_frame->frame_error);
       // finish the frame
@@ -514,12 +507,14 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     }
 
 #ifdef GUI_SET
-    if (uvc_payload.size() > payload_header.HLE){
-      uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,0);
-      if (payload_header.PTS){
-        uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,0);
-      }
-    }
+    // // This goes to zero anyway when next payload is received
+    // // Better not use this since error pts could be calculated
+    // if (uvc_payload.size() > payload_header.HLE){
+    //   uvcfd_graph.getGraph_URBGraph().plot_graph(received_time ,0);
+    //   if (payload_header.PTS){
+    //     uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,0);
+    //   }
+    // }
 #else
     auto& last_frame = frames.back();
     plot_received_chrono_times(last_frame->received_valid_times, last_frame->received_error_times);
@@ -574,8 +569,8 @@ void UVCPHeaderChecker::control_configuration_ctrl(int vendor_id, int product_id
   std::ostringstream logStream;
   logStream << "[ " << control_last_frame_number << " ]\n";
   logStream << "[ " << formatted_time << " ]\n";
-  logStream << "vendor_id: 0x" << std::hex << control_config.get_vendor_id() << std::dec << "\n";
-  logStream << "product_id: 0x" << std::hex << control_config.get_product_id() << std::dec << "\n";
+  logStream << "vendor_id: 0x" << std::setw(4) << std::setfill('0') << std::hex << control_config.get_vendor_id() << std::dec << "\n";
+  logStream << "product_id: 0x" << std::setw(4) << std::setfill('0') << std::hex << control_config.get_product_id() << std::dec << "\n";
   logStream << "device_name: " << control_config.get_device_name() << "\n";
   logStream << "width: " << control_config.get_width() << "\n";
   logStream << "height: " << control_config.get_height() << "\n";
@@ -895,7 +890,7 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "[ " << frame.frame_number << " ]"<< "\n";
 
     // Calculate time taken from valid start to the last of error or valid times
-    if (!frame.received_valid_times.empty()) {
+    // if (!frame.received_valid_times.empty()) {
         auto valid_start = frame.received_valid_times.front();
         auto valid_end = frame.received_valid_times.back();
         auto error_end = !frame.received_error_times.empty() ? frame.received_error_times.back() : valid_end;
@@ -908,9 +903,9 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
         auto final_end_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(final_end.time_since_epoch()));
 
         CtrlPrint::v_cout_2 << "[ " << valid_start_ms << "  ~ " << final_end_ms << "  ]: " << time_taken << " ms" << "\n";
-    } else {
-        CtrlPrint::v_cout_2 << "No Valid Times Recorded" << "\n";
-    }
+    // } else {
+    //     CtrlPrint::v_cout_2 << "No Valid Times Recorded" << "\n";
+    // }
 
     CtrlPrint::v_cout_2 << "Toggle Bit (FID): " << static_cast<int>(frame.toggle_bit) << "\n";
     CtrlPrint::v_cout_2 << "Payload Count: " << frame.packet_number << "\n";
@@ -986,6 +981,17 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     // Calculate total payload size
     size_t total_payload_size = std::accumulate(frame.payload_sizes.begin(), frame.payload_sizes.end(), size_t(0));
     CtrlPrint::v_cout_2 << "Frame Size: " << total_payload_size << " bytes" << "\n";
+
+    std::chrono::time_point<std::chrono::steady_clock> start_frame_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
+        std::chrono::milliseconds(frame.frame_pts / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
+      
+    auto start_chrono_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(start_frame_pts_chrono.time_since_epoch()));
+
+    // static auto very_first_gap = std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch()-start_frame_pts_chrono.time_since_epoch());
+    // auto now_gap = std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch()-start_frame_pts_chrono.time_since_epoch());
+    // auto time_intv = formatTime(now_gap-very_first_gap);
+
+    // CtrlPrint::v_cout_2 << "Time-PTS : " << time_intv << "\n";
 
     CtrlPrint::v_cout_2 << std::endl;
 
