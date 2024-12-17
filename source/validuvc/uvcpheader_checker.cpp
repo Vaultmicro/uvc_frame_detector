@@ -1017,8 +1017,8 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     auto now_gap = std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch()-start_frame_pts_chrono.time_since_epoch());
     auto time_intv = formatTime(now_gap-very_first_gap);
 
-    // CtrlPrint::v_cout_2 << "Time: " << formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch())) << "\n";
-    // CtrlPrint::v_cout_2 << "PTS: " << formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(start_frame_pts_chrono.time_since_epoch())) << "\n"; 
+    CtrlPrint::v_cout_2 << "Time: " << formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch())) << "\n";
+    CtrlPrint::v_cout_2 << "PTS: " << formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(start_frame_pts_chrono.time_since_epoch())) << "\n"; 
     CtrlPrint::v_cout_2 << "Time-PTS: " << time_intv << "\n";
 
     CtrlPrint::v_cout_2 << std::endl;
