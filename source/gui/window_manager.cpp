@@ -247,9 +247,6 @@ void GraphData::plot_graph(std::chrono::time_point<std::chrono::steady_clock> cu
     std::lock_guard<std::mutex> lock(mutex);
     init_current_time_(current_time);
     calculate_time_gap_();
-    if (self_type == 1) {
-        calculate_pts_overflow_();
-    }
     update_switch_();
     draw_graph_(y);
 }
@@ -487,32 +484,31 @@ void GraphData::calculate_time_gap_() {
     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
 }
 
-void GraphData::calculate_pts_overflow_() {
-    const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
-        std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
-    const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
-        static_cast<long long>(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
+// // Not used
+// void GraphData::calculate_pts_overflow_() {
+//     const std::chrono::time_point<std::chrono::steady_clock> PTS_OVERFLOW_THRESHOLD = std::chrono::time_point<std::chrono::steady_clock>(
+//         std::chrono::milliseconds(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
+//     const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
+//         static_cast<long long>(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
     
-    if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
-        reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
-    }
+//     if (reference_timepoint >= PTS_OVERFLOW_THRESHOLD) {
+//         reference_timepoint -= PTS_OVERFLOW_THRESHOLD_MS;
+//     }
     
-    while (current_time < reference_timepoint) {
-        current_time += PTS_OVERFLOW_THRESHOLD_MS;
-    }
+//     while (current_time < reference_timepoint) {
+//         current_time += PTS_OVERFLOW_THRESHOLD_MS;
+//     }
 
-    assert(reference_timepoint < PTS_OVERFLOW_THRESHOLD);
-    assert(current_time >= reference_timepoint);
+//     assert(reference_timepoint < PTS_OVERFLOW_THRESHOLD);
+//     assert(current_time >= reference_timepoint);
     
-    time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+//     time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
     
-    while (time_gap > GRAPH_PERIOD_MILLISECOND) {
-        reference_timepoint = current_time - std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND);
-        time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
-    }
-}
-
-
+//     while (time_gap > GRAPH_PERIOD_MILLISECOND) {
+//         reference_timepoint = current_time - std::chrono::milliseconds(GRAPH_PERIOD_MILLISECOND);
+//         time_gap = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - reference_timepoint).count();
+//     }
+// }
 
 void GraphData::update_switch_(){
     // When first data comes in, or the time gap is over the GRAPH_PERIOD_SECOND

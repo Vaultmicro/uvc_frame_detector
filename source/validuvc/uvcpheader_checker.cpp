@@ -74,7 +74,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
 #endif
 
   std::chrono::milliseconds::rep pass_time_count = std::chrono::duration_cast<std::chrono::seconds>(received_time - temp_received_time).count();
-  std::chrono::time_point<std::chrono::steady_clock> current_pts_chrono;
+  // std::chrono::time_point<std::chrono::steady_clock> current_pts_chrono;
 
   received_time_clock = std::chrono::duration_cast<std::chrono::milliseconds>(received_time.time_since_epoch()).count();
   formatted_time = formatTime(std::chrono::milliseconds(received_time_clock));
@@ -158,9 +158,22 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
     
     // std::cerr << "CLK: " << formatted_time << std::endl;
     // std::cerr << "PTS: " << std::hex <<  payload_header.PTS << std::endl;
+    previous_pts_chrono = current_pts_chrono;
 
     current_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(payload_header.PTS / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
+
+    const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
+        static_cast<long long>(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
+    
+    //overflow check
+    if (previous_pts_chrono != std::chrono::time_point<std::chrono::steady_clock>()){
+      if (current_pts_chrono < previous_pts_chrono && 
+          (previous_payload_header.PTS - payload_header.PTS) >= 0x80000000){
+          stacked_pts_chrono += PTS_OVERFLOW_THRESHOLD_MS;
+      }
+    }
+    final_pts_chrono = current_pts_chrono + stacked_pts_chrono;
   }
 
   // Update Frame
@@ -236,6 +249,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
               
             } else if (payload_header.PTS != previous_frame_pts) {
               frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
+              frame->prev_frame_pts = previous_frame_pts;
+              previous_frame_pts = payload_header.PTS;
             }
           }
 
@@ -256,7 +271,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
             temp_new_frame_flag = false;
           }
           if (payload_header.PTS){
-            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
+            uvcfd_graph.getGraph_PTSGraph().plot_graph(final_pts_chrono ,uvc_payload.size()-payload_header.HLE);
           }
         }
 #endif
@@ -293,6 +308,8 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           
         } else if (payload_header.PTS != previous_frame_pts) {
           new_frame->frame_pts = payload_header.PTS;  // frame pts == payload pts
+          new_frame->prev_frame_pts = previous_frame_pts;
+          previous_frame_pts = payload_header.PTS;
         }
       }
 
@@ -322,7 +339,7 @@ uint8_t UVCPHeaderChecker::payload_valid_ctrl(
           uvcfd_graph.getGraph_SOFGraph().plot_graph(received_time, 1);
           temp_new_frame_flag = false;
           if (payload_header.PTS){
-            uvcfd_graph.getGraph_PTSGraph().plot_graph(current_pts_chrono ,uvc_payload.size()-payload_header.HLE);
+            uvcfd_graph.getGraph_PTSGraph().plot_graph(final_pts_chrono ,uvc_payload.size()-payload_header.HLE);
           }
         }
 #endif
@@ -910,6 +927,7 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
     CtrlPrint::v_cout_2 << "Toggle Bit (FID): " << static_cast<int>(frame.toggle_bit) << "\n";
     CtrlPrint::v_cout_2 << "Payload Count: " << frame.packet_number << "\n";
     CtrlPrint::v_cout_2 << "Frame PTS: " << frame.frame_pts << "\n";
+    // CtrlPrint::v_cout_2 << "Prev Frame PTS: " << frame.prev_frame_pts << "\n";
     // Print Frame Error directly with switch statement
     CtrlPrint::v_cout_2 << "Frame Error: ";
     switch (frame.frame_error) {
@@ -984,14 +1002,24 @@ void UVCPHeaderChecker::print_frame_data(const ValidFrame& frame) {
 
     std::chrono::time_point<std::chrono::steady_clock> start_frame_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
         std::chrono::milliseconds(frame.frame_pts / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
-      
-    auto start_chrono_ms = formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(start_frame_pts_chrono.time_since_epoch()));
+    std::chrono::time_point<std::chrono::steady_clock> previous_frame_pts_chrono = std::chrono::time_point<std::chrono::steady_clock>(
+        std::chrono::milliseconds(frame.prev_frame_pts / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
 
-    // static auto very_first_gap = std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch()-start_frame_pts_chrono.time_since_epoch());
-    // auto now_gap = std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch()-start_frame_pts_chrono.time_since_epoch());
-    // auto time_intv = formatTime(now_gap-very_first_gap);
+    static auto stack_overflow_pts = std::chrono::milliseconds(0);
+    const std::chrono::milliseconds PTS_OVERFLOW_THRESHOLD_MS(
+        static_cast<long long>(0xFFFFFFFFU / (ControlConfig::instance().get_dwTimeFrequency() / 1000)));
+    if (start_frame_pts_chrono < previous_frame_pts_chrono) {
+      stack_overflow_pts += std::chrono::milliseconds(PTS_OVERFLOW_THRESHOLD_MS);
+    }
+    start_frame_pts_chrono += stack_overflow_pts;
 
-    // CtrlPrint::v_cout_2 << "Time-PTS : " << time_intv << "\n";
+    static auto very_first_gap = std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch()-start_frame_pts_chrono.time_since_epoch());
+    auto now_gap = std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch()-start_frame_pts_chrono.time_since_epoch());
+    auto time_intv = formatTime(now_gap-very_first_gap);
+
+    // CtrlPrint::v_cout_2 << "Time: " << formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(frame.received_valid_times.front().time_since_epoch())) << "\n";
+    // CtrlPrint::v_cout_2 << "PTS: " << formatTime(std::chrono::duration_cast<std::chrono::milliseconds>(start_frame_pts_chrono.time_since_epoch())) << "\n"; 
+    CtrlPrint::v_cout_2 << "Time-PTS: " << time_intv << "\n";
 
     CtrlPrint::v_cout_2 << std::endl;
 

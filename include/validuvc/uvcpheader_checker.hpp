@@ -258,11 +258,12 @@ enum FrameSuspicious{
 
 class ValidFrame{
 public:
-    ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0), frame_suspicious(SUSPICIOUS_NO_SUSPICIOUS) {}
+    ValidFrame(int frame_num) : frame_number(frame_num), packet_number(0), frame_pts(0), prev_frame_pts(0), frame_error(ERR_FRAME_NO_ERROR), eof_reached(0), frame_suspicious(SUSPICIOUS_NO_SUSPICIOUS) {}
     
     uint64_t frame_number;
     uint16_t packet_number;
     uint32_t frame_pts;
+    uint32_t prev_frame_pts;
     FrameError frame_error;
     FrameSuspicious frame_suspicious;
     uint8_t eof_reached;
@@ -366,6 +367,12 @@ private:
 
     bool temp_new_frame_flag;
 
+    // for plotting
+    std::chrono::time_point<std::chrono::steady_clock> current_pts_chrono;
+    std::chrono::time_point<std::chrono::steady_clock> previous_pts_chrono;
+    std::chrono::milliseconds stacked_pts_chrono;
+    std::chrono::time_point<std::chrono::steady_clock> final_pts_chrono;
+
 
     void update_payload_error_stat(UVCError perror) {
         switch (perror) {
@@ -447,7 +454,9 @@ private:
 public:
     UVCPHeaderChecker() :  
         frame_count(0), throughput(0), average_frame_rate(0), current_frame_number(0),
-        received_frames_count(0), received_throughput(0), previous_frame_pts(0), temp_received_time(std::chrono::time_point<std::chrono::steady_clock>()) {
+        received_frames_count(0), received_throughput(0), previous_frame_pts(0), temp_received_time(std::chrono::time_point<std::chrono::steady_clock>()),
+        current_pts_chrono(std::chrono::time_point<std::chrono::steady_clock>()), previous_pts_chrono(std::chrono::time_point<std::chrono::steady_clock>()),
+        stacked_pts_chrono(0), final_pts_chrono(std::chrono::time_point<std::chrono::steady_clock>()){
         CtrlPrint::v_cout_1 << "\nUVCPHeaderChecker Constructor\n" << std::endl;
     }
 
